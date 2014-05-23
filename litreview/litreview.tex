@@ -1,0 +1,52 @@
+\documentclass[a4paper,11pt,twoside,notitlepage]{report}
+\usepackage[left=2.5cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
+\usepackage{cleveref} 
+\usepackage{fancyhdr}
+\usepackage{abstract}
+\usepackage{framed}
+\usepackage{cite}
+
+\renewenvironment{abstract}
+ {
+	\small
+  	\begin{center}
+  	\bfseries \abstractname\vspace{-.5em}\vspace{0pt}
+  	\end{center}
+  	\list{}{
+    	\setlength{\leftmargin}{.5cm}%
+    	\setlength{\rightmargin}{\leftmargin}%
+  	}%
+  	\item\relax}
+ 	{\endlist}
+
+
+\begin{document}
+	\title{Chao Wu
+		\\ \small Literature Review}
+	\author{William Marsey
+		\\Imperial College London}
+	\date{June 2014}
+ 	\maketitle
+	
+
+	\begin{framed}
+		\begin{abstract}
+			Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+		\end{abstract}
+	\end{framed}
+
+	Lorem ipsum dolor sit amet, eu vel brute ornatus inimicus, in sit tritani probatus persecuti. Ex quot ornatus concludaturque duo, cum at facilisi mediocritatem, suas lucilius eos ad. Pro no modus albucius. Nobis probatus an vim, percipit voluptaria mei ex. No est mutat vidisse docendi, ei mel brute integre delenit. Virtute facilisi adipisci pri ea.~\cite{Nobody06}
+
+	Mea eu purto perpetua, ipsum graece per ne, verear admodum per et. Ea sonet ridens invenire qui, vel brute regione antiopam ea. Pri viris facilisi cu, cum quot facilisi te. Antiopam constituto percipitur mel eu. Ad vitae delicatissimi pro, qui cu efficiendi interesset, duo viderer impedit prodesset ex. An eos corpora mediocrem philosophia, ut menandri volutpat scripserit pro. Eos ea vivendum phaedrum.
+
+	Usu et enim semper labores, sed laudem necessitatibus cu, ocurreret reprehendunt nec ad. Nec commodo tacimates an. Sit appetere efficiendi adversarium in, an eos tamquam definiebas, quod quas docendi mei id. Eu nec quando vidisse, ex vim decore verear nominati. Cum commune inciderint signiferumque id, an cum dolore ponderum delicata. Qui eius habeo ocurreret ea, an nihil inermis consequuntur his.
+
+	Ipsum epicurei ei sit, usu soluta temporibus in. Nostro theophrastus est eu. Ea mei tota salutatus assentior, mazim adversarium nam in. At pri decore corpora appareat. Putent accommodare ex mei. Nec libris omnesque an, alia essent his no, affert hendrerit reprehendunt ea vim.
+
+	Vim eu vero congue erroribus, pro ea ignota intellegat. Sit accusam inciderint an, no sale altera nam, ex enim aliquid adolescens duo. Mandamus senserit expetenda mei eu, cum te quod accommodare. Numquam singulis concludaturque pro ex, sed movet putant instructior ex. Cum choro lobortis ea, ea hinc exerci volutpat per, nam in verear inimicus iudicabit.
+
+\bibliography{litreview}{}
+\bibliographystyle{plain}	
+\end{document}
