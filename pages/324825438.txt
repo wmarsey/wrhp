@@ -1,1 +1,0 @@
-{"query": {"pages": {"13692155": {"ns": 0, "pageid": 13692155, "revisions": [{"comment": "[[WP:AES|\u2190]]Blanked the page", "*": "", "tags": ["blanking"], "timestamp": "2009-11-09T11:53:03Z", "contentformat": "text/x-wiki", "userid": 10975176, "revid": 324825438, "contentmodel": "wikitext", "user": "Xyhwiba", "parentid": 324756566, "size": 0}], "title": "Philosophy"}}}}

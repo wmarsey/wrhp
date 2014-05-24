@@ -1,1 +1,0 @@
-{"query": {"pages": {"13692155": {"ns": 0, "pageid": 13692155, "revisions": [{"comment": "ok", "*": "my ass hurts.", "tags": [], "timestamp": "2010-05-31T23:54:12Z", "contentformat": "text/x-wiki", "userid": 0, "revid": 365322697, "anon": "", "contentmodel": "wikitext", "user": "213.122.217.53", "parentid": 365322599, "size": 13}], "title": "Philosophy"}}}}
