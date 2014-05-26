@@ -76,26 +76,50 @@
 
         \section{Open Source Valuation}
         \subsection{Previous Work}
+
+        \subsection{McGuinness, et al.}
+        Evaluating articles according to internal and external
+        links. This may be an appropriate strategy, as one study has
+        shown this to be a natural heuristic for the average Wikipedia
+        reader.~cite{Lucassen2010}
+
         \subsubsection{WikiTrust}
         A benchmark piece of software is WikiTrust. It was developed
         in response to Wikipedia reaching a milestone of maturity
         (having by 2006 collected content comparable to Encyclopedia
         Britannica [CITE GILES 2005]), and designed to evaluate each
-        word of an article for its 'trustworthiness'.
+        word of an article for its 'trustworthiness'. It also
+        developed out research made by others, and incorporated a few of
+        the research and heuristics gathered by others, such as the
+        [SUMMARY LATER] of Kittur, et al., and the [SUMMARY LATER] of
+        Cross. 
+
+        [CRITICISMS in Luyt et al.]
 
         This trust is expressed as a real number between 0 and 1, and
         calculated using the 'age' of the word (each edit that word
         survives is regarded implicit attestment to worth on behalf of
         the editor), and the reputation of the contributor of that
         word. Conversely, the reputation of a contributor is
-        calculated using the survival rate of his words.
+        calculated using the survival rate of his words. The 'trust'
+        of each word is then represented as a grade of yellow,
+        highlighting the word as we see below - the darker yellow
+        parts are the most trusted parts.
+
+        [DIAGRAM: WIKITRUST IN ACTION OMG]
 
         The software, although a little aged now (the last update was
         in 2008), tackles a lot of the concepts we concern ourselves
         with here, as well as guiding us to solutions to a few of the
         problems we will come accross, such as different kinds of
-        malicious input. It will be referred to for these reasons.
-        
+        malicious input. There has been a critical evaluation of it as
+        recent as 2011,~/cite{Lucassen2011}. 
+
+        [TALK ABOUT HOW TRUST IS ONLY ONE PART OF VALUE]
+
+        [TALK ABOUT how lucassen found the software to be kind of
+          useless, but a nice thing anyway, but basically useless, lol]
+ 
 	\section{Tackling the Edit Distance Problem}
         Much of the greatest algorithm discoveries in this area come
         out of work made in the 60s and 70s. We find Levenshtein's
