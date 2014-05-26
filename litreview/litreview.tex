@@ -74,15 +74,53 @@
 		\end{abstract}
 	\end{framed}
 
-	Lorem ipsum dolor sit amet, eu vel brute ornatus inimicus, in sit tritani probatus persecuti. Ex quot ornatus concludaturque duo, cum at facilisi mediocritatem, suas lucilius eos ad. Pro no modus albucius. Nobis probatus an vim, percipit voluptaria mei ex. No est mutat vidisse docendi, ei mel brute integre delenit. Virtute facilisi adipisci pri ea.~\cite{Nobody06}
+        \section{Open Source Valuation}
+        \subsection{Previous Work}
+        \subsubsection{WikiTrust}
+        A benchmark piece of software is WikiTrust. It was developed
+        in response to Wikipedia reaching a milestone of maturity
+        (having by 2006 collected content comparable to Encyclopedia
+        Britannica [CITE GILES 2005]), and designed to evaluate each
+        word of an article for its 'trustworthiness'.
 
-	Mea eu purto perpetua, ipsum graece per ne, verear admodum per et. Ea sonet ridens invenire qui, vel brute regione antiopam ea. Pri viris facilisi cu, cum quot facilisi te. Antiopam constituto percipitur mel eu. Ad vitae delicatissimi pro, qui cu efficiendi interesset, duo viderer impedit prodesset ex. An eos corpora mediocrem philosophia, ut menandri volutpat scripserit pro. Eos ea vivendum phaedrum.
+        This trust is expressed as a real number between 0 and 1, and
+        calculated using the 'age' of the word (each edit that word
+        survives is regarded implicit attestment to worth on behalf of
+        the editor), and the reputation of the contributor of that
+        word. Conversely, the reputation of a contributor is
+        calculated using the survival rate of his words.
 
-	Usu et enim semper labores, sed laudem necessitatibus cu, ocurreret reprehendunt nec ad. Nec commodo tacimates an. Sit appetere efficiendi adversarium in, an eos tamquam definiebas, quod quas docendi mei id. Eu nec quando vidisse, ex vim decore verear nominati. Cum commune inciderint signiferumque id, an cum dolore ponderum delicata. Qui eius habeo ocurreret ea, an nihil inermis consequuntur his.
+        The software, although a little aged now (the last update was
+        in 2008), tackles a lot of the concepts we concern ourselves
+        with here, as well as guiding us to solutions to a few of the
+        problems we will come accross, such as different kinds of
+        malicious input. It will be referred to for these reasons.
+        
+	\section{Tackling the Edit Distance Problem}
+        Much of the greatest algorithm discoveries in this area come
+        out of work made in the 60s and 70s. We find Levenshtein's
+        work, and his eponymous edit distance algorithm to be the nexus of
+        this work~/cite{Levenshtein1966} - much of the work in the 50 years since the
+        publication of Levenshtein's original work has been working
+        towards confirming and improving this original algorithm.~/cite{Navarro2001}
 
-	Ipsum epicurei ei sit, usu soluta temporibus in. Nostro theophrastus est eu. Ea mei tota salutatus assentior, mazim adversarium nam in. At pri decore corpora appareat. Putent accommodare ex mei. Nec libris omnesque an, alia essent his no, affert hendrerit reprehendunt ea vim.
+        This family of algorithms tackle the problem in a similar way
+        - comparing each of the characters of two strings, and
+        creating some sort of table with which to speed up computation
+        of edit distance. These improvements are manifold, but
+        cluster around two principles: disregard rows and columns of
+        the table that we know not to improve the final answer;
+        compute the comparisons in a way that leverages the computer's
+        natively quick operations (i.e. bit-wise comparisons,
+        bitmapping representations of the strings, etc).
 
-	Vim eu vero congue erroribus, pro ea ignota intellegat. Sit accusam inciderint an, no sale altera nam, ex enim aliquid adolescens duo. Mandamus senserit expetenda mei eu, cum te quod accommodare. Numquam singulis concludaturque pro ex, sed movet putant instructior ex. Cum choro lobortis ea, ea hinc exerci volutpat per, nam in verear inimicus iudicabit.
+        The algorthims are principally Dynamic programming algorithms
+        - the space complexities for most are usually the limiting
+        factors in terms of implementation. Navarro notes that one of
+        the quickest algorithms in this area is 'only of theoretical
+        interest', having a space requirement [OF LOADS].
+
+        \subsection{Intentions}
 
 \bibliography{litreview}{}
 \bibliographystyle{plain}	
