@@ -1,6 +1,7 @@
 import requests
 import time
 import json
+import csv
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -26,8 +27,6 @@ headers = {
  
 i = 0
 
-list = open("list.txt", "a")
-
 if RATE_LIMIT and RATE_LIMIT_LAST_CALL and \
         RATE_LIMIT_LAST_CALL + RATE_LIMIT_MIN_WAIT > datetime.now():
     wait_time = (RATE_LIMIT_LAST_CALL + RATE_LIMIT_MIN_WAIT) - datetime.now()
@@ -39,19 +38,17 @@ if RATE_LIMIT:
     RATE_LIMIT_LAST_CALL = datetime.now()
 
 r = r.json()
-
 childid =  r['query']['pages']['13692155']['revisions'][0]['revid']
-parentid = r['query']['pages']['13692155']['revisions'][0]['parentid']
-#extract = r['query']['pages']['13692155']['extract']
+parentid = childid
 
-print i
-#print "child, parent:" 
-#print childid
-#print parentid
-#print extract
-print
 
-i = i + 1
+open("index.csv", 'w').close()
+#open("contents.csv", 'w').close()
+index = csv.writer(open("index.csv", "wb"))
+#contents = csv.writer(open("contents.csv", "wb"))
+index.writerow(["REVISION","USER","USERID","TIMSTAMP","SIZE","COMMENT"]) 
+#contents.writerow(["REVISION","CONTENT"])
+
 
 while i < 1000:
     params = {
@@ -75,26 +72,30 @@ while i < 1000:
 
     r = r.json()
 
+    #{"query": {"pages": {"13692155": {"ns": 0, "pageid": 13692155, "revisions": [{"comment": "over linking", "*": CONTENT, "tags": [], "timestamp": "2014-05-05T05:06:31Z", "contentformat": "text/x-wiki", "userid": 1988889, "revid": 607121768, "contentmodel": "wikitext", "user": "Snowded", "parentid": 607105175, "size": 118813}], "title": "Philosophy"}}}}
+
     childid =  r['query']['pages']['13692155']['revisions'][0]['revid']
     parentid = r['query']['pages']['13692155']['revisions'][0]['parentid']
-    #extract = r['query']['pages']['13692155']['extract'] ##this is the current article?!
-
-#    print type(extract)
-
-    file = open('pages/' + str(childid) + '.txt', 'w')
+    user = r['query']['pages']['13692155']['revisions'][0]['user']
+    userid = r['query']['pages']['13692155']['revisions'][0]['userid']
+    size = r['query']['pages']['13692155']['revisions'][0]['size']
+    timestamp = r['query']['pages']['13692155']['revisions'][0]['timestamp']
+    comment = r['query']['pages']['13692155']['revisions'][0]['comment']
+    content = r['query']['pages']['13692155']['revisions'][0]['*']
     
-    json.dump(r, file)
-
-    #file.write(r.encode('UTF-8'))
+    #dump json
+    # file = open('json/' + str(childid) + '.json', 'w')
+    # json.dump(r, file)
+    # file.close()
+    file = open('content/' + str(childid) + '.txt', 'w')
+    file.write(content.encode("UTF-8"))
     file.close()
 
-    list.write("\n" + str(childid))
+    #save 
+    #index.write("\n" + str(childid) + "," + user + "," + str(userid) + "," + timestamp + "," + str(size) + "," + comment)
+    #contents.write("\n" + str(childid) + "," + content.encode('UTF-8'))
+    index.writerow([childid, user, userid, timestamp, size, comment])
+    #contents.writerow([childid, content.encode("UTF-8")])
 
     print i
-#    print "child, parent:" 
-    #print childid
-    #print parentid
-    #print extract
-    print 
-
     i = i + 1
