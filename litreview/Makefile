@@ -1,6 +1,7 @@
 all: litreview
 
 litreview: litreview.tex litreview.bib
+	make clean
 	pdflatex litreview
 	bibtex litreview
 	pdflatex litreview
