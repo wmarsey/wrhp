@@ -41,16 +41,17 @@ r = r.json()
 childid =  r['query']['pages']['13692155']['revisions'][0]['revid']
 parentid = childid
 
-
-open("index.csv", 'w').close()
+#open("index.csv", 'w').close()
 #open("contents.csv", 'w').close()
-index = csv.writer(open("index.csv", "wb"))
-#contents = csv.writer(open("contents.csv", "wb"))
-index.writerow(["REVISION","USER","USERID","TIMSTAMP","SIZE","COMMENT"]) 
+index_f = open("index.csv", "ab")
+contents_f = open("contents.csv", "ab")
+index = csv.writer(index_f)
+contents = csv.writer(contents_f)
+#index.writerow(["REVISION","USER","USERID","TIMSTAMP","SIZE","COMMENT"]) 
 #contents.writerow(["REVISION","CONTENT"])
 
 
-while i < 1000:
+while childid != 273102:
     params = {
         'format': 'json',
         'action': 'query',
@@ -80,22 +81,21 @@ while i < 1000:
     userid = r['query']['pages']['13692155']['revisions'][0]['userid']
     size = r['query']['pages']['13692155']['revisions'][0]['size']
     timestamp = r['query']['pages']['13692155']['revisions'][0]['timestamp']
-    comment = r['query']['pages']['13692155']['revisions'][0]['comment']
+    comment = "" #comments stop eventually
+    try:
+        comment = r['query']['pages']['13692155']['revisions'][0]['comment']
+    except:
+        comment = ""    
     content = r['query']['pages']['13692155']['revisions'][0]['*']
-    
-    #dump json
-    # file = open('json/' + str(childid) + '.json', 'w')
-    # json.dump(r, file)
-    # file.close()
-    file = open('content/' + str(childid) + '.txt', 'w')
-    file.write(content.encode("UTF-8"))
-    file.close()
 
-    #save 
-    #index.write("\n" + str(childid) + "," + user + "," + str(userid) + "," + timestamp + "," + str(size) + "," + comment)
-    #contents.write("\n" + str(childid) + "," + content.encode('UTF-8'))
-    index.writerow([childid, user, userid, timestamp, size, comment])
-    #contents.writerow([childid, content.encode("UTF-8")])
+    index.writerow([childid, user.encode("UTF-8"), userid, timestamp, size, comment.encode("UTF-8")])
+    contents.writerow([childid, content.encode("UTF-8")])
 
-    print i
+    print str(i) + " " + str(childid) + " " + str(timestamp)
     i = i + 1
+
+print "revid is:" 
+print childid
+
+index_f.close()
+contents_f.close()

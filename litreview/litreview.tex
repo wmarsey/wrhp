@@ -1,4 +1,4 @@
-\documentclass[a4paper,11pt,twoside,notitlepage]{report}
+\documentclass[a4paper,11pt,twoside,notitlepage]{article}
 \usepackage[left=2.5cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \usepackage{graphicx}
 \usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
@@ -8,6 +8,7 @@
 \usepackage{framed}
 \usepackage{cite}
 \usepackage{amsmath}
+\usepackage{natbib}
 
 \renewenvironment{abstract}
  {
@@ -32,152 +33,218 @@
  	\maketitle
 	
 
-	\begin{framed}
-		\begin{abstract}
+	%% \begin{framed}
+	%% 	\begin{abstract}
 	
-		I don't know what this is yet.
+	%% 	Mediawiki's slogan reads: ``Mediawiki: Because ideas
+        %%         want to be free''. 
+
+        %%         But qualitatively assessing these articles may be
+        %%         something of a moot point. 
 	
-		%	Traditionally, a collaborative work may not
-                   %     have itself disclosed the provenance of its constituent
-                   %     parts. An individual's stake in the
-                   %     final work - the valued work - was not
-                   %     apparent or accounted for in this
-                    %    text. Regardless of how demarcated the various
-                    %    roles in creating the artefact may have
-                     %   been, the individual's part may have been
-                    %    gauranteed only by way prior
-                    %    negotiation. These policies were individual
-                    %    and capricious, and bound the completeness of the work,
-                    %    the finality (or authenticity) of the
-                    %    work. 
-%
-                    %    But it is exactly these foundations that
-                     %   have been severely undermined in the last few%
-                    %    decades, by the revolutions and eveloutions
-                    %    apparent in the development of modern
-                     %   content-creation. 'Finality' of a work has no
-                     %   real meaning in the context of a Wikipedia
-                    %    article, as does ownership become a very
-                     %   problematic concept. The emergence of
-                     %   such transparent, massively-distributed
-                     %   participation is just one more consequence of
-                    %    that urge to connect that brought us the
-                   %     internet itself, and its manifestation has
-                    %    brought about some decidedly awkward
-                    %    reconsiderations of concepts
-                      %  that, in the last few centuries at least, have
-                      %  been very important in consideration of 'the
-                     %   work': ownership, accountability and
-                     %   authenticity are just a few.
+	%% 	%	Traditionally, a collaborative work may not
+        %%            %     disclosed the provenance of its constituent
+        %%            %     parts. An individual's stake in the
+        %%            %     final work - the valued work - was not
+        %%            %     apparent or accounted for in the final
+        %%             %    text. Regardless of how clearly demarcated the various
+        %%             %    roles in creating the artefact, an individual
+        %%             %    collaborator's stake may have been
+        %%             %    gauranteed only by way of prior
+        %%             %    negotiation. These stakeholder policies were individual
+        %%             %    and capricious, and bound the completeness of the work,
+        %%             %    the finality (or authenticity) of the
+        %%             %    work. 
+	%% 	\end{abstract}
+	%% \end{framed}
 
-                     %   This project examines the status of valuation
-                      %  in this context, with an emphasis on the
-                      %  algorithms that may be used to seek out value
-                     %   in large data-sets, and histories of online
-                      %  collaboration.
-		\end{abstract}
-	\end{framed}
+        \section{Introduction}
+        \subsection{The Research Question}
+        (what is the main question/s you are trying to answer in your dissertation?)
+        Define topic/Why this topic?
+        Point out overall trends, gaps, themes
 
-        \section{Open-source valuation}
-        \subsection{Native valuation}
-        \subsubsection{Wikipedia}
-        Wikipedia articles are rated on an article-by-article basis by
-        groups of volunteers, to a specification detailed on the
-        Wikipedia itself. There are numerous grades with various
-        qualifying characteristics, and many groups of volunteers - or
-        'Wikiprojects' - may rate the same article. A bot
-        automatically gathers and averages these ratings, so that they
-        may guide editors in improving all articles to a state of
-        'completion'. (It is important to remember that due to the
-        nature of Wikipedia that this is 'completion' in a qualitative
-        sense, and certainly does not allude to finality. There are
-        many states of completion.)
+        %% \section{Wikipedia}
+        %% It is worth giving a very brief overview of Wikipedia. In
+        %% particular, it is worth decribing the opportunities and
+        %% limitations of the implementation of Mediawiki software which
+        %% is its foundation. 
 
-        As with most other aspects of Wikipedia, this scale system is
-        negotiated between various different parties and is, in
-        itself, non-standardised. The Wikipedia article on the
-        standard has itself a section named 'Non-standard' grades.
+        \section{Previous work}
+        discuss your sources
+        by theme, then date
 
-        \subsection{Previous work}
-        \subsubsection{McGuinness, et al.}
-        Evaluating articles according to internal and external
-        links. This may be an appropriate strategy, as one study has
-        shown this to be a natural heuristic for the average Wikipedia
-        reader.~cite{Lucassen2010}
+        \subsection{Wikipedia}
+        identify, analyse
 
-        \subsubsection{WikiTrust}
-        A benchmark piece of software is WikiTrust. It was developed
-        in response to Wikipedia reaching a milestone of maturity
-        (having by 2006 collected content comparable to Encyclopedia
-        Britannica [CITE GILES 2005]), and designed to evaluate each
-        word of an article for its 'trustworthiness'. It also
-        developed out research made by others, and incorporated a few of
-        the research and heuristics gathered by others, such as the
-        [SUMMARY LATER] of Kittur, et al., and the [SUMMARY LATER] of
-        Cross. 
+        Denning: Wikipedia risks: Accuracy, Motives, Uncertain Expertise,
+        Volatility, Coverage, Sources (not many offline sources)
+        \cite{Denning2005} 
 
-        [CRITICISMS in Luyt et al.]
+        Denning says it cannot attain the status of a true
+        encyclopedia without more formal content-inclusion and expert
+        review procedures\cite{Denning2005} this corroborates by
+        findings in \cite{Giles2005}?
 
-        This trust is expressed as a real number between 0 and 1, and
-        calculated using the 'age' of the word (each edit that word
-        survives is regarded implicit attestment to worth on behalf of
-        the editor), and the reputation of the contributor of that
-        word. Conversely, the reputation of a contributor is
-        calculated using the survival rate of his words. The 'trust'
-        of each word is then represented as a grade of yellow,
-        highlighting the word as we see below - the darker yellow
-        parts are the most trusted parts.
+        \subsubsection{On Wikipedia}
+        `robust and remarkable growth'
+        \cite{Kittur2007}\cite{Voss2005} 
+        
+        Wikipedia, at the last dump, consisted 800G of compressed data
+        \cite{wiki-dump}
 
-        [DIAGRAM: WIKITRUST IN ACTION OMG]
+        \subsubsection{Evaluating Wikipedia articles}
+        identify, analyse
 
-        The software, although a little aged now (the last update was
-        in 2008), tackles a lot of the concepts we concern ourselves
-        with here, as well as guiding us to solutions to a few of the
-        problems we will come accross, such as different kinds of
-        malicious input. There has been a critical evaluation of it as
-        recent as 2011,~/cite{Lucassen2011}. 
+        after article mentioned in press \cite{Lih2004}
 
-        [TALK ABOUT HOW TRUST IS ONLY ONE PART OF VALUE]
+        compared by 'experts' to 'equivalent' Encyclopedia Britannica articles \cite{Giles2005}
 
-        [TALK ABOUT how lucassen found the software to be kind of
-          useless, but a nice thing anyway, but basically useless, lol]
+        found metrics of article quality through factor analysis
+        \cite{Stvilia2005}
+
+        Analysis by conflict - revisions?\cite{Kittur2007}
+
+        WikiTrust. The most `complete' of the many of the. Exists as
+        firefox plugin (though it doesn't work any more) Culmination
+        of various studies that try to QUOTE \cite{Adler2007} and QUOTE CITE. It
+        was assessed as recently as 2011 \cite{Lucassen2011}
+       
+        \subsection{Edit difference}
+
+        Standard: Levenshtein distance \cite{Levenshtein1966}
+        
+        \subsection{My work in context of these sources}
+        different views
+        emerging topics
+        gaps and inconsistencies
+
+        \section{Conclusions}
+
+        PREDIFINED / NOT-PREDEFINED ideas of quality. look for when
+        the the article levels off? And do this by DATE rather than
+        REVISION. We may assume that pageviews are more
+        well-distributed than revisions
+
+        summarize major contributions (which do we care about?)
+        evaluate your current position
+        point out any flaw in methodology/research/contradictions
+        are there any gaps in the area which you will cover in your research?
+        How will you integrate sources you have mentioned into your dissertation?
+        Point out any areas for further study
+
+        %% \section{Wikipedia}
+        %% \subsection{Brief overview}
+
+        %% \subsection{Native valuation systems}
+        %% Wikipedia articles are rated on an article-by-article basis by
+        %% groups of volunteers, to a specification detailed on the
+        %% Wikipedia itself. There are numerous grades with various
+        %% qualifying characteristics, and many groups of volunteers - or
+        %% 'Wikiprojects' - may rate the same article. A bot
+        %% automatically gathers and averages these ratings, so that they
+        %% may guide editors in improving all articles to a state of
+        %% 'completion'. (It is important to remember that due to the
+        %% nature of Wikipedia that this is 'completion' in a qualitative
+        %% sense, and certainly does not allude to finality. There are
+        %% many states of completion.)
+
+        %% As with most other aspects of Wikipedia, this scale system is
+        %% negotiated between various different parties and is, in
+        %% itself, non-standardised. The Wikipedia article on the
+        %% standard has itself a section named 'Non-standard' grades.
+
+        %% \subsection{Technological Limitations}
+        %% The wikipedia article that ranks  Wikipedia users by their
+        %% number of edits has a caveat lector ('user beware')
+        %% section. It warns readers of the misguided conclusions that
+        %% can be easily taken by reading these numbers, and serves as a
+        %% good guide for this project as to what native data to trust.
+
+        %% In this project, if we use this data at all, we will mine
+        %% afresh.
+
+        %% \subsection{Previous work}
+        %% \subsubsection{McGuinness, et al.}
+        %% Evaluating articles according to internal and external
+        %% links. This may be an appropriate strategy, as one study has
+        %% shown this to be a natural heuristic for the average Wikipedia
+        %% reader.~cite{Lucassen2010}
+
+        %% \subsubsection{WikiTrust, and others} 
+
+        %% A benchmark piece of software is WikiTrust. It was developed
+        %% in response to Wikipedia reaching a milestone of maturity
+        %% (having by 2006 collected content comparable to Encyclopedia
+        %% Britannica [CITE GILES 2005]), and designed to evaluate each
+        %% word of an article for its 'trustworthiness'. It also
+        %% developed out research made by others, and incorporated a few of
+        %% the research and heuristics gathered by others, such as the
+        %% [SUMMARY LATER] of Kittur, et al., and the [SUMMARY LATER] of
+        %% Cross. 
+
+        %% [CRITICISMS in Luyt et al.]
+
+        %% This trust is expressed as a real number between 0 and 1, and
+        %% calculated using the 'age' of the word (each edit that word
+        %% survives is regarded implicit attestment to worth on behalf of
+        %% the editor), and the reputation of the contributor of that
+        %% word. Conversely, the reputation of a contributor is
+        %% calculated using the survival rate of his words. The 'trust'
+        %% of each word is then represented as a grade of yellow,
+        %% highlighting the word as we see below - the darker yellow
+        %% parts are the most trusted parts.
+
+        %% [DIAGRAM: WIKITRUST IN ACTION OMG]
+
+        %% The software, although a little aged now (the last update was
+        %% in 2008), tackles a lot of the concepts we concern ourselves
+        %% with here, as well as guiding us to solutions to a few of the
+        %% problems we will come accross, such as different kinds of
+        %% malicious input. There has been a critical evaluation of it as
+        %% recent as 2011, \cite{Lucassen2011}. 
+
+        %% [TALK ABOUT HOW TRUST IS ONLY ONE PART OF VALUE]
+
+        %% [TALK ABOUT how lucassen found the software to be kind of
+        %%   useless, but a nice thing anyway, but basically useless, lol]
  
-	\section{Tackling the Edit Distance Problem}
-        Much of the greatest algorithm discoveries in this area come
-        out of work made in the 60s and 70s. We find Levenshtein's
-        work, and his eponymous edit distance algorithm to be the nexus of
-        this work~/cite{Levenshtein1966} - much of the work in the 50 years since the
-        publication of Levenshtein's original work has been working
-        towards confirming and improving this original algorithm.~/cite{Navarro2001}
+	%% \section{Tackling the Edit Distance Problem}
+        %% Much of the greatest algorithm discoveries in this area come
+        %% out of work made in the 60s and 70s. We find Levenshtein's
+        %% work, and his eponymous edit distance algorithm to be the nexus of
+        %% this work~/cite{Levenshtein1966} - much of the work in the 50 years since the
+        %% publication of Levenshtein's original work has been working
+        %% towards confirming and improving this original algorithm. \cite{Navarro2001}
 
-        This family of algorithms tackle the problem in a similar way
-        - comparing each of the characters of two strings, and
-        creating some sort of table with which to speed up computation
-        of edit distance. These improvements are manifold, but
-        cluster around two principles: disregard rows and columns of
-        the table that we know not to improve the final answer;
-        compute the comparisons in a way that leverages the computer's
-        natively quick operations (i.e. bit-wise comparisons,
-        bitmapping representations of the strings, etc).
+        %% This family of algorithms tackle the problem in a similar way
+        %% - comparing each of the characters of two strings, and
+        %% creating some sort of table with which to speed up computation
+        %% of edit distance. These improvements are manifold, but
+        %% cluster around two principles: disregard rows and columns of
+        %% the table that we know not to improve the final answer;
+        %% compute the comparisons in a way that leverages the computer's
+        %% natively quick operations (i.e. bit-wise comparisons,
+        %% bitmapping representations of the strings, etc).
 
-        The algorthims are principally Dynamic programming algorithms
-        - the space complexities for most are usually the limiting
-        factors in terms of implementation. Navarro notes that one of
-        the quickest algorithms in this area is 'only of theoretical
-        interest', having a space requirement [OF LOADS].
+        %% The algorthims are principally Dynamic programming algorithms
+        %% - the space complexities for most are usually the limiting
+        %% factors in terms of implementation. Navarro notes that one of
+        %% the quickest algorithms in this area is 'only of theoretical
+        %% interest', having a space requirement [OF LOADS].
 
-        \subsection{Intentions}
-        \subsubsection{An examination of quality assessment in massive
-          collaborations}
-        [REFER to Dalip, Wiki case study - 'new type of repository for
-          human knowledge'] ['12 million articles, written in around 
-          one hundred languages']
+        %% \subsection{Intentions}
+        %% \subsubsection{An examination of quality assessment in massive
+        %%   collaborations}
+        %% [REFER to Dalip, Wiki case study - 'new type of repository for
+        %%   human knowledge'] ['12 million articles, written in around 
+        %%   one hundred languages']
 
-        One main axiom - good quality MUST be assumed to be the same
-        as edit survival. We must assume, in this context, that
-        collective agreement. It is part of the axiom on which
-        wikipedia's operate. [from the dalip, read on all these things
-        he references]
+        %% One main axiom - good quality MUST be assumed to be the same
+        %% as edit survival. We must assume, in this context, that
+        %% collective agreement. It is part of the axiom on which
+        %% wikipedia's operate. [from the dalip, read on all these things
+        %% he references]
 
 
 \bibliography{litreview}{}
