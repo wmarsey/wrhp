@@ -1,110 +1,121 @@
-def printg(x,y,g):
-    result = ""
-    for ch in y:
-        result = result + ch + "  "
-    print "       ", result
-    for r in range(len(g)):
-        s = " "
-        if r != 0:
-            s = x[r-1]
-        print s, " ", g[r]
-
-def printpserve(i,j,e):
-    if e[i][j] == " ":
-        if i == 0 and j > 0:
-            print "insert", y[0]
-        if j == 0 and i > 0:
-            print "delete", x[0]
-        return
-    if e[i][j] == "keep":
-        printpserve(i-1, j-1, e)
-        print e[i][j], x[i-1]
-    elif e[i][j] == "swap":
-        printpserve(i-1, j-1, e)
-        print e[i][j], x[i-1], "for", y[i-1]
-    elif e[i][j] == "delete":
-        printpserve(i-1,j,e)
-        print e[i][j], x[i-1]
-    else:
-        printpserve(i,j-1,e)
-        print e[i][j], y[j-1]    
-
-def printp(x,y,e):
-    print "edit operation:"
-    i,j = len(e)-1, len(e[0])-1
-    return printpserve(i,j,e)
+class LevDistBasic:
+    e = [] #edit operation array
+    t = [] #grid array
+    x = "" #string1
+    y = "" #string2
+    m = 0 #length string1
+    n = 0 #length string2
+    dist = 0 #Levenshtein distance
+    ed = [] #the edit operation, calculated in _calculate()
     
+    def __init__(self, _x, _y):
+        self.x = _x
+        self.y = _y
+        self.m = len(_x)
+        self.n = len(_y)     
+        self.t = [[0]*(self.n+1) for _ in xrange(self.m+1)]
+        self.e = [[" "]*(self.n+1) for _ in xrange(self.m+1)]
+        self.dist = self._calculate()
+    
+    def __str__(self):
+        return str(self.distance())
 
-##naive version
-def levdist1(x,y):
-    m = len(x) + 1
-    n = len(y) + 1
-    d = [[0]*(n) for _ in xrange(m)]
-    e = [[" "]*(n) for _ in xrange(m)]
-    for i in xrange(m):
-        d[i][0] = i
-    for j in xrange(n):
-        d[0][j] = j
-    j = 1
-    while j < n:
-        i = 1
-        while i < m:
-            c = (x[i-1] != y[j-1])
-            dl = d[i-1][j] + 1
-            ins = d[i][j-1] + 1
-            sbs = d[i-1][j-1] + c
-            d[i][j] = min(ins, dl, sbs)
-            if ins < dl and ins - 1 < sbs:
-                e[i][j] = "insert"
-            elif dl <= sbs:
-                e[i][j] = "delete"
+    def distance(self):
+        return self.dist
+
+    def strings(self):
+        return self.x, self.y
+    
+    def table(self):
+        return self.t
+    
+    def operation(self):
+        return self.ed
+        
+    ##ADD WARNING for long strings / deal with them
+    def showtable(self):
+        result = ""
+        for ch in self.y:
+            result = result + ch + "  "
+        print "       ", result
+        for r in range(len(self.t)):
+            s = ' '
+            if r:
+                s = self.x[r-1]
+            print s, ' ', self.t[r]
+    
+    def showop(self):
+        for i, op in enumerate(self.ed):
+            l = str(i) + ": "
+            if op[0] == 'I':
+                l += "insert " + op[-1]
+            elif op[0] == 'K':
+                l += "keep " + op[-1]
+            elif op[0] == 'D':
+                l += "delete " + op[-1]
+            elif op[0] == 'S':
+                l += "swap " + op[-1][0] + " for " + op[-1][-1]
             else:
-                if(x[i-1] != y[j-1]):
-                    e[i][j] = "swap"
+                return "FAIL: incorrect operation"
+            print l
+
+    def _ed(self):
+        i, j = len(self.e)-1, len(self.e[0])-1
+        self._ed_recursive(i,j)
+
+    def _ed_recursive(self,i,j):
+        if self.e[i][j] == ' ':
+            if i == 0 and j > 0:
+                self.ed.append(('D', self.y[0]))
+            if j == 0 and i > 0:
+                self.ed.append(('D', self.x[0]))
+            return
+        if self.e[i][j] == 'K':
+            self._ed_recursive(i-1, j-1)
+            self.ed.append((self.e[i][j], self.x[i-1]))
+        elif self.e[i][j] == 'S':
+            self._ed_recursive(i-1, j-1)
+            self.ed.append((self.e[i][j], (self.x[i-1] + ',' + self.y[j-1])))
+        elif self.e[i][j] == 'D':
+            self._ed_recursive(i-1,j)
+            self.ed.append((self.e[i][j], self.x[i-1]))
+        else:
+            self._ed_recursive(i,j-1)
+            self.ed.append((self.e[i][j], self.y[j-1]))   
+
+    def _calculate(self):
+        for i in xrange(self.m+1):
+            self.t[i][0] = i
+        for j in xrange(self.n+1):
+            self.t[0][j] = j
+        j = 1
+        while j < self.n+1:
+            i = 1
+            while i < self.m+1:
+                c = (self.x[i-1] != self.y[j-1])
+                dl = self.t[i-1][j] + 1
+                ins = self.t[i][j-1] + 1
+                sbs = self.t[i-1][j-1] + c
+                self.t[i][j] = min(ins, dl, sbs)
+                if ins < dl and ins < sbs:
+                    self.e[i][j] = 'I'
+                elif dl <= sbs:
+                    self.e[i][j] = 'D'
                 else:
-                    e[i][j] = "keep"
-            i += 1
-        j += 1
-    printg(x,y,d)
-    printp(x,y,e)        
-    return d[m-1][n-1]
+                    if(self.x[i-1] != self.y[j-1]):
+                        self.e[i][j] = 'S'
+                    else:
+                        self.e[i][j] = 'K'
+                i += 1
+            j += 1
+        self._ed()
+        return self.t[self.m][self.n]
 
-##some space optimisation, base cases
-def levdist2(x,y):
-    if len(x) < len(y):
-        return levenshtein(y, x)
-    if len(y) == 0:
-        return len(x)
-    row = xrange(len(y) + 1)
-    for i, xch in enumerate(x):
-        newrow = [i + 1]
-        for j, ych in enumerate(y):
-            c = (xch != ych)
-            ins = row[j + 1] + 1 #insertions
-            dl = newrow[j] + 1 #deletions
-            sbs = row[j] + c #substitutions
-            newrow.append(min(ins, dl, sbs))
-        row = newrow 
-    return row[-1]
+# dist = LevDistBasic("bank", "books")
 
-x = "empirical"
-y = "imperial"
-l = levdist1(x, y)    
-print "Levenstein distance between", x, "and", y, "is", l
-x = "mperial"
-y = "empirical"
-l = levdist1(x, y)    
-print "Levenstein distance between", x, "and", y, "is", l
-x = "bank"
-y = "book"
-l = levdist1(x, y)
-print "Levenstein distance between", x, "and", y, "is", l
-
-x = "empirical"
-y = "imperial"
-l = levdist2(x, y)    
-print "Levenstein distance between", x, "and", y, "is", l
-x = "bank"
-y = "book"
-l = levdist2(x, y)
-print "Levenstein distance between", x, "and", y, "is", l
+# print dist.operation()
+# print dist.table()
+# dist.showtable()
+# dist.showop()
+# print "distance", dist.strings(), "is", dist
+# print dist.distance()
