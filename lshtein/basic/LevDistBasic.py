@@ -110,12 +110,3 @@ class LevDistBasic:
             j += 1
         self._ed()
         return self.t[self.m][self.n]
-
-# dist = LevDistBasic("bank", "books")
-
-# print dist.operation()
-# print dist.table()
-# dist.showtable()
-# dist.showop()
-# print "distance", dist.strings(), "is", dist
-# print dist.distance()
