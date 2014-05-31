@@ -5,7 +5,10 @@ litreview: litreview.tex litreview.bib
 	pdflatex litreview
 	bibtex litreview
 	pdflatex litreview
+	bibtex litreview
 	pdflatex litreview
+	pdflatex litreview
+	make clean
 	evince litreview.pdf
 
 clean:

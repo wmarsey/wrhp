@@ -1,3 +1,5 @@
+import sys
+
 class LevDistBasic:
     e = [] #edit operation array
     t = [] #grid array
@@ -7,12 +9,13 @@ class LevDistBasic:
     n = 0 #length string2
     dist = 0 #Levenshtein distance
     ed = [] #the edit operation, calculated in _calculate()
+    isFile = False
     
-    def __init__(self, _x, _y):
-        self.x = _x
-        self.y = _y
-        self.m = len(_x)
-        self.n = len(_y)     
+    def __init__(self, _x, _y, isFile=False):
+        self.x = self._variablehandle(_x)
+        self.y = self._variablehandle(_y)
+        self.m = len(self.x)
+        self.n = len(self.y)     
         self.t = [[0]*(self.n+1) for _ in xrange(self.m+1)]
         self.e = [[" "]*(self.n+1) for _ in xrange(self.m+1)]
         self.dist = self._calculate()
@@ -83,6 +86,19 @@ class LevDistBasic:
             self._ed_recursive(i,j-1)
             self.ed.append((self.e[i][j], self.y[j-1]))   
 
+    def _variablehandle(self,v):
+        if not isinstance(v, str):
+            try:
+                return v.read()
+            except:
+                try:
+                    return str(v)
+                except:
+                    print "Argument cannot be of type" + type(v)
+                    raise
+                pass
+        return v
+                            
     def _calculate(self):
         for i in xrange(self.m+1):
             self.t[i][0] = i

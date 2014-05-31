@@ -15,6 +15,7 @@
 \usepackage{appendix}
 \usepackage{enumitem}
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
+\setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 
 \newcommand{\super}[1]{\textsuperscript{#1}}
 
@@ -62,8 +63,7 @@
 	\author{William Marsey
 		\\Imperial College London}
 	\date{June 2014}
- 	\maketitle
-	
+ 	\maketitle	
 
 	%% \begin{framed}
 	%% 	\begin{abstract}
@@ -142,45 +142,145 @@
             to the former
         \end{itemize}
         
-        \subsection{Wikipedia}
+        \subsection{On Wikipedia}
         Wikipedia's pre-eminence as an online resource is self-evident
         to anyone who has searched the internet for a generic
         topic. The website is ranked 6\super{th} globally in terms of
         website traffic,\footnote{According to Alexa, an Amazon-owned
-        company. The rankings are based on a combined measure of
-        Unique Visitors and Pageviews, and the data mined from around
-        25,000 different browser extensions, as well as sites that
-        have installed Alexa's scripts.\cite{Alexa-about2014}} and
-        is the highest-ranked reference website by far - most of the
-        sites it shares the top spots with are portals, search
-        engines, shopping mega-sites, and social media
-        websites.\cite{Alexa-topsites2014}
+          company. The statistics are wide-rangingbased on a combined
+          measure of Unique Visitors and Pageviews, and the data mined
+          from around 25,000 different browser extensions, as well as
+          sites that have installed Alexa's
+          scripts.\cite{Alexa-about2014} Alexa may well be biased
+          towards English speakers and Internet Explorer users, but
+          this may underestimate Wikipedia.org's popularity, since
+          `two thirds of all Wikipedia articles are in languages other
+          than English'\cite{wikimedia-noteonalexa}} and is the
+        highest-ranked reference website by far - most of the sites it
+        shares the top spots with are portals, search engines,
+        shopping mega-sites, and social media
+        websites.\cite{Alexa-topsites2014} Despite some skepticism
+        (particularly concern over the inherent chaos of the system:
+        ``...edits, contributed in a predominantly undirected and
+        haphazard fashion by ... unvetted
+        volunteers.''\cite{Wilkinson2007}), it is widely
+        claimed to be a success, `the best-developed attempt thus
+        far of the enduring quest to gather all human knowledge in one
+        place'\cite{Mesgari2014}.
 
-        As a nexus of collaboration, a platform for negotiation,
-        the site lends itself many different areas of study. That
-        Wikipedia is a completely open platform, free of copyright
-        restrictions, open database access and a comprehensive API
-        has facilitated much study. 
+        That Wikipedia has become a hub of research in many fields is
+        also self-evident to anyone who has searched for articles on
+        the subject. Mesgari et al, just quoted, has prepared a very
+        recent 'systematic review of scholarly research on the content
+        of Wikipedia', which gives an overview of 110 articles on the
+        subject --- an attestment to the observation that Wikipedia
+        has been 'irresistable point of unquiry for researchers from
+        various fields of knowledge', and a useful touching stone for
+        this study. Mesgari et al's review finds 82 out of the 100 to
+        concern quality in Wikipedia articles, some of these are also
+        referenced here, and many of the others will come to bear on
+        the study as it progresses.
 
-        As a focal point of many people, the site, as a network, has
-        been seen as a microcosm of the world wide web on the
-        whole.[WHERE THE BOLLOCKS HAS THAT PAPER GONE I HAD IT]
-        Previous work has seen the site reflecting society too, and
-        has been used in social studies such as Lih's 2004 study of
-        articles immediately after they have been cited in the
-        press\cite{Lih2004}, and Metyan's 2012 use of the site to
-        predict box-office success \cite{Mestyan2012}. These studies
-        give us a good idea of the community of Wikipedia
-        colaborators. 
+        Other important general sources will be WikiLit,\cite{wikilit}
+        AcaWiki\cite{acawiki} and WikiPapers\cite{wikipapers}, all of
+        which are online repositories of academic research into
+        Wikipedia and other Wikis (as well as being Wikis
+        themselves...).
 
-        emblem of the Web2.0 era \cite{Mesgari2014}
+        \subsubsection{The particularities of Wikipedia, and implications}
 
-        used to predict box office success \cite{Mestyan2012} But does
-        it reveal westernness?
+        %% As a focal point of many people, the site, as a network,
+        %% has been seen as a microcosm of the world wide web on the
+        %% whole.[WHERE THE BOLLOCKS HAS THAT PAPER GONE I HAD IT]
+        %% Previous work has seen the site reflecting society too, and
+        %% has been used in social studies such as Lih's 2004 study of
+        %% articles immediately after they have been cited in the
+        %% press\cite{Lih2004}, and Metyan's 2012 use of the site to
+        %% predict box-office success \cite{Mestyan2012}. These
+        %% studies are useful in their exploration of the general
+        %% culture affecting Wikipedia.
 
-        Denning: Wikipedia risks: Accuracy, Motives, Uncertain Expertise,
-        Volatility, Coverage, Sources (not many offline sources)
-        \cite{Denning2005} 
+        %% The question of the `quality' of Wikipedia articles in
+        %% general, also pertinent here, has reared its head
+        %% regularly. The question is problematic, and papers
+        %% concerning it (the earlier ones especially) show concern
+        %% about the abandonment of expert opinion, particularly of
+        %% the chaos of the system: ``...edits, contributed in a
+        %% predominantly undirected and haphazard fashion by
+        %% ... unvetted volunteers.''\cite{Wilkinson2007} (The studies
+        %% on this are very numerous, and will not be listed here. A
+        %% select few are cited throughout this document.)
+
+        The six 'risks' one takes when referencing Wikipedia, as
+        defined in an early article on the subject,\cite{Denning2005}
+        is a good starting block for identifying the ways in which to
+        ragard the 'quality' of content in Wikipedia. We list them
+        here, describing the implications for our work with each. Some
+        are particular to Wikipedia, some are inherent to all Wikis.
+        
+        \begin{itemize}
+          \item \textbf{Accuracy.} It is important to remember that,
+            without severely increasingly the complexity of our
+            algorithm, we may not verify the accuracy of
+            information. And, if accuracy of information is
+            proportionate to value (surely it must be in a reference
+            text), then our algorithm may misplace its reward. We may
+            most usefully look at the problem as follows. The texts that
+            are edited most often are those that are visited most
+            often. The previously cited studies of Lih and Mestyan et al
+            attest to this - they both study the peaks in activity in
+            articles that are brought to attention in some way. We
+            find in the work of Bongwon Suh et al that the growth of
+            wikipedia is inverse-exponential, as the overheads of
+            coordination and beaurocrosy temper content
+            creation.\cite{Suh2009}\cite{Kittur2007} Content is more
+            likely to be refined and corrected as an article grows
+            old.\cite{Wilkinson2007} We can assume, then, that all
+            articles tend towards accuracy (we may find this bore out
+            in Giles's 2005 semi-formal comparison of Encyclopedia
+            Britannica articles to Wikipedia articles - finding an
+            average three mistakes in the former and 4 mistakes in the
+            latter)\cite{Giles2005}. We may possibly extend this to
+            say that all edits improve a text. This is complicated by
+            malicious, misinformed or malformed edits, but we will
+            discuss dealing with these later.\\
+            \textbf{Response:}
+          \item \textbf{Motives.} It has been found that different
+            contributors may edit Wikipedia in various different ways,
+            according to their proclivities.\\
+            \textbf{Response:}
+          \item \textbf{Uncertain Expertise.} We may take this to mean
+            malformed and misinformed editing, but we may also take it
+            to mean malicious editing. As for malicious edits - we
+            find a lot of useful information in Potthast et al's work
+            on automatic detection of vandals,\cite{Potthast2008} as
+            well as the discussions around Wikipedia's own
+            Counter-Vandalism Unit (`CVU').\cite{wiki-vandalism}
+            including 
+          \item \textbf{Volatility.} 
+          \item \textbf{Coverage.} Cite that structure is a
+            problem.\\
+            \textbf{Response:} We may want to reward extra for restructuring.
+          \item \textbf{Sources.} There has a been some work
+            explicitly taking external links to be relative to
+            quality,\cite{CITEHYPERLINKS} and seems to have been bore
+            out by a further study which found this to be a heuristic
+            used by actual readers.\cite{THISHEURISTICIGUESS}.\\
+            \textbf{Response:} We may give give extra weight to the value
+            of (working) hyperlinks, and fixing hyperlinks.
+        \end{itemize}
+            
+        \subsection{Wikipedia Self-Valuation}
+        \begin{quote}
+          [Wikipedia] cannot attain the status of a true encyclopedia
+          without more formal content-inclusion and expert review
+          procedures.\cite{Denning2005}
+        \end{quote}
+
+        
+
+        Most visited articles in an hour - correlates with
+        (american-centric) events \cite{wiki-visits}
 
         Denning says it cannot attain the status of a true
         encyclopedia without more formal content-inclusion and expert
@@ -216,11 +316,30 @@
         Standard: Levenshtein distance \cite{Levenshtein1966}
         
         \subsection{My work in context of these sources}
-        different views
-        emerging topics
-        gaps and inconsistencies
+        different views emerging topics gaps and inconsistencies
+
+        Goals.
+
+        Methods. Python. Levenshtein. Optimisations of.
+            
 
         \section{Conclusions}
+
+        \subsection{Intentions / Progress}
+        The Code in appendix A
+        
+        Possible extensions.  Perhaps we can examine more about what
+        we may find out about the articles. Cite other studies Lih's
+        2004 study of articles immediately after they have been cited
+        in the press\cite{Lih2004}, and Metyan's 2012 use of the site
+        to predict box-office success \cite{Mestyan2012}. Lieberman
+        worked out their locale.\cite{Lieberman2009}:
+
+        \begin{enumerate}
+          \item peaks in activity (rate of levenshtein distance... may
+            have to be in a log graph...)
+          \item 
+        \end{enumerate}
 
         PREDIFINED / NOT-PREDEFINED ideas of quality. look for when
         the the article levels off? And do this by DATE rather than
@@ -228,16 +347,38 @@
         well-distributed than revisions
 
         summarize major contributions (which do we care about?)
-        evaluate your current position
-        point out any flaw in methodology/research/contradictions
-        are there any gaps in the area which you will cover in your research?
-        How will you integrate sources you have mentioned into your dissertation?
+        evaluate your current position point out any flaw in
+        methodology/research/contradictions are there any gaps in the
+        area which you will cover in your research?  How will you
+        integrate sources you have mentioned into your dissertation?
         Point out any areas for further study
 
 \clearpage
 \begin{appendices}
-\section{Appendix A: Python class for scraping Wikipedia article version}
-\subsection{Code}
+\section{Appendix A: Code progress}
+\subsection{Python class for scraping a Wikipedia article's revision history}
+The following code is a first draft of a class which incrementally
+traces, parses, and stores the revision history of select articles. It
+chooses random articles up to a maximum amount of articles unless an
+article (or articles) are specified. It traces the entire
+discoverable\footnote{Using the Wikipedia API, articles can either be
+  traced back to their origin (revision parent ID = 0), or to the
+  point at which a loop is found in the revision history - this
+  usually happens with older articles.} history of the, unless a
+specific depth is specified by the user.
+
+The class already yields workable data, but here is some immediate
+further work for this code:
+\begin{itemize}
+  \item Allow the user to specify timeframe
+  \item Allow for integration with a postgres database (at the moment
+    the code saves the data in CSV format).
+\end{itemize}
+
+This code is an extension to an existing wikipedia API class for
+python (which did not provide the features we need
+here).\cite{python-wikipedia}
+
 \lstinputlisting[language=Python,frame=single]{../wikiScraper/WikiRevisionScrape.py}
 \subsection{Example output}
 
@@ -246,9 +387,12 @@
   implementation}
 \subsection{Code}
 \lstinputlisting[language=Python,frame=single]{../lshtein/basic/LevDistBasic.py}
+\clearpage
 \subsection{Example output}
+\lstinputlisting[language=sh,frame=single]{../lshtein/basic/output.txt}
 \end{appendices}
 
-\bibliography{litreview}{}
-\bibliographystyle{plain}	
+\clearpage
+\renewcommand\refname{Bibliograpy} \bibliography{litreview}{}
+\bibliographystyle{plain}
 \end{document}
