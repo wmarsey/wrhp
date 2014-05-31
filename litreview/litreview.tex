@@ -16,6 +16,8 @@
 \usepackage{enumitem}
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 
+\newcommand{\super}[1]{\textsuperscript{#1}}
+
 \definecolor{keywords}{RGB}{255,0,90}
 \definecolor{comments}{RGB}{0,0,113}
 \definecolor{red}{RGB}{160,0,0}
@@ -91,10 +93,12 @@
         \section{Introduction}
         \subsection{The Research Question}
         Given a collaboratively edited document, and information about
-        who edited the document, and in what way, how do we measure
-        the quality of their contribution?
-
-        Colloborative work is becoming a big deal. It is both
+        the collection of edits that constitute that document, may we
+        measure the quality of each contribution? And may we use that
+        to give all the collaborators a algorithmically-defined 'stake'
+        in that final document?
+        
+        Collaborative work is becoming a big deal. It is both
         interesting and an important trend in modern computer
         use. And the data is abundant. 
 
@@ -128,11 +132,46 @@
         study tangentially. 
  
         \section{Previous work}
-        discuss your sources
-        by theme, then date
-
+        There are three sections here for the three different topics
+        that come to bear on this subject:
+        \begin{itemize}
+          \item Wikipedia, studies of wikipedia, and the nature of
+            Wikipedia
+          \item The 'edit distance problem', Levenshtein distance
+          \item The various pre-existing studies that apply the latter
+            to the former
+        \end{itemize}
+        
         \subsection{Wikipedia}
-        identify, analyse
+        Wikipedia's pre-eminence as an online resource is self-evident
+        to anyone who has searched the internet for a generic
+        topic. The website is ranked 6\super{th} globally in terms of
+        website traffic,\footnote{According to Alexa, an Amazon-owned
+        company. The rankings are based on a combined measure of
+        Unique Visitors and Pageviews, and the data mined from around
+        25,000 different browser extensions, as well as sites that
+        have installed Alexa's scripts.\cite{Alexa-about2014}} and
+        is the highest-ranked reference website by far - most of the
+        sites it shares the top spots with are portals, search
+        engines, shopping mega-sites, and social media
+        websites.\cite{Alexa-topsites2014}
+
+        As a nexus of collaboration, a platform for negotiation,
+        the site lends itself many different areas of study. That
+        Wikipedia is a completely open platform, free of copyright
+        restrictions, open database access and a comprehensive API
+        has facilitated much study. 
+
+        As a focal point of many people, the site, as a network, has
+        been seen as a microcosm of the world wide web on the
+        whole.[WHERE THE BOLLOCKS HAS THAT PAPER GONE I HAD IT]
+        Previous work has seen the site reflecting society too, and
+        has been used in social studies such as Lih's 2004 study of
+        articles immediately after they have been cited in the
+        press\cite{Lih2004}, and Metyan's 2012 use of the site to
+        predict box-office success \cite{Mestyan2012}. These studies
+        give us a good idea of the community of Wikipedia
+        colaborators. 
 
         emblem of the Web2.0 era \cite{Mesgari2014}
 
