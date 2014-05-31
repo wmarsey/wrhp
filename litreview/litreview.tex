@@ -16,14 +16,27 @@
 \usepackage{enumitem}
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 \setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
+\usepackage{float}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+\makeatletter
+\tikzset{join/.code=\tikzset{after node path={%
+\ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
+edge[every join]#1(\tikzchaincurrent)\fi}}}
+\makeatother
+\tikzset{>=stealth',every on chain/.append style={join},
+         every join/.style={->}}
+\tikzstyle{labeled}=[execute at begin node=$\scriptstyle,
+   execute at end node=$]
 
 \newcommand{\super}[1]{\textsuperscript{#1}}
+
 
 \definecolor{keywords}{RGB}{255,0,90}
 \definecolor{comments}{RGB}{0,0,113}
 \definecolor{red}{RGB}{160,0,0}
 \definecolor{green}{RGB}{0,150,0}
-
 \lstset{frame=tb,
   language=Python,
   aboveskip=3mm,
@@ -89,7 +102,7 @@
         %%             %    work. 
 	%% 	\end{abstract}
 	%% \end{framed}
-
+          
         \section{Introduction}
         \subsection{The Research Question}
         Given a collaboratively edited document, and information about
@@ -244,7 +257,7 @@
             say that all edits improve a text. This is complicated by
             malicious, misinformed or malformed edits, but we will
             discuss dealing with these later.\\
-            \textbf{Response:}
+            \textbf{make}
           \item \textbf{Motives.} It has been found that different
             contributors may edit Wikipedia in various different ways,
             according to their proclivities.\\
@@ -314,15 +327,29 @@
         \subsection{Edit difference}
 
         Standard: Levenshtein distance \cite{Levenshtein1966}
-        
+        \begin{figure}
+          \begin{tikzpicture}
+            \matrix (m) [matrix of math nodes, row sep=4em, column
+              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+            \path[-stealth] (m-2-1) edge node [left]
+                 {$d(v_{i-1},v_i)$} (m-1-2) edge node [below]
+                 {$d(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
+                 [right] {$d(v_i,v_{i+1})$} (m-2-3); 
+                 \draw[color=red]
+                 (m-1-2.north west) -- (m-1-2.north east) --
+                 (m-1-2.south east) -- (m-1-2.south west) --
+                 (m-1-2.north west);
+          \end{tikzpicture}
+        \end{figure}
+        \cite{Adler2006}
+
         \subsection{My work in context of these sources}
         different views emerging topics gaps and inconsistencies
 
         Goals.
 
         Methods. Python. Levenshtein. Optimisations of.
-            
-
+     
         \section{Conclusions}
 
         \subsection{Intentions / Progress}
@@ -353,6 +380,7 @@
         integrate sources you have mentioned into your dissertation?
         Point out any areas for further study
 
+        
 \clearpage
 \begin{appendices}
 \section{Appendix A: Code progress}
