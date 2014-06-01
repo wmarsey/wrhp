@@ -6,9 +6,8 @@
 \usepackage{fancyhdr}
 \usepackage{abstract}
 \usepackage{framed}
-\usepackage{cite}
+%\usepackage{cite}
 \usepackage{amsmath}
-\usepackage{natbib}
 \usepackage{parskip}
 \usepackage[procnames]{listings}
 \usepackage{color}
@@ -16,7 +15,21 @@
 \usepackage{enumitem}
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 \setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
-\usepackage{float}
+\usepackage{float}              %for forcefully placing diagrams 
+%\usepackage{natbib}             %for harvard referencing
+%\bibliographystyle{agsm}        %harvard style
+\usepackage[backref=true,
+            style=authoryear,
+            citereset=section,
+            maxcitenames=3,
+            maxbibnames=100,]{biblatex}
+\bibliography{litreview}
+\DefineBibliographyStrings{english}{%
+    backrefpage  = {see p.}, % for single page number
+    backrefpages = {see pp.} % for multiple page numbers
+}
+\setlength\bibitemsep{1em}
+
 
 \usepackage{tikz}
 \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
@@ -32,6 +45,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
 \newcommand{\super}[1]{\textsuperscript{#1}}
 
+\renewcommand{\cite}[1]{\footcite{#1}}
 
 \definecolor{keywords}{RGB}{255,0,90}
 \definecolor{comments}{RGB}{0,0,113}
@@ -71,7 +85,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
 %% OK LETS GO I GUESS
 \begin{document}
-	\title{Contribution
+	\title{Copyright Model for Collaboration
 		\\ \small Literature Review}
 	\author{William Marsey
 		\\Imperial College London}
@@ -201,29 +215,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         themselves...).
 
         \subsubsection{The particularities of Wikipedia, and implications}
-
-        %% As a focal point of many people, the site, as a network,
-        %% has been seen as a microcosm of the world wide web on the
-        %% whole.[WHERE THE BOLLOCKS HAS THAT PAPER GONE I HAD IT]
-        %% Previous work has seen the site reflecting society too, and
-        %% has been used in social studies such as Lih's 2004 study of
-        %% articles immediately after they have been cited in the
-        %% press\cite{Lih2004}, and Metyan's 2012 use of the site to
-        %% predict box-office success \cite{Mestyan2012}. These
-        %% studies are useful in their exploration of the general
-        %% culture affecting Wikipedia.
-
-        %% The question of the `quality' of Wikipedia articles in
-        %% general, also pertinent here, has reared its head
-        %% regularly. The question is problematic, and papers
-        %% concerning it (the earlier ones especially) show concern
-        %% about the abandonment of expert opinion, particularly of
-        %% the chaos of the system: ``...edits, contributed in a
-        %% predominantly undirected and haphazard fashion by
-        %% ... unvetted volunteers.''\cite{Wilkinson2007} (The studies
-        %% on this are very numerous, and will not be listed here. A
-        %% select few are cited throughout this document.)
-
         The six 'risks' one takes when referencing Wikipedia, as
         defined in an early article on the subject,\cite{Denning2005}
         is a good starting block for identifying the ways in which to
@@ -352,6 +343,21 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
      
         \section{Conclusions}
 
+        \textbf{For this study we will assume that the 'final' or
+          'target' version is fully trusted, or that it's quality does
+          not need evaluating.} This way we can leave issues of trust
+        regarding the article to one side, and concentrate on the
+        various contributors, and their edits. It is the opinion in
+        this study that the reputation, or quality, of the article
+        itself is not important here. Our intention is to evaluate an
+        individual's weighted stake in an article - whether that
+        article is of good or bad quality is something of a different
+        issue.
+
+        That said, some of the methods used to measure quality are
+        directly applicable here. In particular we look at the studies
+        by 
+
         \subsection{Intentions / Progress}
         The Code in appendix A
         
@@ -421,6 +427,8 @@ here).\cite{python-wikipedia}
 \end{appendices}
 
 \clearpage
-\renewcommand\refname{Bibliograpy} \bibliography{litreview}{}
-\bibliographystyle{plain}
+\printbibheading[heading=bibintoc,title={References}]
+\printbibliography[keyword=wiki,heading=subbibliography,title={On wikipedia}]
+\printbibliography[keyword=edit,heading=subbibliography,title={On edit
+distance in general}]
 \end{document}
