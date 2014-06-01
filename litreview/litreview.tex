@@ -1,23 +1,21 @@
 \documentclass[a4paper,11pt,twoside,notitlepage]{article}
 \usepackage[left=2.5cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.jpg}
 \usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
 \usepackage{cleveref} 
 \usepackage{fancyhdr}
 \usepackage{abstract}
-\usepackage{framed}
-%\usepackage{cite}
-\usepackage{amsmath}
-\usepackage{parskip}
-\usepackage[procnames]{listings}
-\usepackage{color}
-\usepackage{appendix}
-\usepackage{enumitem}
+\usepackage{framed}              %for doing nice boxes
+\usepackage{amsmath}             %for math environment
+\usepackage{parskip}             %for modifying spacing
+\usepackage[procnames]{listings} %for inserting code
+\usepackage{color}               %obv
+\usepackage{appendix}            %obv
+\usepackage{enumitem}            %for modifying lists
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 \setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 \usepackage{float}              %for forcefully placing diagrams 
-%\usepackage{natbib}             %for harvard referencing
-%\bibliographystyle{agsm}        %harvard style
 \usepackage[backref=true,
             style=authoryear,
             citereset=section,
@@ -29,7 +27,8 @@
     backrefpages = {see pp.} % for multiple page numbers
 }
 \setlength\bibitemsep{1em}
-
+\usepackage{fancyvrb} % for inserting .txt
+\usepackage{pgfplots}
 
 \usepackage{tikz}
 \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
@@ -92,31 +91,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 	\date{June 2014}
  	\maketitle	
 
-	%% \begin{framed}
-	%% 	\begin{abstract}
-	
-	%% 	Mediawiki's slogan reads: ``Mediawiki: Because ideas
-        %%         want to be free''. 
-
-        %%         But qualitatively assessing these articles may be
-        %%         something of a moot point. 
-	
-	%% 	%	Traditionally, a collaborative work may not
-        %%            %     disclosed the provenance of its constituent
-        %%            %     parts. An individual's stake in the
-        %%            %     final work - the valued work - was not
-        %%            %     apparent or accounted for in the final
-        %%             %    text. Regardless of how clearly demarcated the various
-        %%             %    roles in creating the artefact, an individual
-        %%             %    collaborator's stake may have been
-        %%             %    gauranteed only by way of prior
-        %%             %    negotiation. These stakeholder policies were individual
-        %%             %    and capricious, and bound the completeness of the work,
-        %%             %    the finality (or authenticity) of the
-        %%             %    work. 
-	%% 	\end{abstract}
-	%% \end{framed}
-          
         \section{Introduction}
         \subsection{The Research Question}
         Given a collaboratively edited document, and information about
@@ -318,49 +292,51 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         \subsection{Edit difference}
 
         Standard: Levenshtein distance \cite{Levenshtein1966}
-        \begin{figure}
-          \begin{tikzpicture}
-            \matrix (m) [matrix of math nodes, row sep=4em, column
-              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
-            \path[-stealth] (m-2-1) edge node [left]
-                 {$d(v_{i-1},v_i)$} (m-1-2) edge node [below]
-                 {$d(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
-                 [right] {$d(v_i,v_{i+1})$} (m-2-3); 
-                 \draw[color=red]
-                 (m-1-2.north west) -- (m-1-2.north east) --
-                 (m-1-2.south east) -- (m-1-2.south west) --
-                 (m-1-2.north west);
-          \end{tikzpicture}
-        \end{figure}
-        \cite{Adler2006}
+        
 
-        \subsection{My work in context of these sources}
+        \section{Previous Work}
         different views emerging topics gaps and inconsistencies
 
         Goals.
 
         Methods. Python. Levenshtein. Optimisations of.
      
-        \section{Conclusions}
-
         \textbf{For this study we will assume that the 'final' or
-          'target' version is fully trusted, or that it's quality does
-          not need evaluating.} This way we can leave issues of trust
-        regarding the article to one side, and concentrate on the
-        various contributors, and their edits. It is the opinion in
-        this study that the reputation, or quality, of the article
-        itself is not important here. Our intention is to evaluate an
-        individual's weighted stake in an article - whether that
-        article is of good or bad quality is something of a different
-        issue.
+          'target' version is fully trusted, or, that its quality does
+          not need to be evaluated by us, and does not affect how we
+          evauluate contributions.} This way we can leave issues of
+        trust regarding the article itself to one side, and
+        concentrate on the various edits made. The reputation, or
+        quality, of the article itself is not important for this
+        study. Our intention is to evaluate an individual's weighted
+        stake in an article - whether that article is of good or bad
+        quality is something of a different issue.
 
-        That said, some of the methods used to measure quality are
-        directly applicable here. In particular we look at the studies
-        by 
+        However, some of the methods used to measure quality are
+        directly applicable here, and, as mentioned previously, are
+        copious. Of particular interest is the academic work that
+        culminated in WikiTrust,\cite{Adler2006}\cite{Adler2007} and
+        other studies of significant subordinate
+        importance.\cite{Zeng2006}\cite{Cross2006}
 
-        \subsection{Intentions / Progress}
-        The Code in appendix A
+        Wikitrust was\footnote{Defunct as of author's checks, Apr
+          2014} a firefox plugin, designed to highlight the
+        words of a Wikipedia article with different gradations of
+        yellow. The gradations relate to levels of trust, a screenshot
+        can be seen below.
         
+       \begin{figure}
+         \centering
+         \includegraphics[width=0.8\textwidth,clip=true,resolution=300]{img/wikitrust.jpg}
+         \caption{Wikitrust in action (2011)}
+         \label{fig:wikitrust}
+       \end{figure}
+
+ \cite{Lucassen2011} 
+
+        \section{Conclusions}
+        
+                
         Possible extensions.  Perhaps we can examine more about what
         we may find out about the articles. Cite other studies Lih's
         2004 study of articles immediately after they have been cited
@@ -385,6 +361,78 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         area which you will cover in your research?  How will you
         integrate sources you have mentioned into your dissertation?
         Point out any areas for further study
+
+        \begin{figure}[h!]
+          \centering
+          \begin{tikzpicture}
+            \matrix (m) [matrix of math nodes, row sep=4em, column
+              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+            \path[-stealth] (m-2-1) edge node [left]
+                 {$ed(v_{i-1},v_i)$} (m-1-2) edge node [below]
+                 {$ed(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
+                 [right] {$ed(v_i,v_{i+1})$} (m-2-3); 
+                 \draw[color=red]
+                 (m-1-2.north west) -- (m-1-2.north east) --
+                 (m-1-2.south east) -- (m-1-2.south west) --
+                 (m-1-2.north west);
+          \end{tikzpicture}
+          \\$ed(v_{i-1},v_i) < ed(v_{i-1},v_i) + ed(v_{i},v_{i+1})$
+          \caption{Diagram showing identification of a partially
+            undone operation}
+          \label{fig:awesome_image}
+        \end{figure}
+
+        \begin{figure}[h!]
+          \centering
+          \begin{tikzpicture}
+            \matrix (m) [matrix of math nodes, row sep=4em, column
+              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+            \path[-stealth] (m-2-1) edge node [left]
+                 {$ed(v_{i-1},v_i)$} (m-1-2) edge node [below]
+                 {$ed(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
+                 [right] {$ed(v_i,v_{i+1})$} (m-2-3); 
+                 \draw[color=red]
+                 (m-1-2.north west) -- (m-1-2.north east) --
+                 (m-1-2.south east) -- (m-1-2.south west) --
+                 (m-1-2.north west);
+          \end{tikzpicture}
+          \\$ed(v_{i-1},v_{i+1}) = 0$, $ed(v_{i-1},v_{i}) > 0$)
+          \caption{Diagram showing identification of an undone operation}
+          \label{fig:awesome_image}
+        \end{figure}
+
+        We will also consider introducing ways of representing the
+        history of a page in space. The position of a certain revision
+        in that space may help us define the corresponding edit operation.
+
+        Since we are taking one revision, say, the current one, to be
+        the ultimate 'target' of previous edits, perhaps we should
+        describe all previous edits in terms of this final version. We
+        may measure the edit distance between all previous versions
+        and arrive at the set:
+        
+        \begin{figure}[h!]
+          \centering
+          $\text{prev} = <ed(v_0,v_n),ed(v_1,v_n),...,ed(v_n,v_n)>$  
+        \end{figure}
+        where $v_n$ is the 'target' version of a page, and we are
+        considering $n$ revisions of the page
+
+        \begin{figure}[h!]
+          \centering
+          \begin{tikzpicture}
+            \matrix (m) [matrix of math nodes, row sep=4em, column
+              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+          \end{tikzpicture}
+          \\$ed(v_{i-1},v_{i+1}) = 0$, $ed(v_{i-1},v_{i}) > 0$)
+          \caption{Diagram showing revisions}
+          \label{fig:awesome_image}
+        \end{figure}
+        
+
+        \section{Progress report}
+        
+        The Code in appendix A
 
         
 \clearpage
@@ -415,15 +463,17 @@ here).\cite{python-wikipedia}
 
 \lstinputlisting[language=Python,frame=single]{../wikiScraper/WikiRevisionScrape.py}
 \subsection{Example output}
+\fvset{frame=single}
+\VerbatimInput{../wikiScraper/output.txt}
 
 \clearpage
 \section{Appendix B: Python class for basic, space-naive Levenshtein
   implementation}
 \subsection{Code}
 \lstinputlisting[language=Python,frame=single]{../lshtein/basic/LevDistBasic.py}
-\clearpage
 \subsection{Example output}
-\lstinputlisting[language=sh,frame=single]{../lshtein/basic/output.txt}
+\fvset{frame=single}
+\VerbatimInput{../lshtein/basic/output.txt}
 \end{appendices}
 
 \clearpage
