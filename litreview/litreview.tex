@@ -17,7 +17,8 @@
 \setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 \usepackage{float}              %for forcefully placing diagrams 
 \usepackage[backref=true,
-            style=authoryear,
+            %style=authoryear,
+            style=numeric-comp,
             citereset=section,
             maxcitenames=3,
             maxbibnames=100,]{biblatex}
@@ -31,7 +32,7 @@
 \usepackage{pgfplots}
 
 \usepackage{tikz}
-\usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+\usetikzlibrary{arrows,chains,matrix,positioning,scopes,calc}
 \makeatletter
 \tikzset{join/.code=\tikzset{after node path={%
 \ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
@@ -78,7 +79,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
 \newcommand{\super}[1]{\textsuperscript{#1}}
 
-\renewcommand{\cite}[1]{\footcite{#1}}
+%% \renewcommand{\cite}[1]{\footcite{#1}}
 
 \definecolor{keywords}{RGB}{255,0,90}
 \definecolor{comments}{RGB}{0,0,113}
@@ -177,7 +178,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             to the former
         \end{itemize}
         
-        \subsection{On Wikipedia}
+        \subsection{Wikipedia}
         Wikipedia's pre-eminence as an online resource is self-evident
         to anyone who has searched the internet for a generic
         topic. The website is ranked 6\super{th} globally in terms of
@@ -222,7 +223,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         Wikipedia and other Wikis (as well as being Wikis
         themselves...).
 
-        \subsubsection{Wikipedia}
         The six 'risks' one takes when referencing Wikipedia, as
         defined in an early article on the subject,\cite{Denning2005}
         is a good starting block for identifying the ways in which to
@@ -282,14 +282,12 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             of (working) hyperlinks, and fixing hyperlinks.
         \end{itemize}
             
-        \subsection{Wikipedia Self-Valuation}
+        [WIKIPEDIA SELF EVALUATION]
         \begin{quote}
           [Wikipedia] cannot attain the status of a true encyclopedia
           without more formal content-inclusion and expert review
           procedures.\cite{Denning2005}
         \end{quote}
-
-        
 
         Most visited articles in an hour - correlates with
         (american-centric) events \cite{wiki-visits}
@@ -352,10 +350,9 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
           \vspace{3 mm}
 
-          fork $\rightarrow$ spork, edit distance: 3
+          forks $\rightarrow$ spork, edit distance: 3
           
-          
-          %% \caption{A trivial example using all three edit distance operations}
+          \caption{An edit distance example using all three operations}
           \label{fig:fork-spork}
         \end{figure}
 
@@ -423,11 +420,11 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         \label{fig:levenshtein-dynamic}
         \end{figure}
 
-        The algorithm runs in $\theta (|x| \times |y|)$ time, with $x$ and
+        The algorithm runs in $\theta (|x||y|)$ time, with $x$ and
         $y$ being the two strings being compared --- we can clearly
         see the derivation of this bound from the creation of the
         $|x|$ by $|y|$. For the same reason the space complexity of
-        the algorithm is also $\theta (|x| \times |y|)$.
+        the algorithm is also $\theta (|x||y|)$.
 
         Reducing the space needed for this computation is relatively
         easy, and can be done in a few different ways. One way is to
@@ -437,34 +434,144 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         $d[i-1,j-1]$, $d[i-1,j]$ and $d[i,j-1]$. Depending on the
         implementation, we may at any point decide to either disregard
         rows $0 \dots i-2$ inclusive, or columns $0 \dots j-2$ (where
-        $i-2$ or $j-2$ $>$ $0$, respectively). There are also more
-        complicated techniques, for 
+        $i-2$ or $j-2$ $>$ $0$, respectively). 
 
-        Increasing speed in computation is a
+        There are more complicated techniques for disregarding
+        unneccesary computations --- a few implementations employ
+        strategies that allow them to trace the table space
+        diagonally, tracing a rather than iteratively, achieving a
+        time complexities as low as $O(ed(x, y)^2)$.\cite{Chang1992}
+        Another harnesses bit vectors to achieve a time complexity of
+        $O(nm/w)$ or $O(nm log {\Sigma}/w)$ time where $w$ the
+        bit-word size of the machine, and $\Sigma$ is the alphabet
+        size.\cite{Myers1999}
 
-        We may improve the efficiency of  
+        Extensions can also be made to the nature of the distance
+        itself. Work on such additions, adapting the generic edit
+        distance to a variety of different and specific needs. Here is
+        a brief overview of the main groups these extensions fall
+        into:
+        \begin{itemize}
+          \item \textbf{Hamming distance.} This allows for
+            substitutions only, comparing same-length strings, such
+            that:\\ 
+            $ed_{hamming}(\text{``abc''},\text{``abd''}) =1$,\\ 
+            $ed_{hamming}(\text{``abc''},\text{``bcd''}) = 3$,\\ 
+            and $ed_{hamming}(\text{``abc''},\text{``ab''})$ is
+            undefined.\cite{Hamming1950}
+          \item \textbf{Reversals.} The Damerau-Levenshtein distance
+            defines an extra operation, which is the swap of to
+            adjacent characters. It is particularly suited to spell-checking
+            and for analysing DNA-sequence variations. In this case:\\ 
+            $ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
+          \item \textbf{Block distance.} This allows for displacements
+            of entire blocks to count as one
+            operation.\\
+            $ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$ \\
+            (one move of the block `cde', one substitution of `b'
+            for `x')\cite{Tichy1984}
+          \item \textbf{\textit{q}-grams distance.} \textit{q}-grams
+            are simply sub-strings, and this measure describes the
+            similarity of two strings in terms of \textit{q}-grams
+            they share.\cite{Ukkonen1992} This variations is quite
+            different from the other algorithms, while remaining
+            comparable:\\
+            $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma ^q}|G(x)[v]-G(y)[v]|$\\ 
+            where $G(x)[v]$ returns the number of occurrences of
+            \textit{q}-gram v in string x, and $\Sigma ^q$ is all the
+            possible \textit{q}-grams in the
+            alphabet (capped by string length). $|G(x)[v]-G(y)[v]|$ a
+            large positive number every time a \textit{q}-gram appears
+            a large amount of times in one string, but not the other;
+            it returns 0 if the substring apears the same number of
+            times. So, the whole function measures this difference for
+            all possible substrings, and sums them, returning a high
+            number for difference, and a low number for similarity.
+        \end{itemize}
 
-        This edit distance is sometimes referred to as the Levenshtein
-        distance --- there are others that include other measures,
-        such as the Damerau–Levenshtein distance, which uses a fourth
-        operation: the transposition of two characters. In this
-        implementation
+        Other algorithms we may look to are those that concern
+        themselves with common subsequences. The common subsequence
+        problem relates to the edit distance problem by way of the
+        heuristic that two similar strings will have similar
+        subsequences --- the \textit{q}-gram algorithm just mentioned
+        relies on this heuristic, and works well for most texts,
+        it does not work for all measures. For example, two strings
+        that are very different according to this heuristic may be
+        quite similar according to the Damrau-Levenshtein measure.
 
-        $$ ed(\text{``AB''},\text{``BA''}) = 1$$
+        Another part of the problem of working out optimal edit
+        distance is calculating the optimal alignment --- the measures
+        are colesly related. For example, in
+        figure \ref{fig:fork-spork}, the alignment of the two strings
+        ``fork'' and ``spork'' was:\\
+        \begin{center}[H]
+          \begin{tabular}{cccccc}
+            s & p & o & r & k & -\\
+            - & f & o & r & k & s 
+          \end{tabular}
+        \end{center}
+        However it could have conceivably also been:
+        \begin{center}
+          \begin{tabular}{cccccccccccccccc}
+            s & p & o & r & k & - & & or even & & - & s & p & o & - & r & k \\
+            f & - & o & r & k & s & &         & & f & - & o & - & r & k & -    
+          \end{tabular}
+        \end{center}
+        We can see how the edit distance for the right-hand example
+        would be sub-optimal given this alignment.
 
-        This operation is particularly applicable to spell-checking
-        and measuring variations in DNA sequences. Though it is not
-        apparently useful, we will keep it in mind. A further measure,
-        which may prove more applicable in our current research, is 
+        The Smith-Waterman algorithm\cite{Smith1981} calculates
+        optimal alignment by populating two tables --- one like the
+        one in the pseudocode above, as well as a table of
+        arrows. These arrows define a path from one corner of the
+        table space to the other. The shape of this path defines how
+        to align the two strings.
 
-        It is pertinent to mention here that two strings may have
-        multiple edit distances, i.e. multiple edit distances, all
-        minimum. 
+        \begin{figure}[h!]
+          \centering
+          %% $\left\{
+          %%       \begin{array}{ccccccc}
+          %%           &   & S & P & O & R & K \\
+          %%           & \color{red}{0} & \color{red}{1} & 2 & 3 & 4 & 5 \\
+          %%         F & 1 & 1 & \color{red}{2} & 3 & 4 & 5 \\
+          %%         O & 2 & 2 & 2 & \color{red}{2} & 3 & 4 \\
+          %%         R & 3 & 3 & 3 & 3 & \color{red}{2} & 3 \\
+          %%         K & 4 & 4 & 4 & 4 & 3 & \color{red}{2} \\
+          %%         S & 5 & 4 & 5 & 5 & 4 & \color{red}{3} \\
+          %%       \end{array}\right\} $
+          $\left\{
+                \begin{array}{ccccccc}
+                    &   & S & P & O & R & K \\
+                    & \color{red}{0} & \color{red}{0} & 0 & 0 & 0 & 0 \\
+                  F & 0 & \nwarrow & \color{red}{\nwarrow} & \nwarrow & \nwarrow & \nwarrow \\
+                  O & 0 & \uparrow & \nwarrow & \color{red}{\nwarrow} & \downarrow & \leftarrow \\
+                  R & 0 & \uparrow & \uparrow & \uparrow & \color{red}{\nwarrow} & \leftarrow \\
+                  K & 0 & \uparrow & \uparrow & \uparrow & \uparrow & \color{red}{\nwarrow} \\
+                  S & 0 & \nwarrow & \uparrow & \uparrow & \uparrow & \color{red}{\uparrow} \\
+                \end{array}\right\} $
+                (If the arrow reaches an edge before the left-hand
+                corner, we trace along that edge, reading each shift
+                as an arrow in the direction of the trace.)
+                \caption{Diagram showing Smith-Waterman traceback (in
+                  red) on the edit operation forks $\rightarrow$
+                  spork}
+          \label{fig:smith-waterman-traceback}
+        \end{figure}
 
-        The Needleman–Wunsch algorithm gives us a basic way of tracing
-        the edit operation. By building up a 
+        This path may also be read as the edit operation. An arrow at
+        the position $[i,j]$ in the table defines edit operations for
+        $x[i]$ and/or $y[j]$ thus:\\
+        \begin{itemize}
+          \item A $\nwarrow$ if
+        $x[i] \neq y[j]$, denotes a 'swap' between $x[i]$ and $y[j]$
+        (otherwise they are the lack of an operation).
+          \item A $\uparrow$ denotes the deletion of $x[i]$
+          \item A $\leftarrow$ denotes the insertion of $y[j]$
+        \end{itemize}
 
-        
+        bit vector implementation\cite{Hyyro2003}
+
+        DELTA ENCODING (storing only changes, compression)
 
         As this distance is of
         fundamental importance in many text-processing, searching
