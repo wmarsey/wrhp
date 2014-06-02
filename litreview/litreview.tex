@@ -42,6 +42,40 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 \tikzstyle{labeled}=[execute at begin node=$\scriptstyle,
    execute at end node=$]
 
+
+
+        \definecolor{redi}{RGB}{255,38,0}
+        \definecolor{yellowi}{RGB}{255,251,0}
+        \definecolor{greeni}{RGB}{166,247,166}
+
+        \tikzset{ 
+          table/.style={
+            matrix of nodes,
+            row sep=-\pgflinewidth,
+            column sep=-\pgflinewidth,
+            nodes={rectangle,draw=black,text width=3ex,align=center},
+            text depth=0.5ex,
+            text height=2ex,
+            nodes in empty cells
+          },
+          texto/.style={font=\large\sffamily},
+          title/.style={font=\large\sffamily}
+        }
+
+
+        \newcommand\CellText[2]{%
+          \node[texto,left=of mat#1,anchor=east]
+          at (mat#1.west)
+          {\large #2};
+        }
+
+        \newcommand\SlText[2]{%
+          \node[texto,left=of mat#1,anchor=west,rotate=50]
+          at ([xshift=1.5ex,yshift=1ex]mat#1.north)
+          {\large #2};
+        }
+
+
 \newcommand{\super}[1]{\textsuperscript{#1}}
 
 \renewcommand{\cite}[1]{\footcite{#1}}
@@ -188,7 +222,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         Wikipedia and other Wikis (as well as being Wikis
         themselves...).
 
-        \subsubsection{The particularities of Wikipedia, and implications}
+        \subsubsection{Wikipedia}
         The six 'risks' one takes when referencing Wikipedia, as
         defined in an early article on the subject,\cite{Denning2005}
         is a good starting block for identifying the ways in which to
@@ -290,9 +324,165 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         was assessed as recently as 2011 \cite{Lucassen2011}
        
         \subsection{Edit difference}
+        To measure difference between different text revisions, we
+        will refer to edit distance. Edit distance between two texts,
+        as defined in the research initiated by Levenshtein in
+        1966,\cite{Levenshtein1966} can be defined as the minimum
+        amount of insert, delete and substitutions operations needed
+        to transform one text into another.
 
-        Standard: Levenshtein distance \cite{Levenshtein1966}
+        \begin{figure}[h]
+          \centering
+                  
+          \begin{tikzpicture}[node distance =3pt and 0.5cm,anchor=center]
+                    
+            \matrix[table] (mat11) {
+              |[fill=greeni]|  & |[fill=yellowi]|F & O & R & K & |[fill=redi]|S \\
+              |[fill=greeni]|S & |[fill=yellowi]|P & O & R & K & |[fill=redi]| \\
+            };
+
+            \CellText{11-1-1}{string 1:};
+            \CellText{11-2-1}{string 2:};
+
+            \SlText{11-1-1}{Insert}
+            \SlText{11-1-2}{Swap}
+            \SlText{11-1-6}{Delete}
+            
+          \end{tikzpicture}
+
+          \vspace{3 mm}
+
+          fork $\rightarrow$ spork, edit distance: 3
+          
+          
+          %% \caption{A trivial example using all three edit distance operations}
+          \label{fig:fork-spork}
+        \end{figure}
+
+        Levenshtein's characterisation of this distance is given as:
+
+
         
+        \begin{figure}[h!]
+          \centering
+          for the function $\mbox{lev}_{a,b}(|a|,|b|)$:\\
+          $$\mbox{lev}_{a,b}(i,j) = 
+             \left\{
+                \begin{array}{ll}
+                  \mbox{max}(i,j) & \mbox{if }min(i,j) = 0\\
+                  \mbox{min}\left\{
+                        \begin{array}{lll}
+                          lev_{a,b}(i-1,j)+1\\
+                          lev_{a,b}(i,j-1)+1\\
+                          lev_{a,b}(i-1,j-1)+1_{(a_i{\neq}b_j)}
+                        \end{array}
+                      \right.
+	                & else 
+	        \end{array}
+             \right.$$
+             when $a_i = b_j$, $1_{(a_i{\neq}b_j)} = 1$\\
+             when  $a_i \neq b_j$, $1_{(a_i{\neq}b_j)} = 0$
+        \end{figure}
+
+        That is, the distance between two strings is characterised the
+        minimum distance between three different pair-combinations of its
+        substrings. A 'text-book' implementation of this algorithm can
+        be represented by the pseudo-code below. (We present the
+        dynamic-programming-style algorithm here, and will generally
+        be working with dynamic programming implementations throughout
+        the study.)
+        
+        \begin{figure}
+          \centering
+          \begin{lstlisting}
+          ed(x,y):
+             #end base cases
+             if |x| = 0: return |y|
+             if |y| = 0: return |x|    
+
+             #end table initialisation
+             d is a table [0..|x|][0..|y|]
+             for i = 1 to |m|:
+                 d[i,0] = i
+             for j = 0 to |y|:
+                 d[0,j] = j           
+             
+             #dynamic computation
+             for j = 1 to |y|:
+                 for i = 1 to |x|:
+                     c = [(x[i] == y[j]) ? O else 1]
+                     ins = d[i-1,j] + 1
+                     dlt =d[i,j-1] + 1
+                     kp_swp = d[i-1,j-1] + c
+                     d[i,j] = min(ins, dlt, kp-swp)
+             
+             #return last computed number
+             return d[|x|,|y|]
+        \end{lstlisting}
+        \caption{Basic dynamic implementation of Levenshtein distance}
+        \label{fig:levenshtein-dynamic}
+        \end{figure}
+
+        The algorithm runs in $\theta (|x| \times |y|)$ time, with $x$ and
+        $y$ being the two strings being compared --- we can clearly
+        see the derivation of this bound from the creation of the
+        $|x|$ by $|y|$. For the same reason the space complexity of
+        the algorithm is also $\theta (|x| \times |y|)$.
+
+        Reducing the space needed for this computation is relatively
+        easy, and can be done in a few different ways. One way is to
+        simply disregard parts of the table already computed. We can
+        see that, on each computation of $d[i,j]$ (as it appears
+        above), we see that we require only part of the matrix:
+        $d[i-1,j-1]$, $d[i-1,j]$ and $d[i,j-1]$. Depending on the
+        implementation, we may at any point decide to either disregard
+        rows $0 \dots i-2$ inclusive, or columns $0 \dots j-2$ (where
+        $i-2$ or $j-2$ $>$ $0$, respectively). There are also more
+        complicated techniques, for 
+
+        Increasing speed in computation is a
+
+        We may improve the efficiency of  
+
+        This edit distance is sometimes referred to as the Levenshtein
+        distance --- there are others that include other measures,
+        such as the Damerau–Levenshtein distance, which uses a fourth
+        operation: the transposition of two characters. In this
+        implementation
+
+        $$ ed(\text{``AB''},\text{``BA''}) = 1$$
+
+        This operation is particularly applicable to spell-checking
+        and measuring variations in DNA sequences. Though it is not
+        apparently useful, we will keep it in mind. A further measure,
+        which may prove more applicable in our current research, is 
+
+        It is pertinent to mention here that two strings may have
+        multiple edit distances, i.e. multiple edit distances, all
+        minimum. 
+
+        The Needleman–Wunsch algorithm gives us a basic way of tracing
+        the edit operation. By building up a 
+
+        
+
+        As this distance is of
+        fundamental importance in many text-processing, searching
+        (approximate string matching in paricular) and computational
+        biology, the research in this field is extensive. We find
+        surveys of this study both in 1997\cite{Gusfield1997} and
+        2001\cite{Navarro2001}. Each point to an array of variations
+        on the 'textbook' implementation, which we will describe
+        below.
+        
+         In this study we will use
+        the convention 
+
+        $$ed(v_i,v_j)$$ 
+
+        to mean 'the edit distance between
+        versions $i$ and version $j$'. 
+
 
         \section{Previous Work}
         different views emerging topics gaps and inconsistencies
@@ -335,8 +525,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
  \cite{Lucassen2011} 
 
         \section{Conclusions}
-        
-                
         Possible extensions.  Perhaps we can examine more about what
         we may find out about the articles. Cite other studies Lih's
         2004 study of articles immediately after they have been cited
@@ -379,7 +567,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \\$ed(v_{i-1},v_i) < ed(v_{i-1},v_i) + ed(v_{i},v_{i+1})$
           \caption{Diagram showing identification of a partially
             undone operation}
-          \label{fig:awesome_image}
+          \label{fig:part-undo}
         \end{figure}
 
         \begin{figure}[h!]
@@ -398,7 +586,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \end{tikzpicture}
           \\$ed(v_{i-1},v_{i+1}) = 0$, $ed(v_{i-1},v_{i}) > 0$)
           \caption{Diagram showing identification of an undone operation}
-          \label{fig:awesome_image}
+          \label{fig:undo}
         \end{figure}
 
         We will also consider introducing ways of representing the
@@ -418,21 +606,28 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         where $v_n$ is the 'target' version of a page, and we are
         considering $n$ revisions of the page
 
-        \begin{figure}[h!]
-          \centering
-          \begin{tikzpicture}
-            \matrix (m) [matrix of math nodes, row sep=4em, column
-              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
-          \end{tikzpicture}
-          \\$ed(v_{i-1},v_{i+1}) = 0$, $ed(v_{i-1},v_{i}) > 0$)
-          \caption{Diagram showing revisions}
-          \label{fig:awesome_image}
-        \end{figure}
+        %% \begin{figure}[h!]
+        %%   \centering
+        %%   \begin{tikzpicture}
+        %%     \matrix (m) [matrix of math nodes, row sep=4em, column
+        %%       sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+        %%   \end{tikzpicture}
+        %%   \\$ed(v_{i-1},v_{i+1}) = 0$, $ed(v_{i-1},v_{i}) > 0$)
+        %%   \caption{Diagram showing revisions}
+        %%   \label{fig:}
+        %% \end{figure}
         
 
         \section{Progress report}
         
         The Code in appendix A
+
+
+\clearpage
+\printbibheading[heading=bibintoc,title={References}]
+\printbibliography[keyword=wiki,heading=subbibliography,title={Wikipedia}]
+\printbibliography[keyword=edit,heading=subbibliography,title={Edit
+distance}]
 
         
 \clearpage
@@ -476,9 +671,4 @@ here).\cite{python-wikipedia}
 \VerbatimInput{../lshtein/basic/output.txt}
 \end{appendices}
 
-\clearpage
-\printbibheading[heading=bibintoc,title={References}]
-\printbibliography[keyword=wiki,heading=subbibliography,title={On wikipedia}]
-\printbibliography[keyword=edit,heading=subbibliography,title={On edit
-distance in general}]
 \end{document}
