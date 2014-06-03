@@ -834,20 +834,11 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
 
         \section{Progress report}
-        So far, I have built two python classes:
-        \begin{enumerate}
-          \item \textbf{LevDistBasic.py}\\
-            Code and example output can be found in
-            \cref{levenshtein-implementation}. In brief, the class is
-            an implementation of Levnenshtein, 
- 
-            \begin{itemize}
-              \item functionality 1
-              \item functionality 2
-            \end{itemize}
-          \item \textbf{WikiRev.py}
-        \end{enumerate}
+        One python scraper
 
+        One simple python levenshtein distance
+
+        One class combining both
         
         \clearpage
         \printbibheading[heading=bibintoc,title={References}]
@@ -884,20 +875,20 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           python (which did not provide the features we need
           here).\cite{python-wikipedia}
           
-          \lstinputlisting[language=Python,frame=single]{../wikiScraper/WikiRevisionScrape.py}
+          \lstinputlisting[language=Python,frame=single]{../code/wikiScraper/WikiRevisionScrape.py}
           \subsection{Example output}
           \fvset{frame=single}
-          \VerbatimInput{../wikiScraper/output.txt}
+          \VerbatimInput{../code/wikiScraper/output.txt}
           
           \clearpage
           \section{Appendix B: Python class for basic, space-naive Levenshtein
             implementation}
           \label{levenshtein-implement}
           \subsection{Code}
-          \lstinputlisting[language=Python,frame=single]{../lshtein/basic/LevDistBasic.py}
+          \lstinputlisting[language=Python,frame=single]{../code/lshtein/basic/LevDistBasic.py}
           \subsection{Example output}
           \fvset{frame=single}
-          \VerbatimInput{../lshtein/basic/output.txt}
+          \VerbatimInput{../code/lshtein/basic/output.txt}
         \end{appendices}
         
 \end{document}
