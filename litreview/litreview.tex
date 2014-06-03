@@ -624,7 +624,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         
        \begin{figure}
          \centering
-         \includegraphics[width=0.8\textwidth,clip=true,resolution=300]{img/wikitrust.jpg}
+         \includegraphics[width=0.8\textwidth,clip=true,resolution=300]{img/wikitrust.png}
          \caption{Wikitrust in action (2011)}
          \label{fig:wikitrust}
        \end{figure}
@@ -713,7 +713,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         where $v_n$ is the 'target' version of a page, and we are
         considering $n$ revisions of the page
 
-        %% \begin{figure}[h!]
+        %% \begin{figure}[h!],
         %%   \centering
         %%   \begin{tikzpicture}
         %%     \matrix (m) [matrix of math nodes, row sep=4em, column
@@ -726,56 +726,70 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         
 
         \section{Progress report}
+        I have so far built two python classes:
+        \begin{enumerate}
+          \item \textbf{LevDistBasic.py}\\
+            Code and example output can be found in
+            \cref{levenshtein-implementation}. In brief, the class is
+            an implementation of Levnenshtein, 
+ 
+            \begin{itemize}
+              \item functionality 1
+              \item functionality 2
+            \end{itemize}
+          \item \textbf{WikiRev.py}
+        \end{enumerate}
+
         
-        The Code in appendix A
-
-
-\clearpage
-\printbibheading[heading=bibintoc,title={References}]
-\printbibliography[keyword=wiki,heading=subbibliography,title={Wikipedia}]
-\printbibliography[keyword=edit,heading=subbibliography,title={Edit
-distance}]
-
+        \clearpage
+        \printbibheading[heading=bibintoc,title={References}]
+        \printbibliography[keyword=wiki,heading=subbibliography,title={Wikipedia}]
+        \printbibliography[keyword=edit,heading=subbibliography,title={Edit
+            distance}]
         
-\clearpage
-\begin{appendices}
-\section{Appendix A: Code progress}
-\subsection{Python class for scraping a Wikipedia article's revision history}
-The following code is a first draft of a class which incrementally
-traces, parses, and stores the revision history of select articles. It
-chooses random articles up to a maximum amount of articles unless an
-article (or articles) are specified. It traces the entire
-discoverable\footnote{Using the Wikipedia API, articles can either be
-  traced back to their origin (revision parent ID = 0), or to the
-  point at which a loop is found in the revision history - this
-  usually happens with older articles.} history of the, unless a
-specific depth is specified by the user.
-
-The class already yields workable data, but here is some immediate
-further work for this code:
-\begin{itemize}
-  \item Allow the user to specify timeframe
-  \item Allow for integration with a postgres database (at the moment
-    the code saves the data in CSV format).
-\end{itemize}
-
-This code is an extension to an existing wikipedia API class for
-python (which did not provide the features we need
-here).\cite{python-wikipedia}
-
-\lstinputlisting[language=Python,frame=single]{../wikiScraper/WikiRevisionScrape.py}
-\subsection{Example output}
-\fvset{frame=single}
-\VerbatimInput{../wikiScraper/output.txt}
-
-\clearpage
-\section{Appendix B: Python class for basic, space-naive Levenshtein
-  implementation}
-\subsection{Code}
-\lstinputlisting[language=Python,frame=single]{../lshtein/basic/LevDistBasic.py}
-\subsection{Example output}
-\fvset{frame=single}
-\VerbatimInput{../lshtein/basic/output.txt}
-\end{appendices}
-
+        
+        \clearpage
+        \begin{appendices}
+          \section{Appendix A: Code progress}
+          \subsection{Python class for scraping a Wikipedia article's
+            revision history}
+          \label{wiki-scrape}
+          The following code is a first draft of a class which incrementally
+          traces, parses, and stores the revision history of select articles. It
+          chooses random articles up to a maximum amount of articles unless an
+          article (or articles) are specified. It traces the entire
+          discoverable\footnote{Using the Wikipedia API, articles can either be
+            traced back to their origin (revision parent ID = 0), or to the
+            point at which a loop is found in the revision history - this
+            usually happens with older articles.} history of the, unless a
+          specific depth is specified by the user.
+          
+          The class already yields workable data, but here is some immediate
+          further work for this code:
+          \begin{itemize}
+          \item Allow the user to specify timeframe
+          \item Allow for integration with a postgres database (at the moment
+            the code saves the data in CSV format).
+          \end{itemize}
+          
+          This code is an extension to an existing wikipedia API class for
+          python (which did not provide the features we need
+          here).\cite{python-wikipedia}
+          
+          \lstinputlisting[language=Python,frame=single]{../wikiScraper/WikiRevisionScrape.py}
+          \subsection{Example output}
+          \fvset{frame=single}
+          \VerbatimInput{../wikiScraper/output.txt}
+          
+          \clearpage
+          \section{Appendix B: Python class for basic, space-naive Levenshtein
+            implementation}
+          \label{levenshtein-implement}
+          \subsection{Code}
+          \lstinputlisting[language=Python,frame=single]{../lshtein/basic/LevDistBasic.py}
+          \subsection{Example output}
+          \fvset{frame=single}
+          \VerbatimInput{../lshtein/basic/output.txt}
+        \end{appendices}
+        
 \end{document}
