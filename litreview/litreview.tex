@@ -153,35 +153,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         particulars of Wikipedia, and the academic studies that are
         most related to what we are developing here.
 
-        %% Amongst many other things, this topic is a playground for
-        %% sociology, machine learning, network studies, as well as more
-        %% general studies of conflict, and personality. My work intends
-        %% to focus on the algorithmic side of things - approximate
-        %% string matching in particular. I look at how we may use
-        %% Levenshtein distance, and the various favours,
-        %% varieties and optimizations thereof, to measure contribution
-        %% to a collaborative text, and how we may implement a version of
-        %% this algorithm specifically tailored to our needs.
-
-        %% The main questions we ask are:
-        %% \begin{itemize}
-        %%   \item What does Levenshtein distance define of a
-        %%     contribution in the context of massive online
-        %%     collaboration?
-        %%   \item What are the limitations and implications of defining
-        %%     contribution in this way?
-        %%   \item What else may we learn from analysing contribution? 
-        %% \end{itemize}
-
-        %% We base our studies around data from Wikipedia. This study is
-        %% defined by -- and in some ways determined by -- the specific
-        %% context of Wikipedia, but, as we will see, is ultimately
-        %% enriched by it. Due to its open-source nature, and its size,
-        %% studies that touch upon Wikipedia cover a very broad range of
-        %% topics. Many of them are directly related to the topic we
-        %% concern ourselves with here, and many more may enrich our
-        %% study tangentially. 
-
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        %%
        %% EDIT DIFFERENCE
@@ -395,16 +366,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
         \begin{figure}[h!]
           \centering
-          %% $\left\{
-          %%       \begin{array}{ccccccc}
-          %%           &   & S & P & O & R & K \\
-          %%           & \color{red}{0} & \color{red}{1} & 2 & 3 & 4 & 5 \\
-          %%         F & 1 & 1 & \color{red}{2} & 3 & 4 & 5 \\
-          %%         O & 2 & 2 & 2 & \color{red}{2} & 3 & 4 \\
-          %%         R & 3 & 3 & 3 & 3 & \color{red}{2} & 3 \\
-          %%         K & 4 & 4 & 4 & 4 & 3 & \color{red}{2} \\
-          %%         S & 5 & 4 & 5 & 5 & 4 & \color{red}{3} \\
-          %%       \end{array}\right\} $
           $\left\{
                 \begin{array}{ccccccc}
                     &   & S & P & O & R & K \\
@@ -460,22 +421,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         maintain in our case because of the linear nature of our
         versions.  
 
-        %% As this distance is of
-        %% fundamental importance in many text-processing, searching
-        %% (approximate string matching in paricular) and computational
-        %% biology, the research in this field is extensive. We find
-        %% surveys of this study both in 1997\cite{Gusfield1997} and
-        %% 2001\cite{Navarro2001}. Each point to an array of variations
-        %% on the 'textbook' implementation, which we will describe
-        %% below.
-        
-        %%  In this study we will use
-        %% the convention 
-
-        %% $$ed(v_i,v_j)$$ 
-
-        %% to mean 'the edit distance between
-        %% versions $i$ and version $j$'. 
 
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        %%
@@ -562,7 +507,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             say that all edits improve a text. This is complicated by
             malicious, misinformed or malformed edits, but we will
             discuss dealing with these later.\\
-            \textbf{make}
+            \textbf{Response:}
           \item \textbf{Motives.} It has been found that different
             contributors may edit Wikipedia in various different ways,
             according to their proclivities.\\
@@ -603,7 +548,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         review procedures\cite{Denning2005} this corroborates by
         findings in \cite{Giles2005}?
 
-        \subsubsection{On Wikipedia}
         `robust and remarkable growth'
         \cite{Kittur2007}\cite{Voss2005} 
         
@@ -668,7 +612,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
        \cite{Lucassen2010} Trust in Wikipedia (how many links)
        
 
-
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%
         %% CONCLUSIONS
@@ -681,7 +624,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         the metrics by which we will regard each contribution.
 
         %% ASSUMPTIONS
-        \subsection*{Assumptions}
+        \subsubsection*{Assumptions}
         \begin{itemize}
           \item \textbf{We assume that the final, or 'target' article
             is of good quality.} There are many studies which concern
@@ -700,7 +643,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             and anonymous editors.}
         \end{itemize}
         
-        \subsection*{Weighting contribution by markup}
+        \subsubsection*{Weighting contribution by markup}
         Given the extesive research regarding which features of a
         wikipedia article are most important, we may define the
         following features to have more weight than standard text from
@@ -717,25 +660,26 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         the main difference algorithm, raising and lowering flags
         during runtime.
 
-        \subsection*{Awarding restructuring}
+        \subsubsection*{Awarding restructuring}
         It has been found that, even in the most accurate articles,
         that the structure of Wikipedia article can be
         weak.\cite{Giles2005} We should award attempts to reorganize
-        articles.
+        articles. We 
         
-        \subsection*{Awarding the dense edits}
+        \subsubsection*{Awarding the dense edits}
         We should give extra reward to the density of the
         changes. For example, if we have a set of the indexes of an
-        edit operation as:\\
-        $<op_0,op_1,op_2,\dots, op_n>$\\
-        where $op_i$ is the index of the $i$th operation, then we may
+        edit operation as $\{op_0,op_1,op_2,\dots, op_n\}$, where
+        $op_i$ is the index of the $i$th operation, then we may
         evaluate it's density with a standard deviation of the edit
         itself, $\sigma_{ed}$, multiplied by the span of the edit
         itself in context of the wider article, and some weighting
-        factor k. Something along the lines of:\\
-        $density\_factor = k\frac{(op_n - op_o)\sigma_{ed}}{|v|}$\\ 
+        factor k. Something along the lines of:
+
+        $$density\_factor = k\frac{(op_n - op_0)\sigma_{ed}}{|v|}$$ 
         %% $\sigma_{ed} = \sqrt{\frac{\sum\limits_{i = 1}^{n}(op_i -
         %%   \overline{op})^2}{|op| - 1}}$\\
+
         where $|v_{ed}|$ is the overall length of resultant version. By
         implementing this carefully, we may achieve a gradient of
         weighting, with a lower weight values for things like
@@ -746,7 +690,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         valueless, or partially valueless. The first two are found in
         previous research:
 
-        \begin{figure}[h!]
+        \begin{figure}[H]
           \centering
           \begin{tikzpicture}
             \matrix (m) [matrix of math nodes, row sep=4em, column
@@ -787,21 +731,78 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         history in terms of the edit distance from this final version,
         thus:
 
-        \begin{figure}[h!]
+        \begin{figure}[H]
           \centering
           \pgfplotsset{width=0.5\textwidth}
           \begin{tikzpicture}
             \begin{axis}[
-                %% axis lines=middle,
-                %% axis line style={-},
                 title={Dummy revision history},
-                ylabel={$distance from final$},
-                xlabel={$timestamp / revision ID$},
+                ylabel={edit distance from final version},
+                xlabel={revision ID},
               ]
-              \addplot table {dummy_history.dat};
+              \addplot table {dat/dummy_history.dat};
             \end{axis}
           \end{tikzpicture}
           \label{fig:dummy_history}
+        \end{figure}
+        
+        We can imagine that each line represents the edit-distance
+        between each version, which is a point on the graph. Given
+        this information, we may be able to disregard some information
+        by only considering revisions that bring us closer to the
+        final version:
+
+        \begin{figure}[H]
+          \centering
+          \pgfplotsset{width=0.5\textwidth}
+          \begin{tikzpicture}
+            \begin{axis}[
+                title={Dummy revision history},
+                ylabel={edit distance from final version},
+                xlabel={revision ID},
+              ]
+              \addplot [blue] table {dat/dummy1.dat};
+              \addplot [red] table {dat/dummy2.dat};
+              \addplot [blue] table {dat/dummy3.dat};
+              \addplot [blue, only marks] table {dat/dummy4.dat};
+            \end{axis}
+          \end{tikzpicture}
+          \label{fig:dummy_optimisation_1}
+        \end{figure}
+
+        Here we can see that, having computed the edit distances
+        between the first 4 versions, we may ignore the next two (the
+        red lines), as they take us away from the final target
+        version. Another possible version would be to disregard all
+        edit distances that, at any point, lie between two versions
+        that are further away from final version than the version
+        currently being considered. Here, the orange area is the 'bad'
+        area as defined when our current version found on the graph at
+        (4,13), and the solid red lines are those ed distances we are
+        disregarding.
+
+        \begin{figure}[H]
+          \centering
+          \pgfplotsset{width=0.5\textwidth}
+          \begin{tikzpicture}
+            \begin{axis}[
+                title={Dummy revision history},
+                ylabel={edit distance from final version},
+                xlabel={revision ID},
+              ]
+              \addplot [blue] table {dat/dummy1.dat};
+              \addplot [red] table {dat/dummy5.dat};
+              \addplot [blue] table {dat/dummy6.dat};
+              \addplot [blue, only marks] table {dat/dummy4.dat};
+              \fill [orange!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
+              cs:1,1);
+              \addplot[red,dashed,update limits=false] 
+	      coordinates {(-2,13) (14,13)};
+              \addplot[red,dashed,update limits=false] 
+	      coordinates {(4,13) (4,22)};
+            \end{axis}
+          \end{tikzpicture}
+          \label{fig:dummy_optimisation_2}
         \end{figure}
         
 
@@ -831,39 +832,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         integrate sources you have mentioned into your dissertation?
         Point out any areas for further study
 
-        
-
-        
-
-        We will also consider introducing ways of representing the
-        history of a page in space. The position of a certain revision
-        in that space may help us define the corresponding edit operation.
-
-        Since we are taking one revision, say, the current one, to be
-        the ultimate 'target' of previous edits, perhaps we should
-        describe all previous edits in terms of this final version. We
-        may measure the edit distance between all previous versions
-        and arrive at the set:
-        
-        \begin{figure}[h!]
-          \centering
-          $\text{prev} = <ed(v_0,v_n),ed(v_1,v_n),...,ed(v_n,v_n)>$  
-        \end{figure}
-        
-        where $v_n$ is the 'target' version of a page, and we are
-        considering $n$ revisions of the page
-
-        %% \begin{figure}[h!],
-        %%   \centering
-        %%   \begin{tikzpicture}
-        %%     \matrix (m) [matrix of math nodes, row sep=4em, column
-        %%       sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
-        %%   \end{tikzpicture}
-        %%   \\$ed(v_{i-1},v_{i+1}) = 0$, $ed(v_{i-1},v_{i}) > 0$)
-        %%   \caption{Diagram showing revisions}
-        %%   \label{fig:}
-        %% \end{figure}
-        
 
         \section{Progress report}
         So far, I have built two python classes:

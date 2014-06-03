@@ -12,4 +12,4 @@ litreview: litreview.tex litreview.bib
 	evince litreview.pdf
 
 clean:
-	rm -f litreview.aux litreview.bbl litreview.blg litreview.dvi litreview.out litreview.log *~* \#*
+	rm -f litreview.aux litreview.bbl litreview.blg litreview.dvi litreview.out *~* \#*
