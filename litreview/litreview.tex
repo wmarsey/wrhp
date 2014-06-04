@@ -619,9 +619,11 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         \section{Conclusions}
-        Here we will outline the assumptions that we make about our
-        data, our intentions with regards to analysing that data, and
-        the metrics by which we will regard each contribution.
+        Now we have reviewed the existing work, we will begin to
+        outline our intentions. Here we discuss the assumptions that
+        we make about our data, our intentions with regards to
+        analysing that data, and the metrics by which we will regard
+        each contribution.
 
         %% ASSUMPTIONS
         \subsubsection*{Assumptions}
@@ -643,6 +645,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             and anonymous editors.}
         \end{itemize}
         
+        %%WEIGHTING BY MARKUP
         \subsubsection*{Weighting contribution by markup}
         Given the extesive research regarding which features of a
         wikipedia article are most important, we may define the
@@ -660,12 +663,14 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         the main difference algorithm, raising and lowering flags
         during runtime.
 
+        %%RESTRUCTURING
         \subsubsection*{Awarding restructuring}
         It has been found that, even in the most accurate articles,
         that the structure of Wikipedia article can be
         weak.\cite{Giles2005} We should award attempts to reorganize
         articles. We 
         
+        %%DENSITY
         \subsubsection*{Awarding the dense edits}
         We should give extra reward to the density of the
         changes. For example, if we have a set of the indexes of an
@@ -676,7 +681,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         itself in context of the wider article, and some weighting
         factor k. Something along the lines of:
 
-        $$density\_factor = k\frac{(op_n - op_0)\sigma_{ed}}{|v|}$$ 
+        $$ed_{density} = k\bullet\frac{(op_n - op_0)\sigma_{ed}}{|v|}$$ 
         %% $\sigma_{ed} = \sqrt{\frac{\sum\limits_{i = 1}^{n}(op_i -
         %%   \overline{op})^2}{|op| - 1}}$\\
 
@@ -685,10 +690,12 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         weighting, with a lower weight values for things like
         spell-checks, and higher values for whole-paragraph changes.
 
+        %% UNDONE OPERATIONS
         \subsection*{Undone and partially undone operations}
         We consider three different ways of classifying an edit as
-        valueless, or partially valueless. The first two are found in
-        previous research:
+        valueless, or partially valueless. Two ways of classifying
+        these kinds of edit are found in previous research, and are
+        covered in the figure below:
 
         \begin{figure}[H]
           \centering
@@ -699,28 +706,44 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
                  {$ed(v_{i-1},v_i)$} (m-1-2) edge node [below]
                  {$ed(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
                  [right] {$ed(v_i,v_{i+1})$} (m-2-3); 
-                 %% \draw[color=red]
-                 %% (m-1-2.north west) -- (m-1-2.north east) --
-                 %% (m-1-2.south east) -- (m-1-2.south west) --
-                 %% (m-1-2.north west);
           \end{tikzpicture}\\
-          if $ed(v_{i-1},v_i) < ed(v_{i-1},v_i) + ed(v_{i},v_{i+1})$,
-          then $ed(v_{i-1},v_i)$ has been partially undone.\\ if
-          $ed(v_{i-1},v_{i+1}) = 0$ then $ed(v_{i-1},v_i)$ has been
+          a) if $ed(v_{i-1},v_i) < ed(v_{i-1},v_i) +
+          ed(v_{i},v_{i+1})$, then $ed(v_{i-1},v_i)$ has been
+          partially undone.\\ b) if $ed(v_{i-1},v_{i+1}) = 0$
+          ($v_{i-1} = v_{i+1}$), then $ed(v_{i-1},v_i)$ has been
           completely undone.
           \caption{Diagram showing identification of apartially or
             completely undone edit}
           \label{fig:undo}
         \end{figure}
 
-        The above figure outlines how to identify immediately undone
-        or partially undone edits according to edit distance, as layed
-        out in Adler et al\cite{Adler2007}. The immediate undo
-        operations are worth looking out for, as 'reverts' are a
-        common occurence on Wikipedia.
+        We identify immediately undone or partially undone edits
+        according to edit distance, as layed out in Adler et
+        al\cite{Adler2007}. The triangle represents three consecutive
+        revisions, and the arrows are the edit operations that
+        transform one to another. By calculating the edit distance
+        between $v_{i-1}$ and $v_{i+1}$ we may characterise a longer
+        history of revisions than usual, and use that context in order
+        to re-characterise the edits it encompasses. In the figure
+        above, case $a$ describes $v_i$ as a 'diversion'. If $v_{i-1}$
+        can be transformed into $v_{i+1}$ with less operations than
+        the two edits that actually bridged that gap, then perhaps
+        some of the edits in $v_{i-1} \rightarrow v_i$ were
+        unnecessary, and undone by $v_{i+1}$. In this case, we may
+          punish the edit $v_{i-1} \rightarrow v_i$ (for the
+          diversion), reward $v_{i} \rightarrow v_{i+1}$, or
+          both. Case $b$ is an extreme version of $a$ - the texts
+          $v_{i-1}$ and $v_{i+1}$ are identical, so the changes in
+            $v_i$ must have been completely, and immediately,
+            undone. These reverts are common in Wikipedia edit
+            practice.\cite{wiki-revert}
 
-        However, we will look into ways of characterising redundant
-        entries over a longer period of time. The studies, mentioned
+        These reverts, however, are limited in their scope. Although
+        the system may easily be extended to cover larger spans of
+        history, to consider all nodes in a history would require the
+        edit-distance computation of many version pairs. I propose a
+        different, more efficient way of characterising redundant
+        entries in terms of longer history spans. The studies, mentioned
         above, that graph aim to graph a Wikipedia revision history,
         hint at a possible method of characterising redundant material
         in terms of a much larger time-frame. Again, we may utilise
@@ -746,11 +769,13 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \label{fig:dummy_history}
         \end{figure}
         
-        We can imagine that each line represents the edit-distance
-        between each version, which is a point on the graph. Given
+        Each point represents a different version, and each line
+        represents the the edit-distance between each version. Given
         this information, we may be able to disregard some information
         by only considering revisions that bring us closer to the
-        final version:
+        final version. They appear on this graph as lines with a
+        negative gradient; those with a positive gradient take us
+        further away from the final version:
 
         \begin{figure}[H]
           \centering
@@ -770,16 +795,19 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \label{fig:dummy_optimisation_1}
         \end{figure}
 
-        Here we can see that, having computed the edit distances
-        between the first 4 versions, we may ignore the next two (the
-        red lines), as they take us away from the final target
-        version. Another possible version would be to disregard all
-        edit distances that, at any point, lie between two versions
-        that are further away from final version than the version
-        currently being considered. Here, the orange area is the 'bad'
-        area as defined when our current version found on the graph at
-        (4,13), and the solid red lines are those ed distances we are
-        disregarding.
+        We may ignore the lines with a positive gradient (the two
+        red lines). This is simple to implement. Given a version
+        $v_i$, having computed it's immediate edit distance
+        $ed(v_{i-1},v_i)$, and it's edit distance from the final
+        version, $ed_{final_i}$, we know our next computation must be
+        $ed(v_{j-1},ed_j)$, such that $j$ is the smallest number that
+        satisfies the qualities $j > i$ and $ed_{final_j} <
+        ed_{final_{j-1}}$. 
+
+        Another possible version would be to disregard all edit
+        distances that, at any point, lie between two versions that
+        are further away from final version than the version
+        currently being considered.
 
         \begin{figure}[H]
           \centering
@@ -805,14 +833,69 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \label{fig:dummy_optimisation_2}
         \end{figure}
         
+        The green area shows the area in which we look to find
+        $v_j$. Here, after considering $v_i$, we move to $v_j$, such
+        that $j$ is the smallest number that satisfies to qualities $j
+        > i$ and $ed_{final_j} < ed_{final_i}$. In the graph above we
+        move from (4,13) to (8,12). It is worth stating here that
+        always compute $ed(v_{j-1}, v_j)$, not necessarily
+        $ed(v_i,v_j)$. We will look into the pros and cons of these
+        different strategies further into the project.
 
         \subsection*{Possible extensions}
-        Possible extensions.  Perhaps we can examine more about what
+        \subsubsection*{Visualisation}
+        Given that we are distributing wealth according to a series of
+        weight factors, it may be useful to devise a system that
+        visualises how these weight factors affect the
+        distribution. This would be a matter of expressing the final
+        'score' in terms of these variables, and producing some
+        interactive graphs. We will look into the viability of this
+        extension further into the project.
+        
+        \subsubsection*{Data}
+        Current intentions are to approach the data on an
+        article-by-article basis, grabbing a particular version and
+        tracing its history backwards. We grab the pages using HTTP
+        requests, as described earlier (see page
+        \ref{wikipedia-api}). We could, however, download Wikipedia in
+        its entirety. The entire site is compressed and dumped
+        monthly, and the dumps are free to download.\cite{wiki-dump}
+
+        \subsubsection*{Further analysis}
+        Given the over-arching nature of Wikis, it may be possible to
+        derive other information about the articles we
+        study. By-products of this study include various ways to
+        visualise the histories of different articles, and
+        comprehensive storage of various dimensions of Wikipedia
+        artefacts and agents. We may be able compare and contrast
+        different categories of article, or editor. It would be
+        interesting to contrast the actions of humans, and
+        bots,\footnote{It has been noted that there are around 700
+          bots registered on Wikipedia (as of 2014). Though not all of
+          them make edits, those that do are very prolific, and are
+          known to reverse malicious submisions in a matter of
+          seconds.\cite{wiki-bots}\cite{bbc-bots}}, and perhaps look
+        at the nature of edits made by different groups of editors.
+
+        %%%%%%%%%%%%%%%%%%%% FIND ROOM
+        
+        It may be worth Perhaps we can examine more about what
         we may find out about the articles. Cite other studies Lih's
         2004 study of articles immediately after they have been cited
         in the press\cite{Lih2004}, and Metyan's 2012 use of the site
         to predict box-office success \cite{Mestyan2012}. Lieberman
         worked out their locale.\cite{Lieberman2009}:
+
+        %%%%%%%%%%%%%%%%%%%% FIND ROOM
+
+        \subsubsection*{Further subjects}
+        The project may well extend to subjects beyond Wikipedia. A
+        github project, for instance may be of interest in further
+        study. We may begin to look into software metrics, such as
+        Cyclomatic Complexity, which measures code flow complexity
+        according to its logical operators,\cite{McCabe1976} as well
+        as others, and figure out ways of regarding non-linear
+        revision histories.
 
         \begin{enumerate}
           \item peaks in activity (rate of levenshtein distance... may
@@ -828,7 +911,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         summarize major contributions (which do we care about?)
         evaluate your current position point out any flaw in
         methodology/research/contradictions are there any gaps in the
-        area which you will cover in your research?  How will you
+        area which you will cover in your researchq?  How will you
         integrate sources you have mentioned into your dissertation?
         Point out any areas for further study
 
@@ -837,14 +920,20 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         One python scraper
 
         One simple python levenshtein distance
+        - Have defined a format for storing edit operation: array of
+        tuples. Will work on extending this. MAy have to be a
+        dictionary to deal with flags
+        - Have not yet implemented other versions of the algorithm,
+        that is next step
 
-        One class combining both
+        One class combining both is in progress.
         
         \clearpage
         \printbibheading[heading=bibintoc,title={References}]
-        \printbibliography[keyword=wiki,heading=subbibliography,title={Wikipedia}]
-        \printbibliography[keyword=edit,heading=subbibliography,title={Edit
-            distance}]
+        \printbibliography
+        %% \printbibliography[keyword=wiki,heading=subbibliography,title={Wikipedia}]
+        %% \printbibliography[keyword=edit,heading=subbibliography,title={Edit
+        %%     distance}]
         
         
         \clearpage
@@ -881,9 +970,22 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \VerbatimInput{../code/wikiScraper/output.txt}
           
           \clearpage
-          \section{Appendix B: Python class for basic, space-naive Levenshtein
-            implementation}
+          \section{Appendix B: Python Levenshtein distance implementation}
           \label{levenshtein-implement}
+          This Python class gives a basic implementation of
+          Levenshtein distance. To compare strings $x$ and $y$ both
+          its time and space complexity is
+          ${\Theta}log(|x|{\bullet}|y|)$.
+
+          The class is instantiated with the twwo strings, or files,
+          it is to compare. Methods can then be accessed in order to
+          examine the distance between the provided strings. The class
+          provides command-line visualisations of the data --- it can
+          print out its table of computations, as well as instructions
+          on how to transform one into the other. Please see the
+          exmple output below. It does not currently give any
+          information about optimal alignment, although information
+          about this alignment is found in the table.
           \subsection{Code}
           \lstinputlisting[language=Python,frame=single]{../code/lshtein/basic/LevDistBasic.py}
           \subsection{Example output}
