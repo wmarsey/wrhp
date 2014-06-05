@@ -21,7 +21,7 @@
             style=numeric-comp,
             citereset=section,
             maxcitenames=3,
-            maxbibnames=100,]{biblatex}
+            maxbibnames=100]{biblatex}
 \bibliography{litreview}
 \DefineBibliographyStrings{english}{%
     backrefpage  = {see p.}, % for single page number
@@ -33,6 +33,11 @@
 \usepackage{caption} % for figures within figures
 \usepackage{subcaption} %figures figures
 \usepackage{adjustbox}
+
+\usepackage{titlesec}
+\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsubsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
 
 \usepackage{tikz}
 \usetikzlibrary{arrows,chains,matrix,positioning,scopes,calc}
@@ -106,19 +111,19 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   procnamekeys={def,class}
 }
 
-%% BOXED ABSTRACT
-\renewenvironment{abstract}
- {
-	\small
-  	\begin{center}
-  	\bfseries \abstractname\vspace{-.5em}\vspace{0pt}
-  	\end{center}
-  	\list{}{
-    	\setlength{\leftmargin}{.5cm}%
-    	\setlength{\rightmargin}{\leftmargin}%
-  	}%
-  	\item\relax}
- 	{\endlist}
+%% %% BOXED ABSTRACT
+%% \renewenvironment{abstract}
+%%  {
+%% 	\small
+%%   	\begin{center}
+%%   	\bfseries \abstractname\vspace{-.5em}\vspace{0pt}
+%%   	\end{center}
+%%   	\list{}{
+%%     	\setlength{\leftmargin}{.5cm}%
+%%     	\setlength{\rightmargin}{\leftmargin}%
+%%   	}%
+%%   	\item\relax}
+%%  	{\endlist}
 
 %% OK LETS GO I GUESS
 \begin{document}
@@ -129,6 +134,9 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 	\date{June 2014}
  	\maketitle	
         
+        \tableofcontents
+
+        \clearpage
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%
         %% THE QUESTION --- COMPLETE REWRITE PLEASE
@@ -137,29 +145,36 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
         \section{Introduction}
         \subsection{The Research Question}
-        Given a collaboratively edited document, and information about
-        the collection of edits that constitute that document, may we
-        measure the quality of each contribution? And may we use that
-        to give all the collaborators a algorithmically-defined 'stake'
-        in that final document?
+        This project will be be looking at evaluating individual
+        contribution in the context of large-scale online
+        collaboration. Given a collaboratively edited document, and information about
+        each edit that of which that article is consequent, may we
+        define each collaborator in terms of their stake in the
+        document? How do we algorithmically define the value of a
+        contribution in this context? 
+
+        Taking a Wikipedia article and its revision history, this
+        project aims to assign each editor a weighted value, according
+        to the algorithmic analysis of the versions each editor
+        generated. One of the main aims of this project is to produce
+        a system that will allow for a visualisation of the
+        distribution of this 'wealth' amongst the users.   
         
-        Collaborative work is becoming a big deal. It is both
-        interesting and an important trend in modern computer
-        use. And the data is abundant. 
-        
-        We begin with a brief overview of the history of
-        the edit distance problem and similar issues, including the
-        carious algorithms that may be used. We then look at the
-        particulars of Wikipedia, and the academic studies that are
-        most related to what we are developing here.
+        In this literature review we begin with a brief overview of
+        the concept of edit distance, including the various algorithms
+        that have been devised in order to measure it. We then give an
+        overview of existing research into Wikipedia revision
+        histories that leverage these algorithms. We conclude with a
+        general overview of the goals of this project, including the
+        metrics by which we will measure contribution.
 
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        %%
        %% EDIT DIFFERENCE
        %%
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-        \subsection{Edit difference}
+        \section{Previous work}
+        \subsection{Edit difference algorithms}
         To measure difference between different text revisions, we
         will refer to edit distance. Edit distance between two texts,
         as defined in the research initiated by Levenshtein in
@@ -167,7 +182,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         amount of insert, delete and substitutions operations needed
         to transform one text into another.
 
-        \begin{figure}[h]
+        \begin{figure}[H]
           \centering
                   
           \begin{tikzpicture}[node distance =3pt and 0.5cm,anchor=center]
@@ -196,7 +211,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
         Levenshtein's characterisation of this distance is given as:
         
-        \begin{figure}[h!]
+        \begin{figure}[H]
           \centering
           for the function $\mbox{lev}_{a,b}(|a|,|b|)$:\\
           $$\mbox{lev}_{a,b}(i,j) = 
@@ -225,7 +240,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         be working with dynamic programming implementations throughout
         the study.)
         
-        \begin{figure}
+        \begin{figure}[H]
           \centering
           \begin{lstlisting}
           ed(x,y):
@@ -280,8 +295,9 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         Another harnesses bit vectors to achieve a time complexity of
         $O(nm/w)$ or $O(nm log {\Sigma}/w)$ time where $w$ the
         bit-word size of the machine, and $\Sigma$ is the alphabet
-        size.\cite{Myers1999}
+        size.\cite{Myers1999}\cite{Hyyro2003}
 
+        \subsubsection*{Extensions}
         Extensions can also be made to the nature of the distance
         itself. Work on such additions, adapting the generic edit
         distance to a variety of different and specific needs. Here is
@@ -335,27 +351,33 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         it does not work for all measures. For example, two strings
         that are very different according to this heuristic may be
         quite similar according to the Damrau-Levenshtein measure.
-
+        
+        \subsubsection*{Optimal alignment}
         Another part of the problem of working out optimal edit
         distance is calculating the optimal alignment --- the measures
         are colesly related. For example, in
         figure \ref{fig:fork-spork}, the alignment of the two strings
-        ``fork'' and ``spork'' was:\\
-        \begin{center}[H]
+        ``fork'' and ``spork'' was:
+
+        \begin{center}
           \begin{tabular}{cccccc}
             s & p & o & r & k & -\\
             - & f & o & r & k & s 
           \end{tabular}
         \end{center}
-        However it could have conceivably also been:
+
+        However it could also also conceivably have been:
+
         \begin{center}
           \begin{tabular}{cccccccccccccccc}
             s & p & o & r & k & - & & or even & & - & s & p & o & - & r & k \\
             f & - & o & r & k & s & &         & & f & - & o & - & r & k & -    
           \end{tabular}
         \end{center}
-        We can see how the edit distance for the right-hand example
-        would be sub-optimal given this alignment.
+
+        The left-hand version results in an equivalent Levenshtein
+        distance, but we can see how the distance for the right-hand
+        example would be sub-optimal given this alignment.
 
         The Smith-Waterman algorithm\cite{Smith1981} calculates
         optimal alignment by populating two tables --- one like the
@@ -396,8 +418,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \item A $\leftarrow$ at $[i,j]$ denotes the insertion of $y[j]$
         \end{itemize}
 
-        bit vector implementation\cite{Hyyro2003}
-
         Finally, we may also look into Delta algorithms. These
         describe ways of constructing Delta encodings of a document's
         history --- a compression format in which only the difference
@@ -421,15 +441,14 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         maintain in our case because of the linear nature of our
         versions.  
 
-
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        %%
        %% WIKIPEDIA
        %%
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
-        \section{Previous work}
         \subsection{Wikipedia}
+        \subsubsection*{In academia}
         Wikipedia's pre-eminence as an online resource is self-evident
         to anyone who has searched the internet for a generic
         topic. The website is ranked 6\super{th} globally in terms of
@@ -471,146 +490,96 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         Other important general sources will be WikiLit,\cite{wikilit}
         AcaWiki\cite{acawiki} and WikiPapers\cite{wikipapers}, all of
         which are online repositories of academic research into
-        Wikipedia and other Wikis (as well as being Wikis
-        themselves...).
+        Wikipedia and other Wikis.       
 
-        The six 'risks' one takes when referencing Wikipedia, as
-        defined in an early article on the subject,\cite{Denning2005}
-        is a good starting block for identifying the ways in which to
-        ragard the 'quality' of content in Wikipedia. We list them
-        here, describing the implications for our work with each. Some
-        are particular to Wikipedia, some are inherent to all Wikis.
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%
+        %% WIKIPEDIA ARTICLE QUALITY
+        %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        \begin{itemize}
-          \item \textbf{Accuracy.} It is important to remember that,
-            without severely increasingly the complexity of our
-            algorithm, we may not verify the accuracy of
-            information. And, if accuracy of information is
-            proportionate to value (surely it must be in a reference
-            text), then our algorithm may misplace its reward. We may
-            most usefully look at the problem as follows. The texts that
-            are edited most often are those that are visited most
-            often. The previously cited studies of Lih and Mestyan et al
-            attest to this - they both study the peaks in activity in
-            articles that are brought to attention in some way. We
-            find in the work of Bongwon Suh et al that the growth of
-            wikipedia is inverse-exponential, as the overheads of
-            coordination and beaurocrosy temper content
-            creation.\cite{Suh2009}\cite{Kittur2007} Content is more
-            likely to be refined and corrected as an article grows
-            old.\cite{Wilkinson2007} We can assume, then, that all
-            articles tend towards accuracy (we may find this bore out
-            in Giles's 2005 semi-formal comparison of Encyclopedia
-            Britannica articles to Wikipedia articles - finding an
-            average three mistakes in the former and 4 mistakes in the
-            latter)\cite{Giles2005}. We may possibly extend this to
-            say that all edits improve a text. This is complicated by
-            malicious, misinformed or malformed edits, but we will
-            discuss dealing with these later.\\
-            \textbf{Response:}
-          \item \textbf{Motives.} It has been found that different
-            contributors may edit Wikipedia in various different ways,
-            according to their proclivities.\\
-            \textbf{Response:}
-          \item \textbf{Uncertain Expertise.} We may take this to mean
-            malformed and misinformed editing, but we may also take it
-            to mean malicious editing. As for malicious edits - we
-            find a lot of useful information in Potthast et al's work
-            on automatic detection of vandals,\cite{Potthast2008} as
-            well as the discussions around Wikipedia's own
-            Counter-Vandalism Unit (`CVU').\cite{wiki-vandalism}
-            including 
-          \item \textbf{Volatility.} 
-          \item \textbf{Coverage.} Cite that structure is a
-            problem.\\
-            \textbf{Response:} We may want to reward extra for restructuring.
-          \item \textbf{Sources.} There has a been some work
-            explicitly taking external links to be relative to
-            quality,\cite{CITEHYPERLINKS} and seems to have been bore
-            out by a further study which found this to be a heuristic
-            used by actual readers.\cite{THISHEURISTICIGUESS}.\\
-            \textbf{Response:} We may give give extra weight to the value
-            of (working) hyperlinks, and fixing hyperlinks.
-        \end{itemize}
-            
-        [WIKIPEDIA SELF EVALUATION AND MARKUP ETC]
-        \begin{quote}
-          [Wikipedia] cannot attain the status of a true encyclopedia
-          without more formal content-inclusion and expert review
-          procedures.\cite{Denning2005}
-        \end{quote}
+        \subsubsection*{Studies of Wikipedia revision history}
+        Tangential related studies fall into two major groups: studies
+        of Wikipedia article quality and studies of edit behaviour.
 
-        Most visited articles in an hour - correlates with
-        (american-centric) events \cite{wiki-visits}
+        It is from the first group that we find the most pertinent
+        work. It is also one of the most fruitful areas of research;
+        many articles have been written on the topic. Many of these,
+        particularly those written when Wikipedia was first
+        flourishing, are simply articles that warn of the 'risks' or
+        wikipedia as a source.\cite{Denning2005} Perhaps it is
+        precisely this suspiciousness that fostered so much search in
+        the ensuing years --- in them we find numerous possible
+        metrics for measuring the quality and accuracy of the
+        information deposited on Wikipedia.
 
-        Denning says it cannot attain the status of a true
-        encyclopedia without more formal content-inclusion and expert
-        review procedures\cite{Denning2005} this corroborates by
-        findings in \cite{Giles2005}?
+        It is the metrics used to measure quality in these studies
+        that are of most use to us here. We don't concern ourselves
+        with the quality of the article on the whole, but many studies
+        have endeavoured to find out what kind of article content can
+        be automatically recognised. High numbers of Links, internal
+        links, images and formulas have been found to indicate
+        percieved quality,\cite{Lucassen2010}\cite{mcguinnes2006} and
+        these are easy to identify using Wikipedia's markup
+        language. Other useful meterics have been the age of the
+        word,\cite{Cross2006} the age and rate of change of the
+        article in comparison to other articles,\cite{Zeng2006} and
+        the recent activity of the article (an article undergoing a
+        peak in edit changes may be 'unstable').\cite{Adler2006}
+        Another study of particular interest is that of Stvilia et al,
+        which found metrics of article quality through factor
+        analysis,\cite{Stvilia2005} confirming much of the metrics
+        already mentioned.
 
-        `robust and remarkable growth'
-        \cite{Kittur2007}\cite{Voss2005} 
-        
-        Wikipedia, at the last dump, consisted 800G of compressed data
-        \cite{wiki-dump}
-
-        \subsubsection{Evaluating Wikipedia articles}
-        identify, analyse
-
-        after article mentioned in press \cite{Lih2004}
-
-        compared by 'experts' to 'equivalent' Encyclopedia Britannica articles \cite{Giles2005}
-
-        found metrics of article quality through factor analysis
-        \cite{Stvilia2005}
-
-        Analysis by conflict - revisions?\cite{Kittur2007}
-
-        WikiTrust. The most `complete' of the many of the. Exists as
-        firefox plugin (though it doesn't work any more) Culmination
-        of various studies that try to QUOTE \cite{Adler2007} and QUOTE CITE. It
-        was assessed as recently as 2011 \cite{Lucassen2011}
-       
-        different views emerging topics gaps and inconsistencies
-
-        Goals.
-
-        Methods. Python. Levenshtein. Optimisations of.
-     
-        \textbf{For this study we will assume that the 'final' or
-          'target' version is fully trusted, or, that its quality does
-          not need to be evaluated by us, and does not affect how we
-          evauluate contributions.} This way we can leave issues of
-        trust regarding the article itself to one side, and
-        concentrate on the various edits made. The reputation, or
-        quality, of the article itself is not important for this
-        study. Our intention is to evaluate an individual's weighted
-        stake in an article - whether that article is of good or bad
-        quality is something of a different issue.
-
-        However, some of the methods used to measure quality are
-        directly applicable here, and, as mentioned previously, are
-        copious. Of particular interest is the academic work that
-        culminated in WikiTrust,\cite{Adler2006}\cite{Adler2007} and
-        other studies of significant subordinate
-        importance.\cite{Zeng2006}\cite{Cross2006}
-
-        Wikitrust was\footnote{Defunct as of author's checks, Apr
-          2014} a firefox plugin, designed to highlight the
-        words of a Wikipedia article with different gradations of
-        yellow. The gradations relate to levels of trust, a screenshot
-        can be seen below.
+        A landmark piece of work is the WikiTrust
+        software.\cite{Adler2007} Wikitrust was\footnote{Defunct as of
+          author's checks, Apr 2014} a firefox plugin, designed to
+        highlight the words of a Wikipedia article with different
+        gradations of yellow. The gradations relate to levels of
+        trust, and the computations made to derive this gradation were
+        based upon the metrics mentioned above, mainly concentrating
+        on tracking a word's age. A screenshot can be seen in figure
+        \ref{wikitrust}. The program was reviewed as recently as
+        2011,\cite{lucassen} and it was found to be basically flawed,
+        with users not really seeing the use for it (it was found
+        that, having read Wikipedia before, they already had a good
+        idea of how to rate an article). However, WikiTrust's implementation
+        of the metrics described above will prove to be very useful.
         
        \begin{figure}
          \centering
          \includegraphics[width=0.8\textwidth,clip=true,resolution=300]{img/wikitrust.png}
-         \caption{Wikitrust in action (2011)}
+         \caption{Wikitrust in action, 2011}
          \label{fig:wikitrust}
        \end{figure}
 
-       \cite{Lucassen2011} Evaluating Wikitrust
-       \cite{Lucassen2010} Trust in Wikipedia (how many links)
-       
+        One metric which may also affect the quality of an article as
+        a resource, is logical structure. It was found in 2005 that
+        this, if anything, was the clearest difference between
+        Wikipedia and commercial encyclopedias,\cite{Giles2005}
+        supporting previous conjecture.\cite{Denning2005} We discuss
+        autmatically recognising structural change on page \pageref{restructuring}. 
+        
+        A few key studies give us useful analyses of edit
+        behaviour. Analyses of conflict between authors shows the
+        possible reversion cases we will have to design for, revealing
+        the high number of immediate 'undo'-type revisions, but also
+        revealing that malicious or unnecessary input may survive
+        several versions before being undone. Some studies study these
+        conflicts as a characterisation of normal editing
+        behaviour,\cite{Kittur2007}\cite{Kittur2009}\cite{Kittur2010}\cite{Potthast}
+        while others look to controversial articles,\cite{Iba2010} or
+        articles recently cited in the press,\cite{Lih2004} to examine
+        the dynamics of the `chaos' in Wikipedia articles in the
+        context of high edit frequency. We find from these same
+        studies that articles lead by small groups of `leaders'
+        produce articles of better quality than those with a more
+        homogeneous contribution group, that a small group of editors
+        contribute to most of Wikipedia, and that conflict and
+        bureaucracy (increasing over time) are the major limiting
+        factors in the growth of an article.\cite{Suh2009} Knowledge
+        of this context is vital in evaluating the edits we will
+        eventually analyse.
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%
@@ -665,10 +634,11 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
         %%RESTRUCTURING
         \subsubsection*{Awarding restructuring}
+        \label{restructuring}
         It has been found that, even in the most accurate articles,
         that the structure of Wikipedia article can be
         weak.\cite{Giles2005} We should award attempts to reorganize
-        articles. We 
+        articles.
         
         %%DENSITY
         \subsubsection*{Awarding the dense edits}
@@ -680,28 +650,23 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         itself, $\sigma_{ed}$, multiplied by the span of the edit
         itself in context of the wider article, and some weighting
         factor k. Something along the lines of:
-
         $$ed_{density} = k\bullet\frac{(op_n - op_0)\sigma_{ed}}{|v|}$$ 
-        %% $\sigma_{ed} = \sqrt{\frac{\sum\limits_{i = 1}^{n}(op_i -
-        %%   \overline{op})^2}{|op| - 1}}$\\
-
         where $|v_{ed}|$ is the overall length of resultant version. By
         implementing this carefully, we may achieve a gradient of
         weighting, with a lower weight values for things like
         spell-checks, and higher values for whole-paragraph changes.
 
-        %% UNDONE OPERATIONS
         \subsection*{Undone and partially undone operations}
         We consider three different ways of classifying an edit as
         valueless, or partially valueless. Two ways of classifying
         these kinds of edit are found in previous research, and are
-        covered in the figure below:
+        covered in figure \ref{fig:undo}.
 
-        \begin{figure}[H]
+        \begin{figure}[h]
           \centering
           \begin{tikzpicture}
             \matrix (m) [matrix of math nodes, row sep=4em, column
-              sep=4em] { & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+              sep=4em]{ & v_i & \\ v_{i-1} & & v_{i+1}\\ };
             \path[-stealth] (m-2-1) edge node [left]
                  {$ed(v_{i-1},v_i)$} (m-1-2) edge node [below]
                  {$ed(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
@@ -712,14 +677,14 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           partially undone.\\ b) if $ed(v_{i-1},v_{i+1}) = 0$
           ($v_{i-1} = v_{i+1}$), then $ed(v_{i-1},v_i)$ has been
           completely undone.
-          \caption{Diagram showing identification of apartially or
+          \caption{Diagram showing identification of a partially or
             completely undone edit}
           \label{fig:undo}
         \end{figure}
 
-        We identify immediately undone or partially undone edits
-        according to edit distance, as layed out in Adler et
-        al\cite{Adler2007}. The triangle represents three consecutive
+        Figure \ref{fig:undo} shows how we may identify immediately
+        undone or partially undone edits, as layed out in Adler et
+        al.\cite{Adler2007} The triangle represents three consecutive
         revisions, and the arrows are the edit operations that
         transform one to another. By calculating the edit distance
         between $v_{i-1}$ and $v_{i+1}$ we may characterise a longer
@@ -738,36 +703,37 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             undone. These reverts are common in Wikipedia edit
             practice.\cite{wiki-revert}
 
-        These reverts, however, are limited in their scope. Although
-        the system may easily be extended to cover larger spans of
-        history, to consider all nodes in a history would require the
-        edit-distance computation of many version pairs. I propose a
-        different, more efficient way of characterising redundant
-        entries in terms of longer history spans. The studies, mentioned
-        above, that graph aim to graph a Wikipedia revision history,
-        hint at a possible method of characterising redundant material
-        in terms of a much larger time-frame. Again, we may utilise
-        the fact taht we have take one article to be the ultimate
-        destination of all previous edits. 
+        These algorithm, however, is limited in its scope, and we may
+        come across situations where reversions occur over a series of
+        edits. Although the system may easily be extended to cover
+        larger spans of history, to consider many nodes in a history
+        would require the edit-distance computation of many node
+        pairs. I propose a different, more efficient way of
+        characterising redundant entries in terms of longer history
+        spans. The studies, mentioned above, that graph aim to graph a
+        Wikipedia revision history, hint at a possible method of
+        characterising redundant material in terms of a much larger
+        time-frame. Again, we may utilise the fact taht we have take
+        one article to be the ultimate destination of all previous
+        edits.
 
         Perhaps we may graph the entirety of a wikipedia's revision
         history in terms of the edit distance from this final version,
         thus:
 
-        \begin{figure}[H]
-          \centering
-          \pgfplotsset{width=0.5\textwidth}
+        \begin{center}
+          \pgfplotsset{width=0.4\textwidth}
           \begin{tikzpicture}
             \begin{axis}[
                 title={Dummy revision history},
-                ylabel={edit distance from final version},
+                ylabel={Ed. distance from final},
                 xlabel={revision ID},
               ]
               \addplot table {dat/dummy_history.dat};
             \end{axis}
           \end{tikzpicture}
           \label{fig:dummy_history}
-        \end{figure}
+        \end{center}
         
         Each point represents a different version, and each line
         represents the the edit-distance between each version. Given
@@ -777,13 +743,12 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         negative gradient; those with a positive gradient take us
         further away from the final version:
 
-        \begin{figure}[H]
-          \centering
-          \pgfplotsset{width=0.5\textwidth}
+          \begin{center}
+          \pgfplotsset{width=0.4\textwidth}
           \begin{tikzpicture}
             \begin{axis}[
                 title={Dummy revision history},
-                ylabel={edit distance from final version},
+                ylabel={Ed. distance from final},
                 xlabel={revision ID},
               ]
               \addplot [blue] table {dat/dummy1.dat};
@@ -792,8 +757,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
               \addplot [blue, only marks] table {dat/dummy4.dat};
             \end{axis}
           \end{tikzpicture}
-          \label{fig:dummy_optimisation_1}
-        \end{figure}
+          \end{center}
 
         We may ignore the lines with a positive gradient (the two
         red lines). This is simple to implement. Given a version
@@ -809,38 +773,38 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         are further away from final version than the version
         currently being considered.
 
-        \begin{figure}[H]
-          \centering
-          \pgfplotsset{width=0.5\textwidth}
+          \begin{center}
+          \pgfplotsset{width=0.4\textwidth}
           \begin{tikzpicture}
             \begin{axis}[
                 title={Dummy revision history},
-                ylabel={edit distance from final version},
+                ylabel={Ed. distance from final},
                 xlabel={revision ID},
               ]
               \addplot [blue] table {dat/dummy1.dat};
               \addplot [red] table {dat/dummy5.dat};
               \addplot [blue] table {dat/dummy6.dat};
               \addplot [blue, only marks] table {dat/dummy4.dat};
-              \fill [orange!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
-              cs:1,1);
+              \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
+              cs:1,0);
               \addplot[red,dashed,update limits=false] 
 	      coordinates {(-2,13) (14,13)};
               \addplot[red,dashed,update limits=false] 
-	      coordinates {(4,13) (4,22)};
+	      coordinates {(4,-2) (4,23)};
             \end{axis}
           \end{tikzpicture}
-          \label{fig:dummy_optimisation_2}
-        \end{figure}
+          \end{center}
         
-        The green area shows the area in which we look to find
-        $v_j$. Here, after considering $v_i$, we move to $v_j$, such
-        that $j$ is the smallest number that satisfies to qualities $j
-        > i$ and $ed_{final_j} < ed_{final_i}$. In the graph above we
-        move from (4,13) to (8,12). It is worth stating here that
-        always compute $ed(v_{j-1}, v_j)$, not necessarily
-        $ed(v_i,v_j)$. We will look into the pros and cons of these
-        different strategies further into the project.
+        The green area shows the area in which we look to find $v_j$,
+        and the blue lines are those edit distances we both to
+        compute. Here, after considering $v_i$, we move to the $v_j$
+        such that $j$ is the smallest number that satisfies to
+        qualities $j > i$ and $ed_{final_j} < ed_{final_i}$. In this
+        graph above we move from (4,13) to (8,12). It is worth stating
+        here that, after discovering $v_j$, we always compute
+        $ed(v_{j-1}, v_j)$ rather than $ed(v_i,v_j)$. We will look
+        into the pros and cons of these different strategies further
+        into the project.
 
         \subsection*{Possible extensions}
         \subsubsection*{Visualisation}
@@ -849,22 +813,34 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         visualises how these weight factors affect the
         distribution. This would be a matter of expressing the final
         'score' in terms of these variables, and producing some
-        interactive graphs. We will look into the viability of this
-        extension further into the project.
+        interactive graphs. Several good attempts have been made to
+        visualise Wikipedia history data, with varying levels of
+        success,\cite{Chi2008}\cite{Sabel2007}\cite{Suh2007}\cite{Wu2013} so the
+        work would be well supported. We will look into the viability
+        of this extension further into the project.
         
-        \subsubsection*{Data}
+        \subsubsection*{Extending data}
         Current intentions are to approach the data on an
         article-by-article basis, grabbing a particular version and
         tracing its history backwards. We grab the pages using HTTP
         requests, as described earlier (see page
         \ref{wikipedia-api}). We could, however, download Wikipedia in
         its entirety. The entire site is compressed and dumped
-        monthly, and the dumps are free to download.\cite{wiki-dump}
+        monthly, and the dumps are free to download (though they are
+        800GB compressed).\cite{wiki-dump}
 
         \subsubsection*{Further analysis}
         Given the over-arching nature of Wikis, it may be possible to
         derive other information about the articles we
-        study. By-products of this study include various ways to
+        study. Past studies have used revision histories in order to
+        figure out a numerous variety of different things, including a
+        2012 study which used it to predict box-office
+        success,\cite{Mestyan2012} a 2009 study that was able to
+        geo-locate editors by their edits.\cite{Lieberman2009} Another
+        article of 2004 studied conflicts between authors using
+        flow-diagram of an article's history.\cite{Viegas2004}
+
+        By-products of this study include various ways to
         visualise the histories of different articles, and
         comprehensive storage of various dimensions of Wikipedia
         artefacts and agents. We may be able compare and contrast
@@ -877,65 +853,93 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           seconds.\cite{wiki-bots}\cite{bbc-bots}}, and perhaps look
         at the nature of edits made by different groups of editors.
 
-        %%%%%%%%%%%%%%%%%%%% FIND ROOM
-        
-        It may be worth Perhaps we can examine more about what
-        we may find out about the articles. Cite other studies Lih's
-        2004 study of articles immediately after they have been cited
-        in the press\cite{Lih2004}, and Metyan's 2012 use of the site
-        to predict box-office success \cite{Mestyan2012}. Lieberman
-        worked out their locale.\cite{Lieberman2009}:
-
-        %%%%%%%%%%%%%%%%%%%% FIND ROOM
-
         \subsubsection*{Further subjects}
         The project may well extend to subjects beyond Wikipedia. A
-        github project, for instance may be of interest in further
-        study. We may begin to look into software metrics, such as
-        Cyclomatic Complexity, which measures code flow complexity
-        according to its logical operators,\cite{McCabe1976} as well
-        as others, and figure out ways of regarding non-linear
-        revision histories.
+        git project history, for instance, may be of interest for
+        further study. We may combine the existing research with
+        metrics that concern code in particular,
+        such as Cyclomatic Complexity, which measures code flow
+        complexity according to its logical
+        operators.\cite{McCabe1976} It would also be interesting to
+        figure out a way of changing our algorithm in order to regard
+        non-linear revision histories.
 
-        \begin{enumerate}
-          \item peaks in activity (rate of levenshtein distance... may
-            have to be in a log graph...)
-          \item 
-        \end{enumerate}
+        %% \begin{enumerate}
+        %%   \item peaks in activity (rate of levenshtein distance... may
+        %%     have to be in a log graph...)
+        %%   \item 
+        %% \end{enumerate}
 
-        PREDIFINED / NOT-PREDEFINED ideas of quality. look for when
-        the the article levels off? And do this by DATE rather than
-        REVISION. We may assume that pageviews are more
-        well-distributed than revisions
+        %% PREDIFINED / NOT-PREDEFINED ideas of quality. look for when
+        %% the the article levels off? And do this by DATE rather than
+        %% REVISION. We may assume that pageviews are more
+        %% well-distributed than revisions
 
-        summarize major contributions (which do we care about?)
-        evaluate your current position point out any flaw in
-        methodology/research/contradictions are there any gaps in the
-        area which you will cover in your researchq?  How will you
-        integrate sources you have mentioned into your dissertation?
-        Point out any areas for further study
-
+        %% summarize major contributions (which do we care about?)
+        %% evaluate your current position point out any flaw in
+        %% methodology/research/contradictions are there any gaps in the
+        %% area which you will cover in your researchq?  How will you
+        %% integrate sources you have mentioned into your dissertation?
+        %% Point out any areas for further study
 
         \section{Progress report}
-        One python scraper
+        So far I have written two Python classes, which together
+        can fetch an entire history of a wikipedia article, and
+        compute Levenshtein distances between the texts.
 
-        One simple python levenshtein distance
-        - Have defined a format for storing edit operation: array of
-        tuples. Will work on extending this. MAy have to be a
-        dictionary to deal with flags
-        - Have not yet implemented other versions of the algorithm,
-        that is next step
+        WikiRevisionScrape is a Python class which harnesses the
+        Wikipedia API in order to download various pieces of
+        information about articles and their histories. It is inspired
+        by open Wikipedia metadata classes such as 'Wikipedia
+        Miner'\cite{wiki-miner}, or the revision-fetching 'Java
+        Wikipedia Library / Wikipedia Revision
+        Library'.\cite{wiki-java}\cite{Ferschke2011} My class 
 
-        One class combining both is in progress.
-        
+        If the user doesn't specify an particular article title, we
+        choose a random one, and trace it's history back. We can also
+        set a parameter in order to pick a random article multiple
+        times. There are various ways of improving the efficiency of
+        this program (such as requesting multiple pages at once), and
+        this will be introduced in the next version. At the moment the
+        scraper is fully functional, and at the moment saves the data
+        in CSV files. I will change this so that it uses a postgres
+        database. Code and example output can be found in appendix
+        \ref{wiki-scrape} starting page \pageref{wiki-scrape}.
+
+        Another python class, LevDistBasic, is a naive implementation
+        of Levenshtein distance, without space or speed
+        optimisations. It is a first eploration of implementing the
+        algorithm, and it can return the Levenshtein distance, the
+        computation table, the edit operation (in two different
+        formats --- human readable, and as a list of tuples). Future
+        changes are many, such as including weightings for different
+        kinds of string, more space-efficient and speed efficient
+        implementations, etc. Code and example output can be found in
+        appendix \ref{levenshtein-implement} starting page
+        \pageref{levenshtein-implement}. 
+
+        These two classes can be entwined manually, by fetching two
+        pieces of data from the former and feeding them into the
+        latter. The next step will be to build a class which
+        autmatically builds a database of files, calculating and storing
+        distances as it does so, but there is no point in writing such
+        a class until I change the way the scraper deals with the data
+        it fetches (it should instead returned at the end of a
+        function --- saving it in CSV files is a temporary hack).
+
+        I choose Python principally for the ease at which it handles
+        and passes around different kinds of data. However, even the
+        optimised versions of the algorithms I will use will be fairly
+        slow. If speed becomes an issue I will rewrite my code into
+        C++, but since speed-efficiency is not really the goal of this
+        project, and since the data I use is relatively small, this
+        may not be a consideration.
+
         \clearpage
-        \printbibheading[heading=bibintoc,title={References}]
-        \printbibliography
-        %% \printbibliography[keyword=wiki,heading=subbibliography,title={Wikipedia}]
-        %% \printbibliography[keyword=edit,heading=subbibliography,title={Edit
-        %%     distance}]
-        
-        
+        \phantomsection
+        \addcontentsline{toc}{section}{References}
+        \printbibliography        
+
         \clearpage
         \begin{appendices}
           \section{Appendix A: Code progress}
@@ -944,25 +948,26 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \label{wiki-scrape}
           The following code is a first draft of a class which incrementally
           traces, parses, and stores the revision history of select articles. It
-          chooses random articles up to a maximum amount of articles unless an
-          article (or articles) are specified. It traces the entire
-          discoverable\footnote{Using the Wikipedia API, articles can either be
-            traced back to their origin (revision parent ID = 0), or to the
-            point at which a loop is found in the revision history - this
-            usually happens with older articles.} history of the, unless a
+          chooses random articles up to the limit specified (default =
+          1). It traces the entire discoverable\footnote{Using the
+            Wikipedia API, articles can either be traced back to their
+            origin (revision parent ID = 0), or to the point at which
+            a loop is found in the revision history --- this usually
+            happens with older articles; not all articles can be
+            traced all the way back to the origin.} history, unless a
           specific depth is specified by the user.
           
           The class already yields workable data, but here is some immediate
           further work for this code:
           \begin{itemize}
-          \item Allow the user to specify timeframe
+          \item Allow the user to specify timeframe for revision history
           \item Allow for integration with a postgres database (at the moment
             the code saves the data in CSV format).
           \end{itemize}
           
-          This code is an extension to an existing wikipedia API class for
-          python (which did not provide the features we need
-          here).\cite{python-wikipedia}
+          This leverages an existing wikipedia python class for some
+          of the more trivial parts of fetching the article, and for
+          picking a random title.\cite{python-wikipedia} 
           
           \lstinputlisting[language=Python,frame=single]{../code/wikiScraper/WikiRevisionScrape.py}
           \subsection{Example output}
@@ -974,18 +979,19 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \label{levenshtein-implement}
           This Python class gives a basic implementation of
           Levenshtein distance. To compare strings $x$ and $y$ both
-          its time and space complexity is
+          the time and space complexity is
           ${\Theta}log(|x|{\bullet}|y|)$.
 
-          The class is instantiated with the twwo strings, or files,
-          it is to compare. Methods can then be accessed in order to
-          examine the distance between the provided strings. The class
-          provides command-line visualisations of the data --- it can
-          print out its table of computations, as well as instructions
-          on how to transform one into the other. Please see the
-          exmple output below. It does not currently give any
-          information about optimal alignment, although information
-          about this alignment is found in the table.
+          The class is instantiated with the twwo strings, or .txt
+          files, it is to compare. Methods can then be accessed in
+          order to examine the distance between the provided
+          strings. The class provides command-line visualisations of
+          the data --- it can print out its table of computations, as
+          well as instructions on how to transform one into the
+          other. Please see the exmple output below. It does not
+          currently give any information about optimal alignment,
+          although information about this alignment is found in the
+          table.
           \subsection{Code}
           \lstinputlisting[language=Python,frame=single]{../code/lshtein/basic/LevDistBasic.py}
           \subsection{Example output}
