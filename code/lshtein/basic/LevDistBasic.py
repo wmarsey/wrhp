@@ -1,4 +1,13 @@
 import sys
+import copy
+import cPickle
+
+INDIC = {
+    'insert':'I',
+    'delete':'D',
+    'swap':'S',
+    'keep':'K'
+    }
 
 class LevDistBasic:
     x = "" #string1
@@ -30,14 +39,16 @@ class LevDistBasic:
     
     def showop(self):
         for i, op in enumerate(self.ed):
-            l = str(i+1) + ": "
-            if op[0] == 'I':
+            l = str(i+1) + ": "           
+            ins, keep, swap, dl = INDIC 
+
+            if op[0] == INDIC[ins]:
                 l += "insert " + op[-1]
-            elif op[0] == 'K':
+            elif op[0] == INDIC[keep]:
                 l += "keep " + op[-1]
-            elif op[0] == 'D':
+            elif op[0] == INDIC[dl]:
                 l += "delete " + op[-1]
-            elif op[0] == 'S':
+            elif op[0] == INDIC[swap]:
                 l += "swap " + op[-1][0] + " for " + op[-1][-1]
             else:
                 return "FAIL: incorrect operation"
@@ -58,35 +69,36 @@ class LevDistBasic:
 
     def _calculate(self):
         lrow = None
-        crow = [list() for _ in xrange(self.n+1)]
+        crow = [{'ed':list(),'len':0} for _ in xrange(self.n+1)]
         for i in xrange(self.n):
-            ed = list(crow[i])
-            crow[i+1] = ed
-            crow[i+1].append(('I',self.y[i]))
-        printrow(crow)
+            crow[i+1] = cPickle.loads(cPickle.dumps(crow[i]))
+            crow[i+1]['ed'].append((INDIC['insert'],self.y[i]))
+            crow[i+1]['len'] = crow[i+1]['len'] + 1
         for i in xrange(self.m):
-            lrow, crow = crow, [list() for _ in xrange(self.n+1)]
-            crow[0] = list(lrow[0])
-            crow[0].append(('D',self.x[i]))
+            lrow, crow = crow, [{'ed':list(),'len':0} for _ in xrange(self.n+1)]
+            crow[0] = cPickle.loads(cPickle.dumps(lrow[0]))
+            crow[0]['ed'].append((INDIC['delete'],self.x[i]))
+            crow[0]['len'] = crow[0]['len'] + 1
             j = 1
             while j < self.n+1:
                 c = (self.x[i] != self.y[j-1])
-                dl = len(lrow[j]) + 1
-                ins = len(crow[j-1]) + 1
-                sub = len(lrow[j-1]) + c
+                dl = lrow[j]['len'] + 1
+                ins = crow[j-1]['len'] + 1
+                sub = lrow[j-1]['len'] + c
                 if ins < dl and ins < sub:
-                    crow[j] = list(crow[j-1])
-                    crow[j].append(('I',self.y[j-1]))
-                    # print "(", i+1, ",", j, ")", "insert"
+                    crow[j] = cPickle.loads(cPickle.dumps(crow[j-1]))
+                    crow[j]['ed'].append((INDIC['insert'],self.y[j-1]))
+                    crow[j]['len'] = crow[j]['len'] + 1
                 elif dl < sub:
-                    crow[j] = list(crow[j-1])
-                    crow[j].append(('D',self.x[i]))
-                    # print "(", i+1, ",", j, ")", "delete"
+                    crow[j] = cPickle.loads(cPickle.dumps(crow[j-1]))
+                    crow[j]['ed'].append((INDIC['delete'],self.x[i]))
+                    crow[j]['len'] = crow[j]['len'] + 1
                 else:
-                    # print "(", i+1, ",", j, ")", "swapkeep"
-                    crow[j] = list(lrow[j-1])
+                    crow[j] = cPickle.loads(cPickle.dumps(lrow[j-1]))
                     if(self.x[i] != self.y[j-1]):
-                        crow[j].append(('S',self.x[i] + self.y[j-1]))
+                        crow[j]['ed'].append((INDIC['swap'],self.x[i] + self.y[j-1]))
+                        crow[j]['len'] = crow[j]['len'] + 1
+                    else:
+                        crow[j]['ed'].append((INDIC['keep'],self.x[i]))
                 j = j+1
-            printrow(crow)
-        return len(crow[-1]), crow[-1]
+        return crow[-1]['len'], crow[-1]['ed']
