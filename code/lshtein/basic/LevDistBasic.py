@@ -1,8 +1,6 @@
 import sys
 
 class LevDistBasic:
-    e = [] #edit operation array
-    t = [] #grid array
     x = "" #string1
     y = "" #string2
     m = 0 #length string1
@@ -16,9 +14,7 @@ class LevDistBasic:
         self.y = self._variablehandle(_y)
         self.m = len(self.x)
         self.n = len(self.y)     
-        self.t = [[0]*(self.n+1) for _ in xrange(self.m+1)]
-        self.e = [[" "]*(self.n+1) for _ in xrange(self.m+1)]
-        self.dist = self._calculate()
+        self.dist, self.ed = self._calculate()
     
     def __str__(self):
         return str(self.distance())
@@ -29,27 +25,12 @@ class LevDistBasic:
     def strings(self):
         return self.x, self.y
     
-    def table(self):
-        return self.t
-    
     def operation(self):
         return self.ed
-        
-    ##ADD WARNING for long strings / deal with them
-    def showtable(self):
-        result = ""
-        for ch in self.y:
-            result = result + ch + "  "
-        print "       ", result
-        for r in range(len(self.t)):
-            s = ' '
-            if r:
-                s = self.x[r-1]
-            print s, ' ', self.t[r]
     
     def showop(self):
         for i, op in enumerate(self.ed):
-            l = str(i) + ": "
+            l = str(i+1) + ": "
             if op[0] == 'I':
                 l += "insert " + op[-1]
             elif op[0] == 'K':
@@ -60,31 +41,7 @@ class LevDistBasic:
                 l += "swap " + op[-1][0] + " for " + op[-1][-1]
             else:
                 return "FAIL: incorrect operation"
-            print l
-
-    def _ed(self):
-        i, j = len(self.e)-1, len(self.e[0])-1
-        self._ed_recursive(i,j)
-
-    def _ed_recursive(self,i,j):
-        if self.e[i][j] == ' ':
-            if i == 0 and j > 0:
-                self.ed.append(('D', self.y[0]))
-            if j == 0 and i > 0:
-                self.ed.append(('D', self.x[0]))
-            return
-        if self.e[i][j] == 'K':
-            self._ed_recursive(i-1, j-1)
-            self.ed.append((self.e[i][j], self.x[i-1]))
-        elif self.e[i][j] == 'S':
-            self._ed_recursive(i-1, j-1)
-            self.ed.append((self.e[i][j], (self.x[i-1] + ',' + self.y[j-1])))
-        elif self.e[i][j] == 'D':
-            self._ed_recursive(i-1,j)
-            self.ed.append((self.e[i][j], self.x[i-1]))
-        else:
-            self._ed_recursive(i,j-1)
-            self.ed.append((self.e[i][j], self.y[j-1]))   
+            print l 
 
     def _variablehandle(self,v):
         if not isinstance(v, str):
@@ -98,31 +55,38 @@ class LevDistBasic:
                     raise
                 pass
         return v
-                            
+
     def _calculate(self):
-        for i in xrange(self.m+1):
-            self.t[i][0] = i
-        for j in xrange(self.n+1):
-            self.t[0][j] = j
-        j = 1
-        while j < self.n+1:
-            i = 1
-            while i < self.m+1:
-                c = (self.x[i-1] != self.y[j-1])
-                dl = self.t[i-1][j] + 1
-                ins = self.t[i][j-1] + 1
-                sbs = self.t[i-1][j-1] + c
-                self.t[i][j] = min(ins, dl, sbs)
-                if ins < dl and ins < sbs:
-                    self.e[i][j] = 'I'
-                elif dl <= sbs:
-                    self.e[i][j] = 'D'
+        lrow = None
+        crow = [list() for _ in xrange(self.n+1)]
+        for i in xrange(self.n):
+            ed = list(crow[i])
+            crow[i+1] = ed
+            crow[i+1].append(('I',self.y[i]))
+        printrow(crow)
+        for i in xrange(self.m):
+            lrow, crow = crow, [list() for _ in xrange(self.n+1)]
+            crow[0] = list(lrow[0])
+            crow[0].append(('D',self.x[i]))
+            j = 1
+            while j < self.n+1:
+                c = (self.x[i] != self.y[j-1])
+                dl = len(lrow[j]) + 1
+                ins = len(crow[j-1]) + 1
+                sub = len(lrow[j-1]) + c
+                if ins < dl and ins < sub:
+                    crow[j] = list(crow[j-1])
+                    crow[j].append(('I',self.y[j-1]))
+                    # print "(", i+1, ",", j, ")", "insert"
+                elif dl < sub:
+                    crow[j] = list(crow[j-1])
+                    crow[j].append(('D',self.x[i]))
+                    # print "(", i+1, ",", j, ")", "delete"
                 else:
-                    if(self.x[i-1] != self.y[j-1]):
-                        self.e[i][j] = 'S'
-                    else:
-                        self.e[i][j] = 'K'
-                i += 1
-            j += 1
-        self._ed()
-        return self.t[self.m][self.n]
+                    # print "(", i+1, ",", j, ")", "swapkeep"
+                    crow[j] = list(lrow[j-1])
+                    if(self.x[i] != self.y[j-1]):
+                        crow[j].append(('S',self.x[i] + self.y[j-1]))
+                j = j+1
+            printrow(crow)
+        return len(crow[-1]), crow[-1]

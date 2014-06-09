@@ -389,13 +389,13 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             \SlText{11-1-1}{Insert}
             \SlText{11-1-2}{Delete}
             \SlText{11-1-3}{Swap}
-            \SlText{11-1-3}{Delete}
-            \SlText{11-1-4}{Insert}
-            \SlText{11-1-5}{Delete}
-            \SlText{11-1-7}{Insert}
-          \end{tikzpicture}
+            \SlText{11-1-4}{Delete}
+            \SlText{11-1-5}{Insert}
+            \SlText{11-1-6}{Delete}
+            \SlText{11-1-8}{Insert}
+          \end{tikzpicture}\\
           \vspace{3 mm}
-          forks $\rightarrow$ spork, edit distance: 7
+          spork $\rightarrow$ forks, edit distance: 7
           \caption{An sub-optimal edit distance example}
           \label{fig:fork-spork-subopt}
         \end{figure}
@@ -405,9 +405,23 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         above, and also as a table of arrows. These arrows define a
         path from one corner of the table space to the other. The
         shape of this path defines how to align the two
-        strings.\cite{Smith1981}
+        strings.\cite{Smith1981} See figure
+        \ref{fig:smith-waterman-traceback} for an example.
 
-        \begin{figure}[h!]
+        This path may also be read as an edit operation. An arrow at
+        the position $[i,j]$ in the table defines edit operations for
+        $x[i]$ and/or $y[j]$ thus:
+        \begin{itemize}
+          \item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$}
+            \\ Denotes a 'swap' between $x[i]$ and $y[j]$ (if $x[i] =
+            y[j]$ then it denotes the lack of an operation).
+          \item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion
+            of $x[i]$
+          \item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the
+            insertion of $y[j]$
+        \end{itemize}
+        
+        \begin{figure}[h]
           \centering
           $\left\{
                 \begin{array}{ccccccc}
@@ -428,27 +442,14 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \label{fig:smith-waterman-traceback}
         \end{figure}
 
-        This path may also be read as an edit operation. An arrow at
-        the position $[i,j]$ in the table defines edit operations for
-        $x[i]$ and/or $y[j]$ thus:
-        \begin{itemize}
-          \item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$}
-            \\ Denotes a 'swap' between $x[i]$ and $y[j]$ (if $x[i] =
-            y[j]$ then it denotes the lack of an operation).
-          \item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion
-            of $x[i]$
-          \item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the
-            insertion of $y[j]$
-        \end{itemize}
-
         \subsubsection*{Delta encoding}
-        Finally, we may also look into Delta encoding algorithms. These
-        describe ways of compressing the storage of a document's
-        history --- a format in which only the differences
-        between each text is stored, not the entire version. These
-        algorithms are of the same family of algorithms discussed
-        above. In fact, we find that one of the fastest known
-        algorithms,\footnote{According to Hunt's 1998
+        Finally, we may also look into Delta encoding
+        algorithms. These describe ways of compressing the storage of
+        a document's history --- a format in which only the
+        differences between each text is stored, not the entire
+        version. These algorithms are of the same family of algorithms
+        discussed above. In fact, we find that one of the fastest
+        known algorithms,\footnote{According to Hunt's 1998
           study\cite{Hunt1998}} \textit{VDelta}, is a refinement of
         the block distance algorithm mentioned above. For a given
         version $n$ of a document $doc$ is defined as:
