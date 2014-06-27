@@ -23,7 +23,7 @@ class Database:
         self.crsr = self.cn.cursor()
 
     def getextantrevs(self, pageid):
-        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid DESC;"
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid;"
         data = (pageid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()

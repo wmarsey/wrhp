@@ -108,15 +108,41 @@ def analyse(params):
     for pageid in pageids:
         print "analysing", pageids
         extantrevs = [e[0] for e in database.getextantrevs(pageid)]
-        revx, oldrevs = extantrevs[0], extantrevs[1:]
+        revx, oldrevs = extantrevs[-1], extantrevs[:-1]
         print "extant revids", oldrevs
         print "newest rev", revx
         contentx = database.getrevcontent(revx)[0][0]
+        diffs = {(e,e):0 for e in extantrevs}
+        scratch = open(pageid,"w")
+        print "tracing trajectory"
         for oldrev in oldrevs:
             contenty = database.getrevcontent(oldrev)[0][0] 
-            levy = lv.basic.LevDistBasic(contentx, contenty)
-            print "dist between", revx, "and", oldrev, levy.dist()
-        
+            levy = lv.FastLev(contentx, contenty)
+            print "dist between", revx, "and", oldrev, "is", levy
+            diffs.update({(revx,oldrev):levy.distance()})
+            diffs.update({(oldrev,revx):levy.distance()})
+            scratch.write(str(revx) + "\t" + str(oldrev) + "\t" + str(levy) + "\n")
+            scratch.write(str(oldrev) + "\t" + str(revx) + "\t" + str(levy) + "\n")
+            del levy
+        print "calculating pairs"
+        i, v = 0, 1
+        while v < len(extantrevs):
+            while diffs[(revx,extantrevs[i])] < diffs[(revx,extantrevs[v])]:
+                if v == len(extantrevs)-1:
+                    break
+                print "skipping version", v, "- revid:", extantrevs[v]
+                v = v + 1
+            contentx = database.getrevcontent(extantrevs[i])[0][0]
+            contenty = database.getrevcontent(extantrevs[v])[0][0]
+            levy = lv.FastLev(contentx, contenty)
+            diffs.update({(extantrevs[i],extantrevs[v]):levy.distance()})
+            diffs.update({(extantrevs[v],extantrevs[i]):levy.distance()})
+            scratch.write(str(extantrevs[i]) + "\t" + str(extantrevs[v]) + "\t" + str(levy) + "\n")
+            scratch.write(str(extantrevs[v]) + "\t" + str(extantrevs[i]) + "\t" + str(levy) + "\n")
+            del levy
+            i = v
+            v = v + 1
+        scratch.close()
 
 def fetch():
     contentparams = {}

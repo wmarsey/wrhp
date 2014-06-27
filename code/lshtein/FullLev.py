@@ -9,7 +9,7 @@ INDIC = {
     'keep':'K'
     }
 
-class LevDistBasic:
+class FullLev:
     x = "" #string1
     y = "" #string2
     m = 0 #length string1

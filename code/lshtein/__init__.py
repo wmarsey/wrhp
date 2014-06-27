@@ -1,1 +1,2 @@
-import basic
+from FastLev import *
+from FullLev import *
