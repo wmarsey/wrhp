@@ -22,8 +22,22 @@ class Database:
                              dbname = self.database)
         self.crsr = self.cn.cursor()
 
+    def getextantrevs(self, pageid):
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid DESC;"
+        data = (pageid,)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+        return None
+
+    def getyoungestrev(self, pageid):
+        sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE pageid = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE pageid = %s AND b.time > a.time);"
+        data = (pageid,pageid)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+        return None
+
     def getrevcontent(self, revid):
-        sql = "SELECT revid FROM " + self.contenttable + " WHERE revid = %s;"
+        sql = "SELECT content FROM " + self.contenttable + " WHERE revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
             return self.crsr.fetchall()
@@ -36,7 +50,7 @@ class Database:
             return self.crsr.fetchall()
         return None
 
-    def getrevfull(self, revid):
+    def getrevfull(self, titles="random", revids=None, userids=None):
         sql = "SELECT * from " + self.contenttable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND a.revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
@@ -51,8 +65,8 @@ class Database:
         if self.getrevcontent(param[0]):
             print "content already exists"
             return False
-        sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s);"
-        data = (param[0], param[1], param[2])
+        sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s, %s);"
+        data = (param[0],param[1],param[2],param[3])
         return self._execute(sql,data)
 
     def indexinsert(self, param):

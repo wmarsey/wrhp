@@ -8,7 +8,8 @@ import re
 VERSION_NUMBER = "0.0.0.0.00.1"
 
 def print_help():
-    print "There is no help for you, not now. Not after what you did."
+    with open("../README", "r") as helpfile:
+        print helpfile.read()
 
 def intstring(s):
     try:
@@ -30,10 +31,11 @@ def echo_params(flags, params):
 def _arg_sanity(params):
     a = sys.argv
     if "--help" in a:
-        return print_help()
+        print_help()
+        sys.exit(0)
     if "--version" in a:
         print "Version:", VERSION_NUMBER
-        return
+        sys.exit(0)
     if "--scrape_limit" in a:
         slim = a[a.index("--scrape_limit") + 1]
         if intstring(slim) and int(slim) > 0:
@@ -50,11 +52,12 @@ def _arg_sanity(params):
         else:
             print "Depth limit must be an integer above 0. Default is unlimited."
             return errno.EINVAL
-    if "--title" in a:
-        titles = a[a.index("--title") + 1]
-        if " " in titles:
-            print "Warning: removing spaces from titles parameter"
-            titles = title.replace(" ","")
+    if "--titles" in a:
+        titles = a[a.index("--titles") + 1]
+        if " |" in titles or "| " in titles:
+            print "Warning: removing trailing spaces from compound titles parameter"
+            titles = title.replace(" |","|")
+            titles = title.replace("| ","|")
         params["page_titles"] = titles
         print titles.count('|')+1, "page(s) chosen:", ", ".join(titles.split('|'))
     return params
@@ -79,6 +82,52 @@ def _flag_sanity(flags):
         sys.exit(0)
     return flags
 
+def scrape(params):
+    scraper = None
+    if params["page_titles"] == "random":
+        scraper = wk.WikiRevisionScrape(
+            historylimit=params['depth_limit'],
+            pagelimit=params['scrape_limit']
+            )
+    else:
+        scraper = wk.WikiRevisionScrape(
+            historylimit=params['depth_limit'],
+            _titles=params['page_titles']
+            )
+    return scraper.scrape() #a list of the scraped pages ids
+    #return True
+
+def analyse(params):
+    ##distance between newest version and all others
+    ##so first fetch all
+    if(params['scrape_limit'] != -1):
+        print "Warning: ignoring '--scrape_limit' setting -- will only analyse 1 article"
+    params['scrape_limit'] = 1
+    pageids = scrape(params)
+    database = db.Database()
+    for pageid in pageids:
+        print "analysing", pageids
+        extantrevs = [e[0] for e in database.getextantrevs(pageid)]
+        revx, oldrevs = extantrevs[0], extantrevs[1:]
+        print "extant revids", oldrevs
+        print "newest rev", revx
+        contentx = database.getrevcontent(revx)[0][0]
+        for oldrev in oldrevs:
+            contenty = database.getrevcontent(oldrev)[0][0] 
+            levy = lv.basic.LevDistBasic(contentx, contenty)
+            print "dist between", revx, "and", oldrev, levy.dist()
+        
+
+def fetch():
+    contentparams = {}
+    contentparams.update({'titles':params['titles']})
+    if params['page_titles'] != "random" and params['revids']:
+        contentparams.update({'revids':params['revids']})
+    if params['userids']:
+        contentparams.update({'userids':params['userids']})
+    print "Fetching from database"
+    return db.getrevfull(**contentparams)
+
 def main():
     params = {"scrape_limit": -1,
               "depth_limit": -1,
@@ -95,39 +144,26 @@ def main():
     flags = _flag_sanity(flags)
     ##ECHO PARAMETERS
     echo_params(flags, params)
-    
+
     if flags['scrape']:
-        scraper = None
-        if params["page_titles"] == "random":
-            scraper = wk.WikiRevisionScrape(
-                historylimit=params['depth_limit'],
-                )
+        if scrape(params):
+            sys.exit(0)
         else:
-            scraper = wk.WikiRevisionScrape(
-                historylimit=params['depth_limit'],
-                _titles=params['page_titles']
-                )
-        scraper.scrape()
-        sys.exit(0)
+            print "error"
+            sys.exit(-1)
 
     if flags['fetch']:
-        if params['page_titles'] == "random" and not params['revids'] and not params['userids']:
-            print "You must specify an article title, revid or userid in order to use fetch mode."
+        data = fetch(params)
+        if data:
+            print "fetched"
+            print data
+        else:
+            print "error"
             sys.exit(-1)
-        contentparams = {}
-        if params['page_titles'] != "random":
-            contentparams.update({'titles':params['titles']})
-        if params['revids']:
-            contentparams.update({'revids':params['revids']})
-        if params['userids']:
-            contentparams.update({'userids':params['userids']})
-        fetch = getrevfull(**contentparams)
-        if not fetch:
-            print "FULL FAILURE"
-            sys.exit(-1)
-        sys.exit(0)
 
     if flags['analyse']:
+        results = analyse(params)
+        print results
         sys.exit(0)
 
 if __name__ == "__main__":

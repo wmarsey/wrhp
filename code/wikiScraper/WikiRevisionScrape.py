@@ -36,7 +36,7 @@ class WikiRevisionScrape:
     db = None
 
     #atm naively assuming headers, params, titles to be in correct format
-    def __init__(self, pagelimit=1000000, historylimit=-1, _headers=None, _params=None, _titles=None):
+    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None):
         if(_params):
             params = _params
 
@@ -44,7 +44,7 @@ class WikiRevisionScrape:
             self.head = _headers
 
         if(_titles):
-            self.params['titles'] = _titles
+            self.par['titles'] = _titles
             self.rand = False
 
         self.pagelimit = pagelimit
@@ -53,31 +53,57 @@ class WikiRevisionScrape:
 
     def scrape(self):
         self._pace()
-        #index_f = open(indexfilename + ".csv", "ab") #HACK = needs to migrate to postrgres
-        #contents_f = open(contentsfilename + ".csv", "ab")  #HACK = needs to migrate to postrgres
-        #index = csv.writer(index_f)
-        #contents = csv.writer(contents_f)
-        #index.writerow(["PAGEID","REVISION","USER","USERID","TIMSTAMP","SIZE","COMMENT"]) 
-        #contents.writerow(["PAGEID","REVISION","CONTENT"])
-        
-        for i in range(self.pagelimit):
-            if 'rvprop' in self.par:
-                del self.par['rvprop']
-            if 'revids' in self.par:
-                del self.par['revids']
-            print "fetching page"
-            if(self.rand):
+        scraped = []
+        ## IMPROVE THIS LOGICAL FLOW COULD BE JUST TWO IF ELSE DECISIONS
+        ## NEEDS TO BE LIKE while self.pagelimit != 0 or something
+        if self.pagelimit == -1 and self.rand:
+            while True:
+                if 'rvprop' in self.par:
+                    del self.par['rvprop']
+                if 'revids' in self.par:
+                    del self.par['revids']
+                if(self.rand):
+                    self.par['titles'] = wikipedia.random() #get random title
+                print "fetching page", self.par['titles'] 
+                self._getlatest()
+                scraped.append(self.pageid)
+                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                self._rate()
+                del self.par['titles']
+                self._tracehist() ##returns pageid
+        elif self.rand:
+            for i in range(self.pagelimit):
+                if 'rvprop' in self.par:
+                    del self.par['rvprop']
+                if 'revids' in self.par:
+                    del self.par['revids']
                 self.par['titles'] = wikipedia.random() #get random title
-            self.childid = self._getlatest()
-            r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-            self._rate()
-            del self.par['titles']
-            self._tracehist()
-       
+                print "fetching page", self.par['titles']
+                self._getlatest()
+                scraped.append(self.pageid)
+                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                self._rate()
+                del self.par['titles']
+                self._tracehist() ##returns pageid
+        else:
+            for title in self.par['titles'].split('|'):
+                if 'rvprop' in self.par:
+                    del self.par['rvprop']
+                if 'revids' in self.par:
+                    del self.par['revids']
+                print "fetching page", title
+                self.par['titles'] = title
+                self._getlatest()
+                scraped.append(self.pageid)
+                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                self._rate()
+                del self.par['titles']
+                self._tracehist()
+        
+        return scraped 
     def _getlatest(self):
         r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
         r = r.json()
-
         #HACK = should grab multiple pages
         for key, value in r['query']['pages'].iteritems():
             self.pageid = key
@@ -87,10 +113,11 @@ class WikiRevisionScrape:
     
     def _tracehist(self):
         ##We store revisions we've visited
-        ##loops can occur in revision histories
+        ##loops can occur in revision histories, we assume this means the end of discoverable history
         visited = []
         i = self.historylimit
         j = 0
+        pageid = 0
 
         self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|contentmodel|timestamp|content'
 
@@ -112,7 +139,8 @@ class WikiRevisionScrape:
             timestamp = ""
             comment = ""
             content = ""
-            
+            title = ""
+
             try:
                 self.childid =  r['query']['pages'][self.pageid]['revisions'][0]['revid']
             except:
@@ -145,11 +173,15 @@ class WikiRevisionScrape:
                 content = r['query']['pages'][self.pageid]['revisions'][0]['*']
             except:
                 pass
+            try:
+                title = r['query']['pages'][self.pageid]['title']
+            except:
+                pass
             
             if not self.db.indexinsert([int(self.childid), int(self.pageid), user.encode("UTF-8"), int(userid), timestamp, size, comment.encode("UTF-8")]):
                 print "database index insert failed" 
                 return True
-            if not self.db.contentinsert([int(self.childid), int(self.pageid), content.encode("UTF-8")]):
+            if not self.db.contentinsert([int(self.childid), int(self.pageid), title, content.encode("UTF-8")]):
                 print "database index insert failed"
                 return False
             

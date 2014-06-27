@@ -1,3 +1,17 @@
 Individual Project
 
-Looking at algorithmically identifying value in text diffs.
+Help text for CLI:
+
+Mutually modes:
+-s	 	   scrape mode
+-f   	 	   fetch mode, can be used with analyse
+-a   	       	   analyse mode, can be used with fetch
+
+--help	     	   this help text
+--version	   show version
+
+--depth_limit	   how far back to fetch/analyse article history
+--titles	   page titles. multiple titles can be specified,
+		   split with the '|' character, ie:
+		   --titles "philosophy|music"
+--scrape_limit	   

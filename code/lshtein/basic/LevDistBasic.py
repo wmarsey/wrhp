@@ -17,6 +17,7 @@ class LevDistBasic:
     dist = 0 #Levenshtein distance
     ed = [] #the edit operation, calculated in _calculate()
     isFile = False
+    dots = 0
     
     def __init__(self, _x, _y, isFile=False):
         self.x = self._variablehandle(_x)
@@ -36,6 +37,14 @@ class LevDistBasic:
     
     def operation(self):
         return self.ed
+
+    def dot(self):
+        self.dots = self.dots + 1 
+        sys.stdout.write('.')
+        if not (self.dots % 100):
+            sys.stdout.write('|')
+        if not (self.dots % 1000):
+            sys.stdout.write('_.-~^`')
     
     def showop(self):
         for i, op in enumerate(self.ed):
@@ -68,13 +77,16 @@ class LevDistBasic:
         return v
 
     def _calculate(self):
+        self.dot()
         lrow = None
         crow = [{'ed':list(),'len':0} for _ in xrange(self.n+1)]
         for i in xrange(self.n):
+            self.dot()
             crow[i+1] = cPickle.loads(cPickle.dumps(crow[i]))
             crow[i+1]['ed'].append((INDIC['insert'],self.y[i]))
             crow[i+1]['len'] = crow[i+1]['len'] + 1
         for i in xrange(self.m):
+            self.dot()
             lrow, crow = crow, [{'ed':list(),'len':0} for _ in xrange(self.n+1)]
             crow[0] = cPickle.loads(cPickle.dumps(lrow[0]))
             crow[0]['ed'].append((INDIC['delete'],self.x[i]))
@@ -100,5 +112,6 @@ class LevDistBasic:
                         crow[j]['len'] = crow[j]['len'] + 1
                     else:
                         crow[j]['ed'].append((INDIC['keep'],self.x[i]))
+                self.dot()
                 j = j+1
         return crow[-1]['len'], crow[-1]['ed']
