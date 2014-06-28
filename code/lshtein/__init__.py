@@ -1,2 +1,2 @@
-from FastLev import *
+import fastlev
 from FullLev import *

@@ -1,6 +1,7 @@
 import psycopg2 as db
 import sys
 import re
+import random
 
 class Database:
     host = 'db-new.doc.ic.ac.uk'
@@ -10,6 +11,7 @@ class Database:
     password = ''
     contenttable = "wikicontent"
     revisiontable = "wikiauthors"
+    distancetable = "wikidistance"
     cn = None
     crsr = None
 
@@ -57,6 +59,40 @@ class Database:
             return self.crsr.fetchall()
         return None
 
+    def getdist(self, param):
+        sql = "SELECT distance from " + self.distancetable + " WHERE revid1 = %s AND revid2 = %s;"
+        data = (param[0],param[1])
+        if(self._execute(sql, data)):
+            try:
+                result = self.crsr.fetchall()
+                return None if not len(result) else result[0][0]
+            except:
+                print "error", param[0], param[1]
+                pass
+        return None
+
+    def getrandom(self, column):
+        if not (column == "title" \
+                or column == "pageid"\
+                or column == "revid"):
+            print "Error, invalid column name"
+            return None
+        # sql = "SELECT * FROM (SELECT DISTINCT %s FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT %s FROOBM " + self.contenttable + ") AS w2) LIMIT 1;"
+        # data = (column, column)
+        sql = "SELECT %s, %s FROM wikicontent;"
+        data = ('title','pageid')
+        if(self._execute(sql,data)):
+            result = self.crsr.fetchall()
+            print result
+            return result
+        return None
+
+    def gettrajectory(self, revid):
+        sql = "SELECT revid2, distance FROM " + self.distancetable + " WHERE revid1 = %s ORDER BY revid2;"
+        data = (revid,)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+
     def existencequery(self, sql, data):
         self.crsr._execute(sql, data)
         return cursor.fetchall()
@@ -70,11 +106,19 @@ class Database:
         return self._execute(sql,data)
 
     def indexinsert(self, param):
-        if self.getrevcontent(param[0]):
+        if self.getrevinfo(param[0]):
             print "content already exists"
             return False
         sql = "INSERT INTO " + self.revisiontable + " VALUES (%s, %s, %s, %s, %s, %s, %s);"
         data = (param[0], param[1], param[2], param[3], param[4], param[5], param[6])
+        return self._execute(sql,data)
+
+    def distinsert(self, param):
+        if self.getdist([param[0], param[1]]):
+            print "distance already stored"
+            return False
+        sql = "INSERT INTO " + self.distancetable + " VALUES (%s, %s, %s);"
+        data = (param[0], param[1], param[2])
         return self._execute(sql,data)
 
     def _execute(self, sql, data, montcarlo=5):

@@ -4,6 +4,8 @@ import lshtein as lv
 import sys
 import errno
 import re
+#import gnuplot
+#import pylab as plt
 
 VERSION_NUMBER = "0.0.0.0.00.1"
 
@@ -72,14 +74,15 @@ def _flag_sanity(flags):
                 if ch == 'f':
                     flags['fetch'] = True
                     continue
-                if ch == 'a':
-                    flags['analyse'] = True
-    try:
-        if sum([1 for f in flags.itervalues() if f]) != 1:
-            raise ValueError("One mode must be used: -s, -f or -a")
-    except ValueError:
-        print "Error: One mode must be used: -s, -f or -a"
-        sys.exit(0)
+        if arg == "--offline":
+            flags['offline'] = True
+    
+    # try:
+    #     if sum([1 for f in flags.itervalues() if f]) != 1:
+    #         raise ValueError("One mode must be used: -s, -f")
+    # except ValueError:
+    #     print "Error: One mode must be used: -s, -f"
+    #     sys.exit(0)
     return flags
 
 def scrape(params):
@@ -97,52 +100,70 @@ def scrape(params):
     return scraper.scrape() #a list of the scraped pages ids
     #return True
 
-def analyse(params):
-    ##distance between newest version and all others
-    ##so first fetch all
+def plottrajectory(revid, database):
+    trajectory = database.gettrajectory(revid)
+    with open("plot/"+str(revid), "w") as file:
+        file.write("# distance \t revid\n")
+        for tr in trajectory:
+            file.write("\t".join(str(t) for t in tr)+"\n")
+    with open("plot/"+str(revid), "r") as file:
+        print file.read()
+
+def analyse(params, flags):
     if(params['scrape_limit'] != -1):
         print "Warning: ignoring '--scrape_limit' setting -- will only analyse 1 article"
     params['scrape_limit'] = 1
-    pageids = scrape(params)
     database = db.Database()
+    pageid = None
+    if flags['offline']:
+        params['titles'], pageid = database.getrandom("title")
+        print "Fetching random article from database,", params['titles']
+    else:
+        pageids = scrape(params)
+    pageids = [pageid]
     for pageid in pageids:
         print "analysing", pageids
         extantrevs = [e[0] for e in database.getextantrevs(pageid)]
         revx, oldrevs = extantrevs[-1], extantrevs[:-1]
-        print "extant revids", oldrevs
-        print "newest rev", revx
-        contentx = database.getrevcontent(revx)[0][0]
-        diffs = {(e,e):0 for e in extantrevs}
-        scratch = open(pageid,"w")
+        #print "extant revids", oldrevs
+        #print "newest rev", revx
+        contentx = database.getrevcontent(revx)[0][0]   
         print "tracing trajectory"
         for oldrev in oldrevs:
-            contenty = database.getrevcontent(oldrev)[0][0] 
-            levy = lv.FastLev(contentx, contenty)
-            print "dist between", revx, "and", oldrev, "is", levy
-            diffs.update({(revx,oldrev):levy.distance()})
-            diffs.update({(oldrev,revx):levy.distance()})
-            scratch.write(str(revx) + "\t" + str(oldrev) + "\t" + str(levy) + "\n")
-            scratch.write(str(oldrev) + "\t" + str(revx) + "\t" + str(levy) + "\n")
-            del levy
+            dist = database.getdist([revx,oldrev])
+            if not dist:
+                contenty = database.getrevcontent(oldrev)[0][0] 
+                levy = lv.fastlev.dist(contentx, contenty)
+                #print "dist between", revx, "and", oldrev, "is", levy
+                sys.out.write('.')
+                database.distinsert([revx, oldrev, levy])
+                database.distinsert([oldrev, revx, levy])
+            else:
+                #print "dist between", revx, "and", oldrev, "is", dist
+                sys.out.write('.')
         print "calculating pairs"
         i, v = 0, 1
         while v < len(extantrevs):
-            while diffs[(revx,extantrevs[i])] < diffs[(revx,extantrevs[v])]:
-                if v == len(extantrevs)-1:
-                    break
+            while v != len(extantrevs)-1 \
+                    and database.getdist([revx,extantrevs[i]]) \
+                    <= database.getdist([revx,extantrevs[v]]):
                 print "skipping version", v, "- revid:", extantrevs[v]
                 v = v + 1
-            contentx = database.getrevcontent(extantrevs[i])[0][0]
-            contenty = database.getrevcontent(extantrevs[v])[0][0]
-            levy = lv.FastLev(contentx, contenty)
-            diffs.update({(extantrevs[i],extantrevs[v]):levy.distance()})
-            diffs.update({(extantrevs[v],extantrevs[i]):levy.distance()})
-            scratch.write(str(extantrevs[i]) + "\t" + str(extantrevs[v]) + "\t" + str(levy) + "\n")
-            scratch.write(str(extantrevs[v]) + "\t" + str(extantrevs[i]) + "\t" + str(levy) + "\n")
-            del levy
+            i = v-1
+            dist = database.getdist([extantrevs[i],extantrevs[v]])
+            if not dist:
+                contentx = database.getrevcontent(extantrevs[i])[0][0]
+                contenty = database.getrevcontent(extantrevs[v])[0][0]
+                levy = lv.fastlev.dist(contentx, contenty)
+                database.distinsert([extantrevs[i], extantrevs[v], levy])
+                database.distinsert([extantrevs[v], extantrevs[i], levy])
+                print "dist between", extantrevs[i], "and", extantrevs[v], "is", levy
+            else:
+                print "dist between", extantrevs[i], "and", extantrevs[v], "is", dist
             i = v
             v = v + 1
-        scratch.close()
+        plottrajectory(revx,database)
+        
 
 def fetch():
     contentparams = {}
@@ -162,7 +183,8 @@ def main():
               "userids": 0}
     flags = {'scrape': False,
              'fetch': False,
-             'analyse': False}
+             'analyse': False,
+             'offline': False}
 
     ##ARGUMENT HANDLING
     params = _arg_sanity(params)
@@ -187,10 +209,9 @@ def main():
             print "error"
             sys.exit(-1)
 
-    if flags['analyse']:
-        results = analyse(params)
-        print results
-        sys.exit(0)
+    results = analyse(params, flags)
+    print results
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()
