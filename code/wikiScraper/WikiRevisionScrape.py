@@ -105,6 +105,10 @@ class WikiRevisionScrape:
         r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
         r = r.json()
         #HACK = should grab multiple pages
+        try:
+            p = r['query']['pages']
+        except:
+            print r
         for key, value in r['query']['pages'].iteritems():
             self.pageid = key
         #HACK = chould grab multiple revisions (for each pageid)
@@ -202,3 +206,97 @@ class WikiRevisionScrape:
     def _rate(self):
         if self.rl:
             self.rl_lastcall = datetime.now()
+
+    def _tracehistbatch(self):
+        visited = []
+        i = self.historylimit
+
+        self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|content|contentmodel|timestamp' 
+        
+        b = False
+        c = []
+        pages = {}
+        self.par.pop('revids', None)
+        self.par.update({'rvlimit':'max'})
+        self.par['pageids'] = self.pageid
+        
+        r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+        r = r.json()
+        print self.par
+        try:
+            pages = r['query']['pages'][self.pageid]['revisions']
+        except:
+            print r
+            
+        title = r['query']['pages'][self.pageid]['title']
+
+        print "fetched", len(pages)
+        # for p in pages:
+        #     visited.append(p['revid'])
+        #     try:
+        #         self.childid = p['revid']
+        #     except:
+        #         pass
+        #     try:
+        #         self.parentid = p['parentid']
+        #     except:
+        #         pass
+        #     try:
+        #         user = p['user']
+        #     except:
+        #         pass
+        #     try:
+        #         userid = p['userid']
+        #     except:
+        #         pass
+        #     try:
+        #         size = p['size']
+        #     except:
+        #         pass
+        #     try:
+        #         timestamp = p['timestamp']
+        #     except:
+        #         pass
+        #     try:
+        #         comment = p['comment']
+        #     except:
+        #         pass    
+        #     try:
+        #         content = p['*']
+        #     except:
+        #         pass
+        # print visited
+            
+        if len(pages) < 500:
+            b = True
+        elif len(pages) == 500: ##GO INTO SLOWER VERSION
+            while True:
+                self.par['revids'] = self.parentid
+                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                r = r.json()
+                visited.append(self.childid)
+                c.append(self.childid)
+                self.childid =  r['query']['pages'][self.pageid]['revisions'][0]['revid']
+                self.parentid = r['query']['pages'][self.pageid]['revisions'][0]['parentid']            
+                if parentid == 0 or parentid in visited:
+                    b = True
+                if b or (len(c)%500) == 0:
+                    print "fetching", len(c), "articles"
+                    self.par['revids'] = "|".join([str(r) for r in c])
+                    self.par.update({'rvlimit':'max'})
+                    print "request using", self.par
+                    r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                    r = r.json()
+                    r1 = None
+                    try:
+                        r1 = r['query']['pages'][self.pageid]['revisions']
+                    except:
+                        print r
+                    print "got", len(r1)
+                    pages.append(pages)
+                    c = []
+                    self.par['rvprop'] = 'ids'
+                    print "done"
+                if b:
+                    break
+        self.par.pop('pageids')

@@ -81,6 +81,13 @@ class Database:
                 pass
         return None
 
+    def getrevid(self, title):
+        sql = "SELECT revid FROM " + self.contenttable + " WHERE title = %s LIMIT 1;"
+        data = (title,)
+        if(self._execute(sql,data)):
+            return self.crsrsanity()
+        return None 
+        
     def getrandom(self):
         sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.contenttable + ") AS w2) LIMIT 1;"
         data = ()
