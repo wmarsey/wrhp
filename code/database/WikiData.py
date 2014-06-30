@@ -24,12 +24,22 @@ class Database:
                              dbname = self.database)
         self.crsr = self.cn.cursor()
 
+    def crsrsanity(self):
+        return self.crsr.fetchall() if (len(self.crsr.fetchall()) > 0) else None 
+
     def getextantrevs(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid;"
         data = (pageid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None
+
+    def gettimestamp(self, revid):
+        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
+        data = (revid,)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+#return self.crsrsanity()
 
     def getyoungestrev(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE pageid = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE pageid = %s AND b.time > a.time);"
@@ -71,24 +81,23 @@ class Database:
                 pass
         return None
 
-    def getrandom(self, column):
-        if not (column == "title" \
-                or column == "pageid"\
-                or column == "revid"):
-            print "Error, invalid column name"
-            return None
-        # sql = "SELECT * FROM (SELECT DISTINCT %s FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT %s FROOBM " + self.contenttable + ") AS w2) LIMIT 1;"
-        # data = (column, column)
-        sql = "SELECT %s, %s FROM wikicontent;"
-        data = ('title','pageid')
+    def getrandom(self):
+        sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.contenttable + ") AS w2) LIMIT 1;"
+        data = ()
         if(self._execute(sql,data)):
-            result = self.crsr.fetchall()
-            print result
-            return result
+            result = self.crsr.fetchall()[0]
+            print result[0], result[1]
+            return result[0], result[1]
         return None
 
     def gettrajectory(self, revid):
-        sql = "SELECT revid2, distance FROM " + self.distancetable + " WHERE revid1 = %s ORDER BY revid2;"
+        sql = "SELECT time, distance FROM wikiauthors JOIN wikidistance ON revid2 = revid WHERE revid1 = %s"
+        data = (revid,)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+
+    def getgrowth(self, revid):
+        sql = "SELECT time, char_length(content) distance FROM wikiauthors AS a JOIN wikidistance ON revid2 = a.revid JOIN wikicontent AS b ON revid2 = b.revid WHERE revid1 = %s"
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()

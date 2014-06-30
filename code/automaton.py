@@ -4,10 +4,23 @@ import lshtein as lv
 import sys
 import errno
 import re
+import datetime, time
+#from os import system
 #import gnuplot
 #import pylab as plt
+#import subprocess
+import scipy
+import os
 
 VERSION_NUMBER = "0.0.0.0.00.1"
+
+def dot():
+    sys.stdout.write('.')
+    sys.stdout.flush()
+
+def sdot():
+    sys.stdout.write('-')
+    sys.stdout.flush()
 
 def print_help():
     with open("../README", "r") as helpfile:
@@ -21,6 +34,7 @@ def intstring(s):
         return False
 
 ##PRINTS OUT DICTIONARY
+## ### NEED TO ADD CONDITIONALS ACCORDING TO FLAGS
 def echo_params(flags, params):
     print "---- PARAMETERS ----"
     for key, val in flags.iteritems():
@@ -76,13 +90,6 @@ def _flag_sanity(flags):
                     continue
         if arg == "--offline":
             flags['offline'] = True
-    
-    # try:
-    #     if sum([1 for f in flags.itervalues() if f]) != 1:
-    #         raise ValueError("One mode must be used: -s, -f")
-    # except ValueError:
-    #     print "Error: One mode must be used: -s, -f"
-    #     sys.exit(0)
     return flags
 
 def scrape(params):
@@ -97,17 +104,138 @@ def scrape(params):
             historylimit=params['depth_limit'],
             _titles=params['page_titles']
             )
-    return scraper.scrape() #a list of the scraped pages ids
-    #return True
+    return scraper.scrape()
+
+def plot(revid, database):
+    rawtrajectory = database.gettrajectory(revid)
+    creation = rawtrajectory[0][0]
+    trajectory = [((e[0]-creation).total_seconds(), e[1]) for e in rawtrajectory] 
+    rawgrowth = database.getgrowth(revid)
+    growth = [e[1] for e in rawgrowth]
+    data = []
+    if len(growth) == len(trajectory):
+        with open("plot/data/"+str(revid)+'plot', "w") as file:
+            file.write("# size \t revid\n")
+            for gr, tr in zip(growth, trajectory):
+                file.write("\t".join([str(tr[0]), str(tr[1]), str(gr)])+"\n")
+    with open("plot/data/"+str(revid)+"plot", "r") as file:
+        print file.read()
+    outputfile = 'plot/images/' + str(revid) + 'plot.png'
+    plotfile = 'plot/data/' + str(revid) + 'plot'
+    xaxis = 'Seconds since article creation'
+    yaxis = 'Distance from final'
+    title = 'Edit trajectory towards revision ' + str(revid) 
+    f = os.popen('gnuplot', 'w')
+    print >>f, "set terminal pngcairo size 700,512 enhanced font 'Verdana,10'"
+    print >>f, "set output '" + outputfile + "'"
+    print >>f, "set border linewidth 1.5"
+    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5"
+    print >>f, "set style line 2 lc rgb '#000000' lt 1 lw 2 pt 7 ps 1.5"
+    print >>f, "set ylabel '" + yaxis + "'"
+    print >>f, "set xlabel '" + xaxis + "'"
+    print >>f, "set format y \"%6.0f\";"
+    print >>f, "set format x \"%6.0f\";"
+    print >>f, "set nokey"
+    print >>f, "set title '" + title + ","
+    print >>f, "plot '" + plotfile + "' using 1:2 with linespoints ls 1,\\"
+    print >>f, "'" + plotfile + "' using 1:3 with linespoints ls 2"
+    f.flush()
+
+def plotgrowth(revid, database):
+    print "\nplotting trajectory towards revid", revid
+    rawtrajectory = database.getgrowth(revid)
+    #print "trajectory", rawtrajectory
+    #wepoch = datetime.datetime(2001,01,15)
+    creation = rawtrajectory[0][0]
+    trajectory = [((e[0]-creation).total_seconds(), e[1]) for e in rawtrajectory] 
+    with open("plot/data/"+str(revid)+'grwth', "w") as file:
+        file.write("# size \t revid\n")
+        for tr in trajectory:
+            file.write("\t".join(str(t) for t in tr)+"\n")
+    with open("plot/data/"+str(revid)+"grwth", "r") as file:
+        print file.read()
+    outputfile = 'plot/images/' + str(revid) + 'growth.png'
+    plotfile = 'plot/data/' + str(revid) + 'grwth'
+    xaxis = 'Seconds since article creation'
+    yaxis = 'Character count'
+    title = 'Article growth, ' + str(revid) 
+    f = os.popen('gnuplot', 'w')
+    print >>f, "set terminal pngcairo size 700,512 enhanced font 'Verdana,10'"
+    print >>f, "set output '" + outputfile + "'"
+    print >>f, "set border linewidth 1.5"
+    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5"
+    print >>f, "set ylabel '" + yaxis + "'"
+    print >>f, "set xlabel '" + xaxis + "'"
+    print >>f, "set format y \"%6.0f\";"
+    print >>f, "set format x \"%6.0f\";"
+    print >>f, "set nokey"
+    print >>f, "set title '" + title + ","
+    print >>f, "plot '" + plotfile + "' u 1:2 with linespoints ls 1"
+    f.flush()
 
 def plottrajectory(revid, database):
-    trajectory = database.gettrajectory(revid)
-    with open("plot/"+str(revid), "w") as file:
+    print "\nplotting trajectory towards revid", revid
+    rawtrajectory = database.gettrajectory(revid)
+    #print "trajectory", rawtrajectory
+    #wepoch = datetime.datetime(2001,01,15)
+    creation = rawtrajectory[0][0]
+    trajectory = [((e[0]-creation).total_seconds(), e[1]) for e in rawtrajectory] 
+    with open("plot/data/"+str(revid)+"traj", "w") as file:
         file.write("# distance \t revid\n")
         for tr in trajectory:
             file.write("\t".join(str(t) for t in tr)+"\n")
-    with open("plot/"+str(revid), "r") as file:
+    with open("plot/data/"+str(revid)+"traj", "r") as file:
         print file.read()
+    outputfile = 'plot/images/' + str(revid) + 'traj.png'
+    plotfile = 'plot/data/' + str(revid) + 'traj'
+    xaxis = 'Seconds since article creation'
+    yaxis = 'Distance from final'
+    title = 'Edit trajectory towards revision ' + str(revid) 
+    f = os.popen('gnuplot', 'w')
+    print >>f, "set terminal pngcairo size 700,512 enhanced font 'Verdana,10'"
+    print >>f, "set output '" + outputfile + "'"
+    print >>f, "set border linewidth 1.5"
+    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5"
+    print >>f, "set ylabel '" + yaxis + "'"
+    print >>f, "set xlabel '" + xaxis + "'"
+    print >>f, "set format y \"%6.0f\";"
+    print >>f, "set format x \"%6.0f\";"
+    print >>f, "set nokey"
+    print >>f, "set title '" + title + ","
+    print >>f, "plot '" + plotfile + "' u 1:2 with linespoints ls 1"
+    f.flush()
+
+def plotgrowth(revid, database):
+    print "\nplotting trajectory towards revid", revid
+    rawtrajectory = database.getgrowth(revid)
+    #print "trajectory", rawtrajectory
+    #wepoch = datetime.datetime(2001,01,15)
+    creation = rawtrajectory[0][0]
+    trajectory = [((e[0]-creation).total_seconds(), e[1]) for e in rawtrajectory] 
+    with open("plot/data/"+str(revid)+'grwth', "w") as file:
+        file.write("# size \t revid\n")
+        for tr in trajectory:
+            file.write("\t".join(str(t) for t in tr)+"\n")
+    with open("plot/data/"+str(revid)+"grwth", "r") as file:
+        print file.read()
+    outputfile = 'plot/images/' + str(revid) + 'growth.png'
+    plotfile = 'plot/data/' + str(revid) + 'grwth'
+    xaxis = 'Seconds since article creation'
+    yaxis = 'Character count'
+    title = 'Article growth, ' + str(revid) 
+    f = os.popen('gnuplot', 'w')
+    print >>f, "set terminal pngcairo size 700,512 enhanced font 'Verdana,10'"
+    print >>f, "set output '" + outputfile + "'"
+    print >>f, "set border linewidth 1.5"
+    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5"
+    print >>f, "set ylabel '" + yaxis + "'"
+    print >>f, "set xlabel '" + xaxis + "'"
+    print >>f, "set format y \"%6.0f\";"
+    print >>f, "set format x \"%6.0f\";"
+    print >>f, "set nokey"
+    print >>f, "set title '" + title + ","
+    print >>f, "plot '" + plotfile + "' using 1:2 with linespoints ls 1"
+    f.flush()
 
 def analyse(params, flags):
     if(params['scrape_limit'] != -1):
@@ -116,38 +244,38 @@ def analyse(params, flags):
     database = db.Database()
     pageid = None
     if flags['offline']:
-        params['titles'], pageid = database.getrandom("title")
+        params['titles'], pageid = database.getrandom()
         print "Fetching random article from database,", params['titles']
+        pageids = [pageid]
     else:
         pageids = scrape(params)
-    pageids = [pageid]
+        print pageids
     for pageid in pageids:
         print "analysing", pageids
         extantrevs = [e[0] for e in database.getextantrevs(pageid)]
+        #print extantrevs
         revx, oldrevs = extantrevs[-1], extantrevs[:-1]
-        #print "extant revids", oldrevs
-        #print "newest rev", revx
         contentx = database.getrevcontent(revx)[0][0]   
-        print "tracing trajectory"
+        print "tracing trajectory", len(extantrevs), "revisions"
+        print "target revision", len(contentx), "long"
         for oldrev in oldrevs:
-            dist = database.getdist([revx,oldrev])
-            if not dist:
+            dist1 = database.getdist([revx,oldrev])
+            dist2 = database.getdist([oldrev, revx])
+            if not dist1 or dist2:
                 contenty = database.getrevcontent(oldrev)[0][0] 
                 levy = lv.fastlev.dist(contentx, contenty)
-                #print "dist between", revx, "and", oldrev, "is", levy
-                sys.out.write('.')
+            if not dist1:
                 database.distinsert([revx, oldrev, levy])
+            if not dist2:
                 database.distinsert([oldrev, revx, levy])
-            else:
-                #print "dist between", revx, "and", oldrev, "is", dist
-                sys.out.write('.')
-        print "calculating pairs"
+            dot()
+        print "\ncalculating pairs"
         i, v = 0, 1
         while v < len(extantrevs):
             while v != len(extantrevs)-1 \
                     and database.getdist([revx,extantrevs[i]]) \
                     <= database.getdist([revx,extantrevs[v]]):
-                print "skipping version", v, "- revid:", extantrevs[v]
+                sdot()
                 v = v + 1
             i = v-1
             dist = database.getdist([extantrevs[i],extantrevs[v]])
@@ -157,14 +285,13 @@ def analyse(params, flags):
                 levy = lv.fastlev.dist(contentx, contenty)
                 database.distinsert([extantrevs[i], extantrevs[v], levy])
                 database.distinsert([extantrevs[v], extantrevs[i], levy])
-                print "dist between", extantrevs[i], "and", extantrevs[v], "is", levy
-            else:
-                print "dist between", extantrevs[i], "and", extantrevs[v], "is", dist
+            dot()
             i = v
             v = v + 1
-        plottrajectory(revx,database)
+        #plottrajectory(revx,database)
+        #plotgrowth(revx, database)
+        plot(revx, database)
         
-
 def fetch():
     contentparams = {}
     contentparams.update({'titles':params['titles']})
