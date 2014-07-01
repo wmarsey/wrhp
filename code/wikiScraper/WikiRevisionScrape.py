@@ -34,6 +34,11 @@ class WikiRevisionScrape:
     parentid = 0
     childid = 0
     db = None
+    title = ""
+
+    def dot(self):
+        sys.stdout.write('.')
+        sys.stdout.flush()
 
     #atm naively assuming headers, params, titles to be in correct format
     def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None):
@@ -64,27 +69,31 @@ class WikiRevisionScrape:
                     del self.par['revids']
                 if(self.rand):
                     self.par['titles'] = wikipedia.random() #get random title
+                    self.title = self.par['titles'] 
                 print "fetching page", self.par['titles'] 
                 self._getlatest()
                 scraped.append(self.pageid)
                 r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                 self._rate()
                 del self.par['titles']
-                self._tracehist() ##returns pageid
+                self._tracehist()
         elif self.rand:
             for i in range(self.pagelimit):
-                if 'rvprop' in self.par:
-                    del self.par['rvprop']
-                if 'revids' in self.par:
-                    del self.par['revids']
-                self.par['titles'] = wikipedia.random() #get random title
-                print "fetching page", self.par['titles']
-                self._getlatest()
-                scraped.append(self.pageid)
-                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-                self._rate()
-                del self.par['titles']
-                self._tracehist() ##returns pageid
+                while True:
+                    if 'rvprop' in self.par:
+                        del self.par['rvprop']
+                    if 'revids' in self.par:
+                        del self.par['revids']
+                    self.par['titles'] = wikipedia.random() #get random title
+                    self.title = self.par['titles']
+                    print "fetching page", self.par['titles']
+                    self._getlatest()
+                    r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                    self._rate()
+                    del self.par['titles']
+                    if self._tracehist(): 
+                        scraped.append(self.pageid)
+                        break
         else:
             for title in self.par['titles'].split('|'):
                 if 'rvprop' in self.par:
@@ -93,14 +102,16 @@ class WikiRevisionScrape:
                     del self.par['revids']
                 print "fetching page", title
                 self.par['titles'] = title
+                self.title = self.par['titles']
                 self._getlatest()
                 scraped.append(self.pageid)
                 r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                 self._rate()
                 del self.par['titles']
-                self._tracehist()
-        
+                self._tracehist()   
         return scraped 
+
+
     def _getlatest(self):
         r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
         r = r.json()
@@ -116,86 +127,77 @@ class WikiRevisionScrape:
         return self.childid
     
     def _tracehist(self):
-        ##We store revisions we've visited
-        ##loops can occur in revision histories, we assume this means the end of discoverable history
         visited = []
         i = self.historylimit
         j = 0
         pageid = 0
-
         self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|contentmodel|timestamp|content'
-
-        while (self.parentid not in visited) and i is not 0 and self.parentid is not 0:
+        pages = []
+        b = False
+        while True:
             self.par['revids'] = self.parentid
-
             self._pace()
-
             r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
             r = r.json()
-            
             self._rate()
 
+            try:
+                page = r['query']['pages'][self.pageid]['revisions'][0]
+            except:
+                print r
             visited.append(self.childid)
-            
-            #print r
-            user = ""
-            size = ""
-            timestamp = ""
-            comment = ""
-            content = ""
-            title = ""
+            pages.append(page)
+            self.childid =  page['revid']
+            self.parentid = page['parentid']
+            title = r['query']['pages'][self.pageid]['title']
 
-            try:
-                self.childid =  r['query']['pages'][self.pageid]['revisions'][0]['revid']
-            except:
-                pass
-            try:
-                self.parentid = r['query']['pages'][self.pageid]['revisions'][0]['parentid']
-            except:
-                pass
-            try:
-                user = r['query']['pages'][self.pageid]['revisions'][0]['user']
-            except:
-                pass
-            try:
-                userid = r['query']['pages'][self.pageid]['revisions'][0]['userid']
-            except:
-                pass
-            try:
-                size = r['query']['pages'][self.pageid]['revisions'][0]['size']
-            except:
-                pass
-            try:
-                timestamp = r['query']['pages'][self.pageid]['revisions'][0]['timestamp']
-            except:
-                pass
-            try:
-                comment = r['query']['pages'][self.pageid]['revisions'][0]['comment']
-            except:
-                pass    
-            try:
-                content = r['query']['pages'][self.pageid]['revisions'][0]['*']
-            except:
-                pass
-            try:
-                title = r['query']['pages'][self.pageid]['title']
-            except:
-                pass
-            
-            if not self.db.indexinsert([int(self.childid), int(self.pageid), user.encode("UTF-8"), int(userid), timestamp, size, comment.encode("UTF-8")]):
-                print "database index insert failed" 
-                return True
-            if not self.db.contentinsert([int(self.childid), int(self.pageid), title, content.encode("UTF-8")]):
-                print "database index insert failed"
-                return False
-            
+            if i == 0 or self.parentid == 0 or self.parentid in visited:
+                b = True
+
+            if b or ((len(pages)%50) == 0 and len(pages)):
+                if len(visited) >= 50:
+                    for p in pages:
+                        user = ""
+                        size = ""
+                        timestamp = ""
+                        comment = ""
+                        content = ""
+                        title = ""
+                        self.childid =  p['revid']
+                        self.parentid = p['parentid']
+                        user = p['user']
+                        try:
+                            userid = p['userid']
+                        except:
+                            pass
+                        try:
+                            size = p['size']
+                        except:
+                            pass
+                        try:
+                            timestamp = p['timestamp']
+                        except:
+                            pass
+                        try:
+                            comment = p['comment']
+                        except:
+                            pass    
+                        content = p['*']
+                        #self.dot()
+                        self.db.indexinsert([int(self.childid), int(self.pageid), user.encode("UTF-8"), int(userid), timestamp, size, comment.encode("UTF-8")])
+                        self.db.contentinsert([int(self.childid), int(self.pageid), title, content.encode("UTF-8")])
+                        pages = []
+                    sys.stdout.write('|\n')
+                    sys.stdout.flush()
+                else:
+                    print "\nArticle discarded"
+                    return False
+            if b:
+                break
             if(self.historylimit > 0):
-                print self.pageid, "fetch", j+1, "of", self.historylimit, ", revid", self.childid, "timestamp", str(timestamp)
                 i = i - 1
-            else:
-                print self.pageid, "fetch", j+1, ", revid", self.childid, "timestamp", str(timestamp)
+            self.dot()
             j = j + 1    
-        print "limit reached"
         return True
         
     def _pace(self):
@@ -207,30 +209,38 @@ class WikiRevisionScrape:
         if self.rl:
             self.rl_lastcall = datetime.now()
 
-    def _tracehistbatch(self):
-        visited = []
-        i = self.historylimit
+    #def _tracehistbatch(self):
+        # visited = []
+        # i = self.historylimit
 
-        self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|content|contentmodel|timestamp' 
+        # self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|content|contentmodel|timestamp' 
         
-        b = False
-        c = []
-        pages = {}
-        self.par.pop('revids', None)
-        self.par.update({'rvlimit':'max'})
-        self.par['pageids'] = self.pageid
+        # b = False
+        # c = []
+        # pages = {}
+        # self.par.pop('revids', None)
+        # if self.historylimit != -1:
+        #     self.par.update({'rvlimit':self.historylimit})
+        # else:
+        #     self.par.update({'rvlimit':'max'})
+        #     i = i - 500
+        # self.par['pageids'] = self.pageid
         
-        r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-        r = r.json()
-        print self.par
-        try:
-            pages = r['query']['pages'][self.pageid]['revisions']
-        except:
-            print r
+        # r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+        # r = r.json()
+        # print self.par
+        # try:
+        #     pages = r['query']['pages'][self.pageid]['revisions']
+        # except:
+        #     print r
             
-        title = r['query']['pages'][self.pageid]['title']
+        # title = r['query']['pages'][self.pageid]['title']
 
-        print "fetched", len(pages)
+        # print "fetched", len(pages)
+        # if len(pages) < 50 and (self.historylimit == -1 or self.historylimit > 50):
+        #     print "Discarding page", title, "less than 50 revisions"
+        #     self.par.pop('pageids')
+        #     return
         # for p in pages:
         #     visited.append(p['revid'])
         #     try:
@@ -265,38 +275,59 @@ class WikiRevisionScrape:
         #         content = p['*']
         #     except:
         #         pass
+        #     if not self.db.indexinsert([int(self.childid), int(self.pageid), user.encode("UTF-8"), int(userid), timestamp, size, comment.encode("UTF-8")]):
+        #         print "database index insert failed" 
+        #         return True
+        #     if not self.db.contentinsert([int(self.childid), int(self.pageid), title, content.encode("UTF-8")]):
+        #         print "database content insert failed"
+        #         return False
         # print visited
             
-        if len(pages) < 500:
-            b = True
-        elif len(pages) == 500: ##GO INTO SLOWER VERSION
-            while True:
-                self.par['revids'] = self.parentid
-                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-                r = r.json()
-                visited.append(self.childid)
-                c.append(self.childid)
-                self.childid =  r['query']['pages'][self.pageid]['revisions'][0]['revid']
-                self.parentid = r['query']['pages'][self.pageid]['revisions'][0]['parentid']            
-                if parentid == 0 or parentid in visited:
-                    b = True
-                if b or (len(c)%500) == 0:
-                    print "fetching", len(c), "articles"
-                    self.par['revids'] = "|".join([str(r) for r in c])
-                    self.par.update({'rvlimit':'max'})
-                    print "request using", self.par
-                    r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-                    r = r.json()
-                    r1 = None
-                    try:
-                        r1 = r['query']['pages'][self.pageid]['revisions']
-                    except:
-                        print r
-                    print "got", len(r1)
-                    pages.append(pages)
-                    c = []
-                    self.par['rvprop'] = 'ids'
-                    print "done"
-                if b:
-                    break
-        self.par.pop('pageids')
+        # if len(pages) < 500:
+        #     b = True
+        #elif len(pages) == 500: ##GO INTO SLOWER VERSION
+        #self.par.pop('pageids')
+        #visited = []
+        #i = self.historylimit
+
+        #self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|content|contentmodel|timestamp' 
+        
+        # self.par['rvprop'] = 'ids'
+        
+        # b = False
+        # c = []
+        # while True:
+        #     self.dot()
+        #     self.par['revids'] = self.parentid
+        #     r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+        #     r = r.json()
+        #     visited.append(self.childid)
+        #     c.append(self.childid)
+        #     self.childid =  r['query']['pages'][self.pageid]['revisions'][0]['revid']
+        #     self.parentid = r['query']['pages'][self.pageid]['revisions'][0]['parentid']
+        #     if i == 0 or self.parentid == 0 or self.parentid in visited:
+        #         b = True
+        #     if b and len(visited) < 50:
+        #         print "\ndiscarding", self.title                 
+        #     elif b or (len(c)%500) == 0:
+        #         print "fetching", len(c), "revisions"
+        #         self.par['revids'] = "|".join([str(r) for r in c])
+        #         self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|content|contentmodel|timestamp'
+        #         #self.par.update({'rvlimit':'max'})
+        #         print "request using", self.par
+        #         r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+        #         r = r.json()
+        #         pages = None
+        #         try:
+        #             pages = r['query']['pages'][self.pageid]['revisions']
+        #         except:
+        #             print r
+        #         print "got", len(pages)
+        #         print "over", len(r['query']['pages'])
+        #         c = []
+        #         self.par['rvprop'] = 'ids'
+        #         print "batch of", len(c), "downloaded of", self.title
+        #     if b:
+        #         break
+        #     i = i - 1
+        #self.par.pop('pageids')
