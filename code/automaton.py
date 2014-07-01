@@ -106,11 +106,46 @@ def scrape(params):
             )
     return scraper.scrape()
 
-def plot(revid, database):
-    rawtrajectory = database.gettrajectory(revid)
+def barchart(revid, rawdata):
+    sdata = sorted(rawdata, key = lambda x: x[1])
+    with open("plot/data/"+str(revid)+'bar', "w") as file:
+        file.write("# size \t revid\n")
+        for n, sd in enumerate(sdata):
+            x = [str(n)]
+            x.extend(["\""+str(sd[0])+"\"", str(sd[1])])
+            file.write("\t".join(x)+"\n")
+    with open("plot/data/"+str(revid)+"bar", "r") as file:
+        print file.read()
+    outputfile = 'plot/images/' + str(revid) + 'bar.png'
+    plotfile = 'plot/data/' + str(revid) + 'bar'
+    xaxis = 'Username'
+    yaxis = 'Contribution weight'
+    title = 'User contribution to ' + str(revid)
+    yrange = sdata[-1][1] * 1
+    print "largest", yrange
+    f = os.popen('gnuplot', 'w')
+    print >>f, "set terminal pngcairo size 1600,512 enhanced font 'Verdana,10'"
+    print >>f, "set output '" + outputfile + "'"
+    print >>f, "set border linewidth 1.5"
+    print >>f, "set boxwidth 0.5"
+    print >>f, "set style fill solid"
+    print >>f, "set ylabel '" + yaxis + "'"
+    print >>f, "set xlabel '" + xaxis + "'"
+    print >>f, "set yrange [:" + str(yrange) + "]"
+    print >>f, "set format y \"%6.0f\";"
+    print >>f, "set format x \"%6.0f\";"
+    print >>f, "set xtics rotate by 90 right"
+    print >>f, "set nokey"
+    print >>f, "set style data histogram"
+    print >>f, "set title '" + title + ","
+    print >>f, "plot '" + plotfile + "' using 3:xtic(2) with histogram, '' using 0:3:3 with labels font \"arial,7\""
+    f.flush()
+
+def plot(revid, rawtrajectory, rawgrowth):
+    print len(rawtrajectory)
+    print len(rawgrowth) ##RAWGROWTH BROKEN
     creation = rawtrajectory[0][0]
     trajectory = [((e[0]-creation).total_seconds(), e[1]) for e in rawtrajectory] 
-    rawgrowth = database.getgrowth(revid)
     growth = [e[1] for e in rawgrowth]
     data = []
     if len(growth) == len(trajectory):
@@ -118,8 +153,8 @@ def plot(revid, database):
             file.write("# size \t revid\n")
             for gr, tr in zip(growth, trajectory):
                 file.write("\t".join([str(tr[0]), str(tr[1]), str(gr)])+"\n")
-    with open("plot/data/"+str(revid)+"plot", "r") as file:
-        print file.read()
+    # with open("plot/data/"+str(revid)+"plot", "r") as file:
+    #     print file.read()
     outputfile = 'plot/images/' + str(revid) + 'plot.png'
     plotfile = 'plot/data/' + str(revid) + 'plot'
     xaxis = 'Seconds since article creation'
@@ -155,30 +190,28 @@ def analyse(params, flags):
         pageids = scrape(params)
         print pageids
     for pageid in pageids:
-        print "analysing", pageids
+        print "analysing", pageid
         extantrevs = [e[0] for e in database.getextantrevs(pageid)]
-        #print extantrevs
         revx, oldrevs = extantrevs[-1], extantrevs[:-1]
         contentx = database.getrevcontent(revx)[0][0]   
         print "tracing trajectory", len(extantrevs), "revisions"
         print "target revision", len(contentx), "long"
         for oldrev in oldrevs:
-            dist1 = database.getdist([revx,oldrev])
-            dist2 = database.getdist([oldrev, revx])
-            if not dist1 or dist2:
+            dist1 = database.gettraj([revx, oldrev])
+            #dist2 = database.gettraj([oldrev, revx])
+            if not dist1:
                 contenty = database.getrevcontent(oldrev)[0][0] 
                 levy = lv.fastlev.dist(contentx, contenty)
-            if not dist1:
-                database.distinsert([revx, oldrev, levy])
-            if not dist2:
-                database.distinsert([oldrev, revx, levy])
+                database.trajinsert([revx, oldrev, levy])
+            #if not dist2:
+                #database.trajinsert([oldrev, revx, levy])
             dot()
         print "\ncalculating pairs"
         i, v = 0, 1
         while v < len(extantrevs):
             while v != len(extantrevs)-1 \
-                    and database.getdist([revx,extantrevs[i]]) \
-                    <= database.getdist([revx,extantrevs[v]]):
+                    and database.gettraj([revx,extantrevs[i]]) \
+                    <= database.gettraj([revx,extantrevs[v]]):
                 sdot()
                 v = v + 1
             i = v-1
@@ -192,9 +225,8 @@ def analyse(params, flags):
             dot()
             i = v
             v = v + 1
-        #plottrajectory(revx,database)
-        #plotgrowth(revx, database)
-        plot(revx, database)
+        plot(revx, database.gettrajectory(revx), database.getgrowth(revx))
+        barchart(revx, database.getuserchange(pageid))
         
 def fetch():
     contentparams = {}

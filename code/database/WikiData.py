@@ -12,6 +12,7 @@ class Database:
     contenttable = "wikicontent"
     revisiontable = "wikiauthors"
     distancetable = "wikidistance"
+    trajectorytable = "wikitrajectory"
     cn = None
     crsr = None
 
@@ -80,6 +81,18 @@ class Database:
                 print "error", param[0], param[1]
                 pass
         return None
+    
+    def gettraj(self, param):
+        sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s;"
+        data = (param[0],param[1])
+        if(self._execute(sql, data)):
+            try:
+                result = self.crsr.fetchall()
+                return None if not len(result) else result[0][0]
+            except:
+                print "error", param[0], param[1]
+                pass
+        return None
 
     def getrevid(self, title):
         sql = "SELECT revid FROM " + self.contenttable + " WHERE title = %s LIMIT 1;"
@@ -98,16 +111,23 @@ class Database:
         return None
 
     def gettrajectory(self, revid):
-        sql = "SELECT time, distance FROM wikiauthors JOIN wikidistance ON revid2 = revid WHERE revid1 = %s"
+        sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s"
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
     def getgrowth(self, revid):
-        sql = "SELECT time, char_length(content) distance FROM wikiauthors AS a JOIN wikidistance ON revid2 = a.revid JOIN wikicontent AS b ON revid2 = b.revid WHERE revid1 = %s"
+        sql = "SELECT time, char_length(content) distance FROM " + self.revisiontable + " AS a JOIN " + self.distancetable + " ON revid2 = a.revid JOIN " + self.contenttable + " AS b ON revid2 = b.revid WHERE revid1 = %s"
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
+
+    def getuserchange(self, pageid):
+        sql = "SELECT username, sum(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid2 = b.revid AND b.pageid = %s GROUP BY username;"
+        data = (pageid,)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+        return None
 
     def existencequery(self, sql, data):
         self.crsr._execute(sql, data)
@@ -134,6 +154,14 @@ class Database:
             print "distance already stored"
             return False
         sql = "INSERT INTO " + self.distancetable + " VALUES (%s, %s, %s);"
+        data = (param[0], param[1], param[2])
+        return self._execute(sql,data)
+
+    def trajinsert(self, param):
+        if self.gettraj([param[0], param[1]]):
+            print "distance already stored"
+            return False
+        sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
         data = (param[0], param[1], param[2])
         return self._execute(sql,data)
 
