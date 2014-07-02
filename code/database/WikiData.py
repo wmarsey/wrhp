@@ -117,7 +117,7 @@ class Database:
             return self.crsr.fetchall()
 
     def getgrowth(self, revid):
-        sql = "SELECT time, char_length(content) distance FROM " + self.revisiontable + " AS a JOIN " + self.distancetable + " ON revid2 = a.revid JOIN " + self.contenttable + " AS b ON revid2 = b.revid WHERE revid1 = %s"
+        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " ON revid2 = a.revid WHERE revid1 = %s ORDER BY time;"
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()

@@ -106,7 +106,7 @@ def scrape(params):
             )
     return scraper.scrape()
 
-def barchart(revid, rawdata):
+def reward(revid, rawdata):
     sdata = sorted(rawdata, key = lambda x: x[1])
     with open("plot/data/"+str(revid)+'bar', "w") as file:
         file.write("# size \t revid\n")
@@ -141,7 +141,7 @@ def barchart(revid, rawdata):
     print >>f, "plot '" + plotfile + "' using 3:xtic(2) with histogram, '' using 0:3:3 with labels font \"arial,7\""
     f.flush()
 
-def plot(revid, rawtrajectory, rawgrowth):
+def trajectory(revid, rawtrajectory, rawgrowth):
     print len(rawtrajectory)
     print len(rawgrowth) ##RAWGROWTH BROKEN
     creation = rawtrajectory[0][0]
@@ -161,11 +161,11 @@ def plot(revid, rawtrajectory, rawgrowth):
     yaxis = 'Distance from final'
     title = 'Edit trajectory towards revision ' + str(revid) 
     f = os.popen('gnuplot', 'w')
-    print >>f, "set terminal pngcairo size 700,512 enhanced font 'Verdana,10'"
+    print >>f, "set terminal pngcairo size 1000,700 enhanced font 'Verdana,10'"
     print >>f, "set output '" + outputfile + "'"
     print >>f, "set border linewidth 1.5"
-    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5"
-    print >>f, "set style line 2 lc rgb '#000000' lt 1 lw 2 pt 7 ps 1.5"
+    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 ps 0"
+    print >>f, "set style line 2 lc rgb '#000000' lt 1 lw 2 ps 0"
     print >>f, "set ylabel '" + yaxis + "'"
     print >>f, "set xlabel '" + xaxis + "'"
     print >>f, "set format y \"%6.0f\";"
@@ -225,8 +225,8 @@ def analyse(params, flags):
             dot()
             i = v
             v = v + 1
-        plot(revx, database.gettrajectory(revx), database.getgrowth(revx))
-        barchart(revx, database.getuserchange(pageid))
+        trajectory(revx, database.gettrajectory(revx), database.getgrowth(revx))
+        reward(revx, database.getuserchange(pageid))
         
 def fetch():
     contentparams = {}
