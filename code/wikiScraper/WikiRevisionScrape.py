@@ -1,14 +1,10 @@
 import requests
 import time
 import json
-import csv
 import wikipedia
-import sys
-import os
+import sys, os
 import inspect
-from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from decimal import Decimal
 sys.path.append("..")
 import database
 
@@ -58,7 +54,8 @@ class WikiRevisionScrape:
 
     def scrape(self):
         self._pace()
-        scraped = []
+        ids = []
+        titles = []
         ## IMPROVE THIS LOGICAL FLOW COULD BE JUST TWO IF ELSE DECISIONS
         ## NEEDS TO BE LIKE while self.pagelimit != 0 or something
         if self.pagelimit == -1 and self.rand:
@@ -72,7 +69,8 @@ class WikiRevisionScrape:
                     self.title = self.par['titles'] 
                 print "fetching page", self.par['titles'] 
                 self._getlatest()
-                scraped.append(self.pageid)
+                ids.append(self.pageid)
+                titles.append(self.title)
                 r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                 self._rate()
                 del self.par['titles']
@@ -92,7 +90,8 @@ class WikiRevisionScrape:
                     self._rate()
                     del self.par['titles']
                     if self._tracehist(): 
-                        scraped.append(self.pageid)
+                        ids.append(self.pageid)
+                        titles.append(self.title)
                         break
         else:
             for title in self.par['titles'].split('|'):
@@ -104,12 +103,13 @@ class WikiRevisionScrape:
                 self.par['titles'] = title
                 self.title = self.par['titles']
                 self._getlatest()
-                scraped.append(self.pageid)
+                ids.append(self.pageid)
+                titles.append(self.title)
                 r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                 self._rate()
                 del self.par['titles']
                 self._tracehist()   
-        return scraped 
+        return titles, ids
 
 
     def _getlatest(self):
@@ -157,7 +157,7 @@ class WikiRevisionScrape:
             if b or ((len(pages)%50) == 0 and len(pages)):
                 if len(visited) >= 50:
                     for p in pages:
-                        user, size, timestamp, comment, content, title = "", "", "", "", "", ""
+                        user, size, timestamp, comment, content = "", "", "", "", ""
                         self.childid =  p['revid']
                         self.parentid = p['parentid']
                         user = p['user']

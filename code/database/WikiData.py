@@ -17,7 +17,7 @@ class Database:
     crsr = None
 
     def __init__(self):
-        with open('dbpas','r') as pasfil:
+        with open('/homes/wm613/individual-project/code/dbpas','r') as pasfil:
             self.password = pasfil.read().strip()
         self.cn = db.connect(host = self.host,
                              user = self.user,
@@ -111,7 +111,7 @@ class Database:
         return None
 
     def gettrajectory(self, revid):
-        sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s"
+        sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s ORDER BY time;"
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
@@ -122,13 +122,20 @@ class Database:
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
-    def getuserchange(self, pageid):
+    def getuserchange(self, revx):
         sql = "SELECT username, sum(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid2 = b.revid AND b.pageid = %s GROUP BY username;"
-        data = (pageid,)
+        data = (revx,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None
-
+    
+    def getusereditcounts(self, revx):
+        sql = "SELECT username, count(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid2 = b.revid AND b.pageid = %s GROUP BY username;"
+        data = (revx,)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+        return None        
+    
     def existencequery(self, sql, data):
         self.crsr._execute(sql, data)
         return cursor.fetchall()
