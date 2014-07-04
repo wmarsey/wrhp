@@ -7,6 +7,7 @@ import datetime, time
 import scipy
 import os, sys
 import signal
+import matplotlib.pyplot as plt
 
 VERSION_NUMBER = "0.0.0.0.00.1"
 BASEPATH = "/homes/wm613/individual-project/code/"
@@ -120,7 +121,6 @@ def count(revid, rawdata, title):
     yaxis = 'Contribution weight'
     title = 'User contribution counts for article "' + title + '"'
     yrange = sdata[-1][1] * 1
-    print "largest", yrange
     f = os.popen('gnuplot', 'w')
     print >>f, "set terminal pngcairo size 1600,700 enhanced font 'Verdana,10'"
     print >>f, "set output '" + outputfile + "'"
@@ -157,7 +157,6 @@ def reward(revid, rawdata, title):
     yaxis = 'Contribution weight'
     title = 'User rewards for contributions to article "' + title + '"'
     yrange = sdata[-1][1] * 1
-    print "largest", yrange
     f = os.popen('gnuplot', 'w')
     print >>f, "set terminal pngcairo size 1600,700 enhanced font 'Verdana,10'"
     print >>f, "set output '" + outputfile + "'"
@@ -178,43 +177,37 @@ def reward(revid, rawdata, title):
     return imagefile
 
 def trajectory(revid, rawtrajectory, rawgrowth, title):
-    filename = str(revid)+'trajectory'
-    datafile = BASEPATH + "plot/data/" + filename
-    imagefile = BASEPATH + "plot/images/" + filename + ".png"
-    creation = rawtrajectory[0][0]
-    trajectory = [((e[0]-creation).total_seconds()/3600, e[1]) for e in rawtrajectory] 
-    growth = [e[1] for e in rawgrowth]
-    data = []
-    if len(growth) == len(trajectory):
-        with open(datafile, "w") as file:
-            file.write("# size \t revid\n")
-            for gr, tr in zip(growth, trajectory):
-                file.write("\t".join([str(tr[0]), str(tr[1]), str(gr)])+"\n")
-    outputfile = imagefile
-    plotfile = datafile
+    #imagefile = BASEPATH + "plot/images/" + filename + ".png"
     xaxis = 'Hours since article creation'
-    yaxis = 'Distance from final'
-    title = 'Edit trajectory towards revision ' + str(revid) + ', ' + str(rawtrajectory[0][0]) + " to " + str(rawtrajectory[-1][0]) 
-    f = os.popen('gnuplot', 'w')
-    print >>f, "set terminal pngcairo size 1600,700 enhanced font 'Verdana,10'"
-    print >>f, "set output '" + outputfile + "'"
-    print >>f, "set border linewidth 1.5"
-    print >>f, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 ps 0"
-    print >>f, "set style line 2 lc rgb '#000000' lt 1 lw 2 ps 0"
-    print >>f, "set ylabel '" + yaxis + "'"
-    print >>f, "set xlabel '" + xaxis + "'"
-    print >>f, "set format y \"%6.0f\";"
-    print >>f, "set format x \"%6.0f\";"
-    print >>f, "set nokey"
-    print >>f, "set title '" + title + ","
-    print >>f, "plot '" + plotfile + "' using 1:2 with linespoints ls 1,\\"
-    print >>f, "'" + plotfile + "' using 1:3 with linespoints ls 2"
-    f.flush()
-    return imagefile
+    yaxis1 = 'Edit distance from final'
+    yaxis2 = 'Article length'
+    title = 'Edit trajectory towards revision ' + str(revid) + ', ' + str(rawtrajectory[0][0]) + " to " + str(rawtrajectory[-1][0])
+    creation = rawtrajectory[0][0]
+    times = [(e[0]-creation).total_seconds()/3600 for e in rawtrajectory]
+    trajectory = [e[1] for e in rawtrajectory]
+    growth = [e[1] for e in rawgrowth]
+    fig, ax1 = plt.subplots()
+    ax1.plot(times, trajectory, 'bo-', label='Edit distance from final')
+    ax1.set_xlabel(xaxis)
+    ax1.set_ylabel(yaxis1, color='b')
+    
+    ax2 = ax1.twinx()
+    ax2.plot(times, growth, 'ko-', label='Article length')
+    ax2.set_ylabel(yaxis2, color='k')
+
+    for tl in ax1.get_yticklabels():
+        tl.set_color('b')
+
+    ax1.legend(loc=0)
+    ax2.legend(loc=0)
+
+    plt.title(title)
+    plt.show()
 
 def analyse(params, flags):
+    repeat = 1;
     if(params['scrape_limit'] != -1):
-        print "Warning: ignoring '--scrape_limit' setting -- will only analyse 1 article"
+        repeat = params['scrape_limit']
     params['scrape_limit'] = 1
     database = db.Database()
     pageid = None
@@ -226,8 +219,8 @@ def analyse(params, flags):
     else:
         titles, pageids = scrape(params)
         print pageids
-    for i, pageid in enumerate(pageids):
-        print "Analysing", titles[i]
+    for t, pageid in enumerate(pageids):
+        print "Analysing", titles[t]
         extantrevs = [e[0] for e in database.getextantrevs(pageid)]
         revx, oldrevs = extantrevs[-1], extantrevs[:-1]
         contentx = database.getrevcontent(revx)[0][0]   
@@ -236,31 +229,41 @@ def analyse(params, flags):
             dist1 = database.gettraj([revx, oldrev])
             if not dist1:
                 contenty = database.getrevcontent(oldrev)[0][0] 
-                levy = lv.fastlev.weightdist(contentx, contenty)
+                levy = lv.fastlev.plaindist(contentx, contenty)
                 database.trajinsert([revx, oldrev, levy])
             dot()
         print "\nCalculating pairs"
         i, v = 0, 1
+        creward = 0
         while v < len(extantrevs):
-            while v != len(extantrevs)-1 \
-                    and database.gettraj([revx,extantrevs[i]]) \
-                    <= database.gettraj([revx,extantrevs[v]]):
-                sdot()
-                v = v + 1
-            i = v-1
+            q = 0
+            if creward < 0: #doesn't do skipping until out of creward period
+                while v != len(extantrevs)-1 \
+                        and q < params['freward'] \
+                        and database.gettraj([revx,extantrevs[i]]) \
+                        <= database.gettraj([revx,extantrevs[v]]):
+                    sdot() #dash
+                    v = v + 1
+                    q = q + 1
+                i = v-1
             dist = database.getdist([extantrevs[i],extantrevs[v]])
             if not dist:
                 contentx = database.getrevcontent(extantrevs[i])[0][0]
                 contenty = database.getrevcontent(extantrevs[v])[0][0]
                 levy = lv.fastlev.weightdist(contentx, contenty)
-                database.distinsert([extantrevs[i], extantrevs[v], levy])
-                database.distinsert([extantrevs[v], extantrevs[i], levy])
+                print levy
+                database.distinsert([extantrevs[i], extantrevs[v], levy[0]])
+                database.distinsert([extantrevs[v], extantrevs[i], levy[0]])
             dot()
             i = v
             v = v + 1
-        plot1 = trajectory(revx, database.gettrajectory(revx), database.getgrowth(revx), params['titles'])
-        plot2 = count(revx, database.getusereditcounts(pageid), params['titles'])
-        plot3 = reward(revx, database.getuserchange(pageid), params['titles'])
+            if creward < params['creward'] and creward >= 0:
+                 creward = creward + 1
+            elif creward > 0:
+                creward = -1
+        plot1 = trajectory(revx, database.gettrajectory(revx), database.getgrowth(revx), titles[t])
+        plot2 = count(revx, database.getusereditcounts(pageid), titles[t])
+        plot3 = reward(revx, database.getuserchange(pageid), titles[t])
         print plot1
         print plot2
         print plot3
@@ -311,6 +314,8 @@ def main():
             print "error"
             sys.exit(-1)
     ##else analyse
+    params['freward'] = 3
+    params['creward'] = 10
     if(analyse(params, flags)):
         sys.exit(0)
     else:
