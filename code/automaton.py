@@ -106,82 +106,46 @@ def scrape(params):
 
 def count(revid, rawdata, title):
     filename = str(revid) + 'count'
-    datafile = BASEPATH + "plot/data/" + filename
     imagefile = BASEPATH + "plot/images/" + filename + ".png"
-    sdata = sorted(rawdata, key = lambda x: x[1])
-    with open(datafile, "w") as file:
-        file.write("# size \t revid\n")
-        for n, sd in enumerate(sdata):
-            x = [str(n)]
-            x.extend(["\""+str(sd[0])+"\"", str(sd[1])])
-            file.write("\t".join(x)+"\n")
-    outputfile = imagefile
-    plotfile = datafile
     xaxis = 'Username'
     yaxis = 'Contribution weight'
     title = 'User contribution counts for article "' + title + '"'
-    yrange = sdata[-1][1] * 1
-    f = os.popen('gnuplot', 'w')
-    print >>f, "set terminal pngcairo size 1600,700 enhanced font 'Verdana,10'"
-    print >>f, "set output '" + outputfile + "'"
-    print >>f, "set border linewidth 1.5"
-    print >>f, "set boxwidth 0.5"
-    print >>f, "set style fill solid"
-    print >>f, "set ylabel '" + yaxis + "'"
-    print >>f, "set xlabel '" + xaxis + "'"
-    print >>f, "set yrange [:" + str(yrange) + "]"
-    print >>f, "set format y \"%6.0f\";"
-    print >>f, "set format x \"%6.0f\";"
-    print >>f, "set xtics rotate by 90 right"
-    print >>f, "set nokey"
-    print >>f, "set style data histogram"
-    print >>f, "set title '" + title + ","
-    print >>f, "plot '" + plotfile + "' using 3:xtic(2) with histogram, '' using 0:3:3 with labels font \"arial,7\""
-    f.flush()
-    return imagefile
+
+    sdata = sorted(rawdata, key = lambda x: x[1])
+
+    n, bins, patches = plt.hist(sdata, 50, normed=1, facecolor='green', alpha=0.75)
+    plt.setp(patches, 'facecolor', 'g', 'alpha', 0.75)    
+    plt.xlabel(xaxis)
+    plt.ylabel(yaxis)
+    plt.title(title)
+    
+    plt.show()
+
+    return True
 
 def reward(revid, rawdata, title):
-    filename = str(revid) + 'reward'
-    datafile = BASEPATH + "plot/data/" + filename
-    imagefile = BASEPATH + "plot/images/" + filename + ".png"
-    sdata = sorted(rawdata, key = lambda x: x[1])
-    with open(datafile, "w") as file:
-        file.write("# size \t revid\n")
-        for n, sd in enumerate(sdata):
-            x = [str(n)]
-            x.extend(["\""+str(sd[0])+"\"", str(sd[1])])
-            file.write("\t".join(x)+"\n")
-    outputfile = imagefile
-    plotfile = datafile
     xaxis = 'Username'
     yaxis = 'Contribution weight'
     title = 'User rewards for contributions to article "' + title + '"'
-    yrange = sdata[-1][1] * 1
-    f = os.popen('gnuplot', 'w')
-    print >>f, "set terminal pngcairo size 1600,700 enhanced font 'Verdana,10'"
-    print >>f, "set output '" + outputfile + "'"
-    print >>f, "set border linewidth 1.5"
-    print >>f, "set boxwidth 0.5"
-    print >>f, "set style fill solid"
-    print >>f, "set ylabel '" + yaxis + "'"
-    print >>f, "set xlabel '" + xaxis + "'"
-    print >>f, "set yrange [:" + str(yrange) + "]"
-    print >>f, "set format y \"%6.0f\";"
-    print >>f, "set format x \"%6.0f\";"
-    print >>f, "set xtics rotate by 90 right"
-    print >>f, "set nokey"
-    print >>f, "set style data histogram"
-    print >>f, "set title '" + title + ","
-    print >>f, "plot '" + plotfile + "' using 3:xtic(2) with histogram, '' using 0:3:3 with labels font \"arial,7\""
-    f.flush()
-    return imagefile
+    filename = str(revid) + 'reward'
+    sdata = sorted(rawdata, key = lambda x: x[1])
+
+    n, bins, patches = plt.hist(sdata, 50, normed=1, facecolor='green', alpha=0.75)
+    plt.setp(patches, 'facecolor', 'g', 'alpha', 0.75)  
+    plt.xlabel(xaxis)
+    plt.ylabel(yaxis)
+    plt.title(title)
+
+    plt.show()
+
+    return True
 
 def trajectory(revid, rawtrajectory, rawgrowth, title):
     #imagefile = BASEPATH + "plot/images/" + filename + ".png"
     xaxis = 'Hours since article creation'
     yaxis1 = 'Edit distance from final'
     yaxis2 = 'Article length'
-    title = 'Edit trajectory towards revision ' + str(revid) + ', ' + str(rawtrajectory[0][0]) + " to " + str(rawtrajectory[-1][0])
+    title = 'Edit trajectory towards revision ' + str(revid) + ', article ' + title + ', from ' + str(rawtrajectory[0][0]) + " to " + str(rawtrajectory[-1][0])
     creation = rawtrajectory[0][0]
     times = [(e[0]-creation).total_seconds()/3600 for e in rawtrajectory]
     trajectory = [e[1] for e in rawtrajectory]
@@ -203,6 +167,8 @@ def trajectory(revid, rawtrajectory, rawgrowth, title):
 
     plt.title(title)
     plt.show()
+
+    return True
 
 def analyse(params, flags):
     repeat = 1;
@@ -250,10 +216,10 @@ def analyse(params, flags):
             if not dist:
                 contentx = database.getrevcontent(extantrevs[i])[0][0]
                 contenty = database.getrevcontent(extantrevs[v])[0][0]
-                levy = lv.fastlev.weightdist(contentx, contenty)
+                levresults = lv.fastlev.weightdist(contentx, contenty)
                 print levy
-                database.distinsert([extantrevs[i], extantrevs[v], levy[0]])
-                database.distinsert([extantrevs[v], extantrevs[i], levy[0]])
+                database.distinsert([extantrevs[i], extantrevs[v], levresults[0]])
+                database.distinsert([extantrevs[v], extantrevs[i], levresults[0]])
             dot()
             i = v
             v = v + 1
