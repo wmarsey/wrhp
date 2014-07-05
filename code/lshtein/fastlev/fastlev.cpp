@@ -8,22 +8,65 @@
 #include <stdlib.h>	       
 using namespace std;  
 
-#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
+#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)));
+#define MINFO(a, b, c) ((a) < (b) ? ((a) < (c) ? 1 : 3) : ((b) < (c) ? 2 : 3));
 #define INT_DIGITS 19
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-const unsigned int INDICNUM = 3;
-char INDIC[] = {'<', '{', '}'};
-const unsigned int TAGNUM = 2;
+const unsigned int INDICNUM = 3; //LENGTH OF LIST BELOW
+char INDIC[][INDICNUM] = 
+  {
+    {'<', '{', '='},
+    {'<', '}', ' '}
+  };
+const unsigned int TAGNUM = 19; //LENGTH OF TAGS
 const unsigned int WINTLEN = TAGNUM + 2;
 const char * TAGS[][2] = 
   {
     {"<math>", "</math>"},
-    {"<blockquote>", "</blockquote>"}
+    {"<blockquote>", "</blockquote>"},
+    {"= ", " ="},
+    {"== ", " =="},
+    {"=== ", " ==="},
+    {"==== ", " ===="},
+    {"===== ", " ====="},
+    {"====== ", " ======"},
+    {"{{math", "}}"},
+    {"[[", "]]"},
+    {"[http", "]"},
+    {"{{As of", "}}"},
+    {"[[media", "]]"},
+    {"<score>", "</score>"},
+    {"[[File", "]]"},
+    {"{|", "}"},
+    {"{{cite", "}}"},
+    {"{{Citation needed", "}}"}
   };
+const char* TAGNAMES[TAGNUM] =
+  {
+    "maths1",
+    "blockquote",
+    "h1", 
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "maths2",
+    "linkinternal",
+    "linkexternal",
+    "asof1",
+    "media",
+    "score",
+    "file",
+    "table",
+    "citation",
+    "citationneeded"
+  };
+    
 
 struct Wint {
   unsigned int w;
@@ -31,46 +74,6 @@ struct Wint {
   unsigned int norm;
 };
 
-void winttolist(Wint wint, unsigned int *t){
-  t[0] = wint.w;
-  cout << wint.w << endl;
-  unsigned int i = 0;
-  for( ; i < TAGNUM; ++i){
-    t[i+1] = wint.tags[i];
-    cout << wint.tags[i] << endl;
-  }
-  t[i+1] = wint.norm;
-  cout << wint.norm << endl;
-} 
-
-// char* itoa(unsigned int i){
-//   static char buf[INT_DIGITS + 2];
-//   char *p = buf + INT_DIGITS + 1;
-//   if (i >= 0) {
-//     do {
-//       *--p = '0' + (i % 10);
-//       i /= 10;
-//     } while (i != 0);
-//   }
-//   else {
-//     do {
-//       *--p = '0' - (i % 10);
-//       i /= 10;
-//     } while (i != 0);
-//     *--p = '-';
-//   } 
-//   return p;
-// }
-
-// unsigned int numdig(unsigned int n){
-//     int d = 0;
-//     if (n < 0) d = 1;
-//     while (n) {
-//         n /= 10;
-//         d++;
-//     }
-//     return d;
-// }
 
 bool operator<(const Wint& X, const Wint& Y){
   return X.w < Y.w;
@@ -82,7 +85,7 @@ Wint operator+(const Wint &W, const int &C){
   return n;
 }
 
-ostream& operator<<(ostream& o, const Wint x){
+ostream& operator<<(ostream& o, const Wint &x){
   o << "[" << x.w << ", ";
   for(unsigned int i = 0; i < TAGNUM; ++i)
     o << x.tags[i] << ", ";
@@ -90,9 +93,33 @@ ostream& operator<<(ostream& o, const Wint x){
   return o;
 }
 
-bool indic(char ch){
+void initialisewint(Wint &w){
+  w.w = 0;
+  w.norm = 0;
+  for(unsigned int i = 0; i < TAGNUM; ++i)
+    w.tags[i] = 0;
+} 
+
+void winttolist(Wint &wint, unsigned int *t){
+  t[0] = wint.w;
+  unsigned int i = 0;
+  for( ; i < TAGNUM; ++i) t[i+1] = wint.tags[i];
+  t[i+1] = wint.norm;
+} 
+
+bool testwint(Wint &w){
+  if(w.norm)
+    return false;
+  for(unsigned int i = 0; i < TAGNUM; ++i)
+    if(w.tags[i])
+      return false;
+  return true;
+}
+
+bool indic(char ch, bool tagmutex){
+  int vindex = (int)tagmutex;
   for(unsigned int i = 0; i < INDICNUM; ++i)
-    if(ch == INDIC[i])
+    if(ch == INDIC[vindex][i])
       return true;
   return false;
 }
@@ -104,102 +131,112 @@ bool startwith(char* str, const char* x){
   return true;
 } 
 
-bool tagger(char* str, unsigned int &tagi, unsigned int &tagv){
-  for(unsigned int v = 0; v < 2; ++v){
-    for(unsigned int i = 0; i < TAGNUM; ++i){
-      if(startwith(str, TAGS[i][v])){
-	tagi = i;
-	tagv = v;
+bool tagger(char* str, unsigned int &upflag, bool tagmutex){
+  int vindex = (int)tagmutex;
+  if (!tagmutex){
+    for(unsigned int i = 0; i < TAGNUM; ++i)
+      if(startwith(str, TAGS[i][vindex])){
+        upflag = i;
 	return true;
-      }
+    }
+  } else {
+    if(startwith(str, TAGS[upflag][vindex])){
+      return true;
     }
   }
   return false;
 }
 
 PyObject* weighteddistance(char *s1, char *s2){
-  unsigned int s1len, s2len, i, j, tagsemaphore = 0;;
+  unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0;
   Wint lastnum, oldnum;
+  bool xtagmutex = false, ytagmutex = false;;
   s1len = strlen(s1);
   s2len = strlen(s2);
   Wint column[s1len+1];
-  bool xflags[] = {
-    false, 
-    false
-  };
-  bool yflags[] = {
-    false, 
-    false
-  }; 
 
-  //prepare column of Wints
-  for(unsigned int u = 0; u < s1len+1; ++u)
-    for(unsigned int v = 0; v < TAGNUM; ++v)
-      column[u].tags[v] = 0;
+  //prepare Wints
+  initialisewint(lastnum);
+  initialisewint(oldnum);  
+  for(unsigned int i = 0; i < s1len+1; ++i)
+    initialisewint(column[i]);
+
   for (j = 1; j <= s1len; j += 2)
     column[j].w = j;
 
+  //---------------------MAIN OUTER LOOP
   for (i = 1; i <= s2len; ++i) {
     
-    //second string flags
-    if(indic(s2[i-1])){
-      unsigned int tagi = 0, tagv = 0;
-      if(tagger(s2+i-1, tagi, tagv)){
-	  if (tagv){
-	    cout << "recieved1 " << tagi << "," << tagv << endl;
-	    yflags[tagi] = false;
-	    --tagsemaphore;
-	  }else{
-	    yflags[tagi] = true;
-	    ++tagsemaphore;
-	  }
+    //flag and mutex setting, string 2
+    if(indic(s2[i-1], ytagmutex)){
+      if(tagger(s2+i-1, yupflag, ytagmutex)){
+	if (ytagmutex) ytagmutex = false;
+	else ytagmutex = true;
       }
     }
 
     column[0].w = i;
+
+    //---------------------MAIN INNER LOOP
     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
       oldnum = column[j];
 
-      //first string flags
-      if(indic(s1[j-1])){
-	unsigned int tagi = 0, tagv = 0;
-	if(tagger(s2+i-1, tagi, tagv)){ //returns [tagnum,stop?]
-	  cout << "recieved2 " << tagi << "," << tagv << endl;
-	  if (tagv){
-	    cout << tagi << endl;
-	    xflags[tagi] = false;
-	    --tagsemaphore;
-	  } else{
-	    xflags[tagi] = true;
-	    ++tagsemaphore;
-	  }
+      //flag and mutex setting
+      if(indic(s1[j-1], xtagmutex)){
+	if(tagger(s1+j-1, xupflag, xtagmutex)){
+	  if (xtagmutex) xtagmutex = false;
+	  else xtagmutex = true;
 	}
       }
-
-      //minimum selector
-      column[j] = MIN3(column[j] + 1, 
-			 (column[j-1]) + 1, 
-			 lastnum + (s1[j-1] == s2[i-1] ? 0 : 1));
       
-      for(unsigned int p = 0; p < TAGNUM; ++p)
-	if(xflags[p] or yflags[p])
-	  ++column[j].tags[p];
-      if(!tagsemaphore)
-	++(column[j].norm);
+      //minimum selector
+      unsigned int c = (s1[j-1] == s2[i-1] ? 0 : 1);
+      Wint aw = column[j] + 1;
+      Wint bw = column[j-1] + 1;
+      Wint cw = lastnum + c;
+      column[j] = MIN3(aw, bw, cw);
+      unsigned int pick = MINFO(aw, bw, cw);
+      
+      // if(!testwint(column[j])){
+      // 	cout << "wint spoilt iteration " << i << "," << j << endl;
+      // 	cout << " comparing characters " << s1[j-1] << "," << s2[i-1] << endl;
+      // 	cout << " which should be the same as " << *(s1+j-1) << "," << *(s2+i-1) << endl;
+      // 	if (xtagmutex)
+      // 	  cout << " with x mutex up, tag index " << xupflag << endl;
+      // 	if (ytagmutex)
+      // 	  cout << " with y mutex up, tag index " << yupflag << endl;
+      // 	cout << "the Wints in the column are" << endl;
+      // 	for(unsigned int d = 0; d < s1len+1; ++d)
+      // 	  cout << column[d];
+      // 	cout << "oldnum is " << endl;
+      // 	cout << oldnum;
+      // 	cout << "lastnum is " << endl;
+      // 	cout << lastnum;
+      // 	exit(-1);
+      // }
+      
+      if(c || (pick != 3)){
+	  if(xtagmutex or ytagmutex){
+       	    if (yupflag == xupflag) //if same, not for keep 
+       	      ++column[j].tags[yupflag];
+       	    else{
+       	      ++column[j].tags[yupflag];
+       	      ++column[j].tags[xupflag];
+       	    }
+       	  } else
+       	    ++column[j].norm;
+      }
       
       lastnum = oldnum;
     }
   }
 
-  cout << column[s1len];
-
-
-  PyObject* result = PyList_New(TAGNUM+2);
+  //construct python list of results
+  PyObject* result = PyList_New(WINTLEN);
   unsigned int rawresults[WINTLEN];
   winttolist(column[s1len], rawresults);
   if (!result) cout << "result list not created" << endl;
-  for(unsigned int i = 0; i < TAGNUM + 2; ++i){
-    cout << (long)rawresults[i] << endl;
+  for(unsigned int i = 0; i < WINTLEN; ++i){
     PyObject* number = PyInt_FromLong((long)rawresults[i]);
     PyList_SetItem(result, i, number);
   }
