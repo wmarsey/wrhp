@@ -217,7 +217,9 @@ def analyse(params, flags):
                 contentx = database.getrevcontent(extantrevs[i])[0][0]
                 contenty = database.getrevcontent(extantrevs[v])[0][0]
                 levresults = lv.fastlev.weightdist(contentx, contenty)
-                print levresults
+                print '\n', levresults
+                levresults2 = lv.fastlev.plaindist(contentx, contenty)
+                print levresults2
                 database.distinsert([extantrevs[i], extantrevs[v], levresults[0]])
                 database.distinsert([extantrevs[v], extantrevs[i], levresults[0]])
             dot()

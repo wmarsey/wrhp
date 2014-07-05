@@ -75,13 +75,13 @@ struct Wint {
 };
 
 
-bool operator<(const Wint& X, const Wint& Y){
-  return X.w < Y.w;
+bool operator<(const Wint &x, const Wint &y){
+  return x.w < y.w;
 }
 
-Wint operator+(const Wint &W, const int &C){
-  Wint n = W;
-  ++n.w;
+Wint operator+(const Wint &w, const int &c){
+  Wint n = w;
+  n.w += c;
   return n;
 }
 
@@ -161,10 +161,12 @@ PyObject* weighteddistance(char *s1, char *s2){
   for(unsigned int i = 0; i < s1len+1; ++i)
     initialisewint(column[i]);
 
-  for (j = 1; j <= s1len; j += 2)
+  for (j = 1; j <= s1len; j += 2){
     column[j].w = j;
+    //NEED TO INSERT TAG LOGIC HERE
+  }
 
-  //---------------------MAIN OUTER LOOP
+  //MAIN OUTER LOOP
   for (i = 1; i <= s2len; ++i) {
     
     //flag and mutex setting, string 2
@@ -176,12 +178,13 @@ PyObject* weighteddistance(char *s1, char *s2){
     }
 
     column[0].w = i;
+    //NEED TO INSERT TAG LOGIC HERE
 
-    //---------------------MAIN INNER LOOP
+    //MAIN INNER LOOP
     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
       oldnum = column[j];
 
-      //flag and mutex setting
+      //flag and mutex setting, string 1
       if(indic(s1[j-1], xtagmutex)){
 	if(tagger(s1+j-1, xupflag, xtagmutex)){
 	  if (xtagmutex) xtagmutex = false;
@@ -216,15 +219,16 @@ PyObject* weighteddistance(char *s1, char *s2){
       // }
       
       if(c || (pick != 3)){
-	  if(xtagmutex or ytagmutex){
-       	    if (yupflag == xupflag) //if same, not for keep 
-       	      ++column[j].tags[yupflag];
-       	    else{
-       	      ++column[j].tags[yupflag];
-       	      ++column[j].tags[xupflag];
-       	    }
-       	  } else
-       	    ++column[j].norm;
+	if(xtagmutex or ytagmutex){
+	  if (yupflag == xupflag){
+	    ++column[j].tags[yupflag];
+	  } else {
+	    ++column[j].tags[yupflag];
+	    ++column[j].tags[xupflag];
+	  }
+	}
+      } else if (pick != 3){
+	++column[j].norm;
       }
       
       lastnum = oldnum;
