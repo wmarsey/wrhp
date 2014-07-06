@@ -22,12 +22,12 @@ ostream& operator<<(ostream& o, const Wint &x){
   return o;
 }
 
-void initialisewint(Wint &w){
-  w.w = 0;
-  w.norm = 0;
-  for(unsigned int i = 0; i < TAGNUM; ++i)
-    w.tags[i] = 0;
-} 
+// void initialisewint(Wint &w){
+//   w.w = 0;
+//   w.norm = 0;
+//   for(unsigned int i = 0; i < TAGNUM; ++i)
+//     w.tags[i] = 0;
+// } 
 
 void winttolist(const Wint &wint, unsigned int *t){
   t[0] = wint.w;
@@ -117,11 +117,11 @@ void flagsum(Wint &wint, const bool &c, const unsigned int &pick, const bool &yt
   }
 }
 
-void preparewints(Wint &lastnum, Wint &oldnum, Wint *column, const unsigned int &len){
-  initialisewint(lastnum);
-  initialisewint(oldnum);  
-  for(unsigned int i = 0; i < len; ++i)
-    initialisewint(column[i]);
-}
+// void preparewints(Wint &lastnum, Wint &oldnum, Wint *column, const unsigned int &len){
+//   initialisewint(lastnum);
+//   initialisewint(oldnum);  
+//   for(unsigned int i = 0; i < len; ++i)
+//     initialisewint(column[i]);
+// }
 
 #endif

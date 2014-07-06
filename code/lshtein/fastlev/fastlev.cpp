@@ -1,9 +1,6 @@
 #include <Python.h>
 //#include <iostream>
 #include <cstring>
-//#include <regex.h>
-//#include <string.h>
-//#include <stdio.h>
 #include <stdlib.h>
 #include "fastlevconst.hpp"
 #include "fastlevhelp.hpp"	       
@@ -27,7 +24,7 @@ PyObject* weighteddistance(char *s1, char *s2){
   Wint column[s1len+1];
 
   //prepare Wints
-  preparewints(lastnum, oldnum, column, s1len+1);
+  //preparewints(lastnum, oldnum, column, s1len+1);
 
   //initialise first column
   for (j = 1; j <= s1len; j += 2)

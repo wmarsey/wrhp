@@ -7,13 +7,13 @@ char INDIC[][INDICNUM] =
     {'<', '{', '='},
     {'<', '}', ' '}
   };
-const unsigned int TAGNUM = 19; //LENGTH OF TAGS
+const unsigned int TAGNUM = 17; //LENGTH OF TAGS
 const unsigned int WINTLEN = TAGNUM + 2;
 const char * TAGS[][2] = 
   {
     {"<math>", "</math>"},
     {"<blockquote>", "</blockquote>"},
-    {"= ", " ="},
+    //{"= ", " ="},
     {"== ", " =="},
     {"=== ", " ==="},
     {"==== ", " ===="},
@@ -34,7 +34,7 @@ const char* TAGNAMES[TAGNUM] =
   {
     "maths1",
     "blockquote",
-    "h1", 
+    //"h1", 
     "h2",
     "h3",
     "h4",
@@ -51,12 +51,19 @@ const char* TAGNAMES[TAGNUM] =
     "citation",
     "citationneeded"
   };
-    
 
-struct Wint {
+
+class Wint {
+public:
   unsigned int w;
   unsigned int tags [TAGNUM];
   unsigned int norm;
+  Wint(){
+    w = 0;
+    norm = 0;
+    for(unsigned int i = 0; i < TAGNUM; ++i)
+      tags[i] = 0;
+  }
 };
 
 #endif
