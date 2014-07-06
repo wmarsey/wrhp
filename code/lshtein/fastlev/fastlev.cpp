@@ -1,11 +1,12 @@
 #include <Python.h>
-#include <iostream>
-#include <vector>
+//#include <iostream>
 #include <cstring>
-#include <regex.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>	       
+//#include <regex.h>
+//#include <string.h>
+//#include <stdio.h>
+#include <stdlib.h>
+#include "fastlevconst.hpp"
+#include "fastlevhelp.hpp"	       
 using namespace std;  
 
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)));
@@ -16,273 +17,42 @@ using namespace std;
 extern "C" {
 #endif
 
-const unsigned int INDICNUM = 3; //LENGTH OF LIST BELOW
-char INDIC[][INDICNUM] = 
-  {
-    {'<', '{', '='},
-    {'<', '}', ' '}
-  };
-const unsigned int TAGNUM = 19; //LENGTH OF TAGS
-const unsigned int WINTLEN = TAGNUM + 2;
-const char * TAGS[][2] = 
-  {
-    {"<math>", "</math>"},
-    {"<blockquote>", "</blockquote>"},
-    {"= ", " ="},
-    {"== ", " =="},
-    {"=== ", " ==="},
-    {"==== ", " ===="},
-    {"===== ", " ====="},
-    {"====== ", " ======"},
-    {"{{math", "}}"},
-    {"[[", "]]"},
-    {"[http", "]"},
-    {"{{As of", "}}"},
-    {"[[media", "]]"},
-    {"<score>", "</score>"},
-    {"[[File", "]]"},
-    {"{|", "}"},
-    {"{{cite", "}}"},
-    {"{{Citation needed", "}}"}
-  };
-const char* TAGNAMES[TAGNUM] =
-  {
-    "maths1",
-    "blockquote",
-    "h1", 
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "maths2",
-    "linkinternal",
-    "linkexternal",
-    "asof1",
-    "media",
-    "score",
-    "file",
-    "table",
-    "citation",
-    "citationneeded"
-  };
-    
-
-struct Wint {
-  unsigned int w;
-  unsigned int tags [TAGNUM];
-  unsigned int norm;
-};
-
-
-bool operator<(const Wint &x, const Wint &y){
-  return x.w < y.w;
-}
-
-Wint operator+(const Wint &w, const int &c){
-  Wint n = w;
-  n.w += c;
-  return n;
-}
-
-ostream& operator<<(ostream& o, const Wint &x){
-  o << "[" << x.w << ", ";
-  for(unsigned int i = 0; i < TAGNUM; ++i)
-    o << x.tags[i] << ", ";
-  o << x.norm << "]" << endl;
-  return o;
-}
-
-void initialisewint(Wint &w){
-  w.w = 0;
-  w.norm = 0;
-  for(unsigned int i = 0; i < TAGNUM; ++i)
-    w.tags[i] = 0;
-} 
-
-void winttolist(const Wint &wint, unsigned int *t){
-  t[0] = wint.w;
-  unsigned int i = 0;
-  for( ; i < TAGNUM; ++i) t[i+1] = wint.tags[i];
-  t[i+1] = wint.norm;
-} 
-
-bool testwint(const Wint &w){
-  if(w.norm)
-    return false;
-  for(unsigned int i = 0; i < TAGNUM; ++i)
-    if(w.tags[i])
-      return false;
-  return true;
-}
-
-bool indic(const char ch, const bool tagmutex){
-  int vindex = (int)tagmutex;
-  for(unsigned int i = 0; i < INDICNUM; ++i)
-    if(ch == INDIC[vindex][i])
-      return true;
-  return false;
-}
-
-bool startwith(const char* str, const char* x){
-  for(unsigned int i = 0; i < strlen(x); ++i)
-    if (x[i] == '\0' || str[i] == '\0' || str[i] != x[i])
-      return false;
-  return true;
-} 
-
-int tagger(const char* str, unsigned int &upflag, const bool tagmutex){
-  int vindex = (int)tagmutex;
-  if (!tagmutex){
-    for(unsigned int i = 0; i < TAGNUM; ++i)
-      if(startwith(str, TAGS[i][vindex])){
-        upflag = i;
-	return 1;
-    }
-  } else {
-    if(startwith(str, TAGS[upflag][vindex])){
-      return strlen(TAGS[upflag][vindex]);
-    }
-  }
-  return 0;
-}
-
-  void flagset(int &release, bool &tagmutex, unsigned int &upflag, const char* str, const unsigned int index){
-  if(tagmutex && (release > 0)){
-    --release;
-  } else if (tagmutex && !release){
-    tagmutex = false;
-    release = -1;
-    //final elif == !tagmutex || (tagmutex && release == -1)
-  } else if(indic(str[index], tagmutex)){
-    int tagq = tagger(str+index, upflag, tagmutex);
-    if(tagq){
-      if (tagmutex) release = tagq;
-      else tagmutex = true;
-    }
-  }
-}
-
-void flagsum(Wint &wint, const bool &c, const unsigned int &pick, const bool &ytagmutex, const bool &xtagmutex, const unsigned int &yupflag, const unsigned int &xupflag){
-  switch(pick){
-  case 1: //add
-    if(ytagmutex) //delete w\ flag
-      ++wint.tags[yupflag];
-    else if(c) //add w\o flag
-      ++wint.norm;
-    break;
-  case 2: //delete
-    if(xtagmutex) //delete w\ flag
-      ++wint.tags[xupflag];
-    else if(c) //delete w\o flag
-      ++wint.norm;
-    break;
-  case 3: //keepswap
-    if(c){
-      if(ytagmutex) //swap w\ flag
-	++wint.tags[yupflag];
-      else //swap w\o flag
-	++wint.norm;
-    }
-    break;
-  }
-}
-
 PyObject* weighteddistance(char *s1, char *s2){
-  unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0;
+  unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0, c, pick;
   int yrelease = -1, xrelease = -1;
-  Wint lastnum, oldnum;
+  Wint lastnum, oldnum, addw, delw, keepswapw;
   bool xtagmutex = false, ytagmutex = false;;
   s1len = strlen(s1);
   s2len = strlen(s2);
   Wint column[s1len+1];
 
   //prepare Wints
-  initialisewint(lastnum);
-  initialisewint(oldnum);  
-  for(unsigned int i = 0; i < s1len+1; ++i)
-    initialisewint(column[i]);
+  preparewints(lastnum, oldnum, column, s1len+1);
 
-  for (j = 1; j <= s1len; j += 2){
-    column[j].w = j;
-    //NEED TO INSERT TAG LOGIC HERE
-  }
+  //initialise first column
+  for (j = 1; j <= s1len; j += 2)
+    column[j].w = j;//NEED TO INSERT TAG LOGIC HERE
 
-  //MAIN OUTER LOOP
-  for (i = 1; i <= s2len; ++i) {
-    
-    //flag and mutex setting, string 2
-    flagset(yrelease, ytagmutex, yupflag, s2, j-1);    
-    // if(ytagmutex && (yrelease > 0)){
-    // 	--yrelease;
-    //   } else if (ytagmutex && !yrelease){
-    // 	ytagmutex = false;
-    // 	yrelease = -1;
-    // 	//final elif == !tagmutex || (tagmutex && release == -1)
-    //   } else if(indic(s2[i-1], ytagmutex)){
-    // 	int tagq = tagger(s2+i-1, yupflag, ytagmutex);
-    // 	if(tagq){
-    // 	  if (ytagmutex) yrelease = tagq;
-    // 	  else ytagmutex = true;
-    // 	}
-    //   }
-    
-    column[0].w = i;
-    //NEED TO INSERT TAG LOGIC HERE
+  for (i = 1; i <= s2len; ++i) {    
+    flagset(yrelease, ytagmutex, yupflag, s2, j-1);        
 
-    //MAIN INNER LOOP
+    //initialise head of column
+    column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
+
     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
       oldnum = column[j];
 
-      //flag and mutex setting, string 1
       flagset(xrelease, xtagmutex, xupflag, s1, i-1);
-      // if(xtagmutex && (xrelease > 0)){
-      // 	--xrelease;
-      // } else if (xtagmutex && !xrelease){
-      // 	xtagmutex = false;
-      // 	xrelease = -1;
-      // 	//final elif == !tagmutex || (tagmutex && release == -1)
-      // } else if(indic(s2[i-1], xtagmutex)){
-      // 	int tagq = tagger(s2+i-1, xupflag, xtagmutex);
-      // 	if(tagq){
-      // 	  if (xtagmutex) xrelease = tagq;
-      // 	  else xtagmutex = true;
-      // 	}
-      // }
 
-      //minimum selector
-      unsigned int c = (s1[j-1] == s2[i-1] ? 0 : 1);
-      Wint aw = column[j] + 1;
-      Wint bw = column[j-1] + 1;
-      Wint cw = lastnum + c;
-      column[j] = MIN3(aw, bw, cw);
-      unsigned int pick = MINFO(aw, bw, cw);
-      
+      c = (s1[j-1] == s2[i-1] ? 0 : 1);
+      addw = column[j] + 1;
+      delw = column[j-1] + 1;
+      keepswapw = lastnum + c;
+      column[j] = MIN3(addw, delw, keepswapw);
+      pick = MINFO(addw, delw, keepswapw);
       
       //using flag logic to sum weightings
       flagsum(column[j], c, pick, ytagmutex, xtagmutex, yupflag, xupflag); 
-      // switch(pick){
-      // case 1: //add
-      // 	if(ytagmutex) //delete w\ flag
-      // 	  ++column[j].tags[yupflag];
-      // 	else if(c) //add w\o flag
-      // 	  ++column[j].norm;
-      // 	break;
-      // case 2: //delete
-      // 	if(xtagmutex) //delete w\ flag
-      // 	  ++column[j].tags[xupflag];
-      // 	else if(c) //delete w\o flag
-      // 	  ++column[j].norm;
-      // 	break;
-      // case 3: //keepswap
-      // 	if(c){
-      // 	  if(ytagmutex) //swap w\ flag
-      // 	    ++column[j].tags[yupflag];
-      // 	  else //swap w\o flag
-      // 	    ++column[j].norm;
-      // 	}
-      // 	break;
-      // }
       
       lastnum = oldnum;
     }
@@ -292,7 +62,7 @@ PyObject* weighteddistance(char *s1, char *s2){
   PyObject* result = PyList_New(WINTLEN);
   unsigned int rawresults[WINTLEN];
   winttolist(column[s1len], rawresults);
-  if (!result) cout << "result list not created" << endl;
+  if (!result) cout << "python list created failed" << endl;
   for(unsigned int i = 0; i < WINTLEN; ++i){
     PyObject* number = PyInt_FromLong((long)rawresults[i]);
     PyList_SetItem(result, i, number);
