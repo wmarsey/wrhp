@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 VERSION_NUMBER = "0.0.0.0.00.1"
 BASEPATH = "/homes/wm613/individual-project/code/"
 
+unzip = lambda l:tuple(zip(*l))
+
 def dot():
     sys.stdout.write('.')
     sys.stdout.flush()
@@ -108,12 +110,12 @@ def count(revid, rawdata, title):
     filename = str(revid) + 'count'
     imagefile = BASEPATH + "plot/images/" + filename + ".png"
     xaxis = 'Username'
-    yaxis = 'Contribution weight'
+    yaxis = 'Contribution count'
     title = 'User contribution counts for article "' + title + '"'
 
     sdata = sorted(rawdata, key = lambda x: x[1])
 
-    n, bins, patches = plt.hist(sdata, 50, normed=1, facecolor='green', alpha=0.75)
+    n, bins, patches = plt.hist(sdata, facecolor='green')
     plt.setp(patches, 'facecolor', 'g', 'alpha', 0.75)    
     plt.xlabel(xaxis)
     plt.ylabel(yaxis)
@@ -126,16 +128,18 @@ def count(revid, rawdata, title):
 def reward(revid, rawdata, title):
     xaxis = 'Username'
     yaxis = 'Contribution weight'
-    title = 'User rewards for contributions to article "' + title + '"'
+    title = unicode('User rewards for contributions to article "' + title + '"')
     filename = str(revid) + 'reward'
     sdata = sorted(rawdata, key = lambda x: x[1])
+    splitdata = unzip(sdata)
+    drange = xrange(len(sdata))
+    fig, ax = plt.subplots()   
 
-    n, bins, patches = plt.hist(sdata, 50, normed=1, facecolor='green', alpha=0.75)
-    plt.setp(patches, 'facecolor', 'g', 'alpha', 0.75)  
+    ax.bar(drange, splitdata[1], width=100)
     plt.xlabel(xaxis)
     plt.ylabel(yaxis)
     plt.title(title)
-
+    plt.xticks(drange,[unicode(e) for e in splitdata[0]], rotation=90)
     plt.show()
 
     return True
@@ -145,7 +149,7 @@ def trajectory(revid, rawtrajectory, rawgrowth, title):
     xaxis = 'Hours since article creation'
     yaxis1 = 'Edit distance from final'
     yaxis2 = 'Article length'
-    title = 'Edit trajectory towards revision ' + str(revid) + ', article ' + title + ', from ' + str(rawtrajectory[0][0]) + " to " + str(rawtrajectory[-1][0])
+    title =  unicode('Edit trajectory towards revision ' + unicode(revid) + ', article ' + title + ', from ' + unicode(rawtrajectory[0][0]) + " to " + unicode(rawtrajectory[-1][0]))
     creation = rawtrajectory[0][0]
     times = [(e[0]-creation).total_seconds()/3600 for e in rawtrajectory]
     trajectory = [e[1] for e in rawtrajectory]
@@ -230,7 +234,7 @@ def analyse(params, flags):
             elif creward > 0:
                 creward = -1
         plot1 = trajectory(revx, database.gettrajectory(revx), database.getgrowth(revx), titles[t])
-        plot2 = count(revx, database.getusereditcounts(pageid), titles[t])
+        #plot2 = count(revx, database.getusereditcounts(pageid), titles[t])
         plot3 = reward(revx, database.getuserchange(pageid), titles[t])
         print plot1
         print plot2

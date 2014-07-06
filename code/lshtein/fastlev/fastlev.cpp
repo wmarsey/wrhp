@@ -100,14 +100,14 @@ void initialisewint(Wint &w){
     w.tags[i] = 0;
 } 
 
-void winttolist(Wint &wint, unsigned int *t){
+void winttolist(const Wint &wint, unsigned int *t){
   t[0] = wint.w;
   unsigned int i = 0;
   for( ; i < TAGNUM; ++i) t[i+1] = wint.tags[i];
   t[i+1] = wint.norm;
 } 
 
-bool testwint(Wint &w){
+bool testwint(const Wint &w){
   if(w.norm)
     return false;
   for(unsigned int i = 0; i < TAGNUM; ++i)
@@ -116,7 +116,7 @@ bool testwint(Wint &w){
   return true;
 }
 
-bool indic(char ch, bool tagmutex){
+bool indic(const char ch, const bool tagmutex){
   int vindex = (int)tagmutex;
   for(unsigned int i = 0; i < INDICNUM; ++i)
     if(ch == INDIC[vindex][i])
@@ -124,31 +124,73 @@ bool indic(char ch, bool tagmutex){
   return false;
 }
 
-bool startwith(char* str, const char* x){
+bool startwith(const char* str, const char* x){
   for(unsigned int i = 0; i < strlen(x); ++i)
     if (x[i] == '\0' || str[i] == '\0' || str[i] != x[i])
       return false;
   return true;
 } 
 
-bool tagger(char* str, unsigned int &upflag, bool tagmutex){
+int tagger(const char* str, unsigned int &upflag, const bool tagmutex){
   int vindex = (int)tagmutex;
   if (!tagmutex){
     for(unsigned int i = 0; i < TAGNUM; ++i)
       if(startwith(str, TAGS[i][vindex])){
         upflag = i;
-	return true;
+	return 1;
     }
   } else {
     if(startwith(str, TAGS[upflag][vindex])){
-      return true;
+      return strlen(TAGS[upflag][vindex]);
     }
   }
-  return false;
+  return 0;
+}
+
+  void flagset(int &release, bool &tagmutex, unsigned int &upflag, const char* str, const unsigned int index){
+  if(tagmutex && (release > 0)){
+    --release;
+  } else if (tagmutex && !release){
+    tagmutex = false;
+    release = -1;
+    //final elif == !tagmutex || (tagmutex && release == -1)
+  } else if(indic(str[index], tagmutex)){
+    int tagq = tagger(str+index, upflag, tagmutex);
+    if(tagq){
+      if (tagmutex) release = tagq;
+      else tagmutex = true;
+    }
+  }
+}
+
+void flagsum(Wint &wint, const bool &c, const unsigned int &pick, const bool &ytagmutex, const bool &xtagmutex, const unsigned int &yupflag, const unsigned int &xupflag){
+  switch(pick){
+  case 1: //add
+    if(ytagmutex) //delete w\ flag
+      ++wint.tags[yupflag];
+    else if(c) //add w\o flag
+      ++wint.norm;
+    break;
+  case 2: //delete
+    if(xtagmutex) //delete w\ flag
+      ++wint.tags[xupflag];
+    else if(c) //delete w\o flag
+      ++wint.norm;
+    break;
+  case 3: //keepswap
+    if(c){
+      if(ytagmutex) //swap w\ flag
+	++wint.tags[yupflag];
+      else //swap w\o flag
+	++wint.norm;
+    }
+    break;
+  }
 }
 
 PyObject* weighteddistance(char *s1, char *s2){
   unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0;
+  int yrelease = -1, xrelease = -1;
   Wint lastnum, oldnum;
   bool xtagmutex = false, ytagmutex = false;;
   s1len = strlen(s1);
@@ -170,13 +212,21 @@ PyObject* weighteddistance(char *s1, char *s2){
   for (i = 1; i <= s2len; ++i) {
     
     //flag and mutex setting, string 2
-    if(indic(s2[i-1], ytagmutex)){
-      if(tagger(s2+i-1, yupflag, ytagmutex)){
-	if (ytagmutex) ytagmutex = false;
-	else ytagmutex = true;
-      }
-    }
-
+    flagset(yrelease, ytagmutex, yupflag, s2, j-1);    
+    // if(ytagmutex && (yrelease > 0)){
+    // 	--yrelease;
+    //   } else if (ytagmutex && !yrelease){
+    // 	ytagmutex = false;
+    // 	yrelease = -1;
+    // 	//final elif == !tagmutex || (tagmutex && release == -1)
+    //   } else if(indic(s2[i-1], ytagmutex)){
+    // 	int tagq = tagger(s2+i-1, yupflag, ytagmutex);
+    // 	if(tagq){
+    // 	  if (ytagmutex) yrelease = tagq;
+    // 	  else ytagmutex = true;
+    // 	}
+    //   }
+    
     column[0].w = i;
     //NEED TO INSERT TAG LOGIC HERE
 
@@ -185,13 +235,21 @@ PyObject* weighteddistance(char *s1, char *s2){
       oldnum = column[j];
 
       //flag and mutex setting, string 1
-      if(indic(s1[j-1], xtagmutex)){
-	if(tagger(s1+j-1, xupflag, xtagmutex)){
-	  if (xtagmutex) xtagmutex = false;
-	  else xtagmutex = true;
-	}
-      }
-      
+      flagset(xrelease, xtagmutex, xupflag, s1, i-1);
+      // if(xtagmutex && (xrelease > 0)){
+      // 	--xrelease;
+      // } else if (xtagmutex && !xrelease){
+      // 	xtagmutex = false;
+      // 	xrelease = -1;
+      // 	//final elif == !tagmutex || (tagmutex && release == -1)
+      // } else if(indic(s2[i-1], xtagmutex)){
+      // 	int tagq = tagger(s2+i-1, xupflag, xtagmutex);
+      // 	if(tagq){
+      // 	  if (xtagmutex) xrelease = tagq;
+      // 	  else xtagmutex = true;
+      // 	}
+      // }
+
       //minimum selector
       unsigned int c = (s1[j-1] == s2[i-1] ? 0 : 1);
       Wint aw = column[j] + 1;
@@ -200,36 +258,31 @@ PyObject* weighteddistance(char *s1, char *s2){
       column[j] = MIN3(aw, bw, cw);
       unsigned int pick = MINFO(aw, bw, cw);
       
-      // if(!testwint(column[j])){
-      // 	cout << "wint spoilt iteration " << i << "," << j << endl;
-      // 	cout << " comparing characters " << s1[j-1] << "," << s2[i-1] << endl;
-      // 	cout << " which should be the same as " << *(s1+j-1) << "," << *(s2+i-1) << endl;
-      // 	if (xtagmutex)
-      // 	  cout << " with x mutex up, tag index " << xupflag << endl;
-      // 	if (ytagmutex)
-      // 	  cout << " with y mutex up, tag index " << yupflag << endl;
-      // 	cout << "the Wints in the column are" << endl;
-      // 	for(unsigned int d = 0; d < s1len+1; ++d)
-      // 	  cout << column[d];
-      // 	cout << "oldnum is " << endl;
-      // 	cout << oldnum;
-      // 	cout << "lastnum is " << endl;
-      // 	cout << lastnum;
-      // 	exit(-1);
-      // }
       
-      if(c || (pick != 3)){
-	if(xtagmutex or ytagmutex){
-	  if (yupflag == xupflag){
-	    ++column[j].tags[yupflag];
-	  } else {
-	    ++column[j].tags[yupflag];
-	    ++column[j].tags[xupflag];
-	  }
-	}
-      } else if (pick != 3){
-	++column[j].norm;
-      }
+      //using flag logic to sum weightings
+      flagsum(column[j], c, pick, ytagmutex, xtagmutex, yupflag, xupflag); 
+      // switch(pick){
+      // case 1: //add
+      // 	if(ytagmutex) //delete w\ flag
+      // 	  ++column[j].tags[yupflag];
+      // 	else if(c) //add w\o flag
+      // 	  ++column[j].norm;
+      // 	break;
+      // case 2: //delete
+      // 	if(xtagmutex) //delete w\ flag
+      // 	  ++column[j].tags[xupflag];
+      // 	else if(c) //delete w\o flag
+      // 	  ++column[j].norm;
+      // 	break;
+      // case 3: //keepswap
+      // 	if(c){
+      // 	  if(ytagmutex) //swap w\ flag
+      // 	    ++column[j].tags[yupflag];
+      // 	  else //swap w\o flag
+      // 	    ++column[j].norm;
+      // 	}
+      // 	break;
+      // }
       
       lastnum = oldnum;
     }
