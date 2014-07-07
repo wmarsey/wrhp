@@ -10,7 +10,7 @@ class Database:
     user = 'wm613'
     password = ''
     contenttable = "wikicontent"
-    revisiontable = "wikiauthors"
+    revisiontable = "wikirevisions"
     distancetable = "wikidistance"
     trajectorytable = "wikitrajectory"
     cn = None
@@ -28,6 +28,42 @@ class Database:
     def crsrsanity(self):
         return self.crsr.fetchall() if (len(self.crsr.fetchall()) > 0) else None 
 
+    def revexist(self, revid, parentid):
+        sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s;"
+        data = (revid, parentid)
+        if(self._execute(sql, data)):
+            result = self.crsr.fetchall()
+            if len(result) > 0:
+                return True
+        return False
+
+    def getparent(self, revid):
+        sql = "SELECT parentid FROM " + self.revisiontable + " WHERE revid = %s;"
+        data = (revid,)
+        if(self._execute(sql, data)):
+            result = self.crsr.fetchall()
+            if len(result) > 0:
+                return result[0][0]
+        return -1
+
+    def getchild(self, parentid):
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE parentid = %s;"
+        data = (parentid,)
+        if(self._execute(sql, data)):
+            result = self.crsr.fetchall()
+            if len(result) > 0:
+                return result[0][0]
+        return -1
+
+    def bridgerevision(self, revid, parentid):
+        #the one whose parent is the revid, their parent alters to be parentid
+        alterchild = self.getchild(revid)
+        sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s;"
+        data = (parentid,alterchild)
+        if(self._execute(sql, data)):
+            return True
+        return False
+        
     def getextantrevs(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid;"
         data = (pageid,)
@@ -40,7 +76,6 @@ class Database:
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
-#return self.crsrsanity()
 
     def getyoungestrev(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE pageid = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE pageid = %s AND b.time > a.time);"
@@ -103,11 +138,14 @@ class Database:
         
     def getrandom(self):
         sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.contenttable + ") AS w2) LIMIT 1;"
-        data = ()
-        if(self._execute(sql,data)):
-            result = self.crsr.fetchall()[0]
-            print result[0], result[1]
-            return result[0], result[1]
+        while True:
+            if(self._execute(sql,())):
+                try: 
+                    result = self.crsr.fetchall()[0]
+                except:
+                    pass
+                else:
+                    return result[0], result[1]
         return None
 
     def gettrajectory(self, revid):
@@ -152,8 +190,15 @@ class Database:
         if self.getrevinfo(param[0]):
             print "content already exists"
             return False
-        sql = "INSERT INTO " + self.revisiontable + " VALUES (%s, %s, %s, %s, %s, %s, %s);"
-        data = (param[0], param[1], param[2], param[3], param[4], param[5], param[6])
+        sql = "INSERT INTO " + self.revisiontable + " VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
+        data = (param[0], 
+                param[1], 
+                param[2], 
+                param[3], 
+                param[4], 
+                param[5], 
+                param[6], 
+                param[7])
         return self._execute(sql,data)
 
     def distinsert(self, param):

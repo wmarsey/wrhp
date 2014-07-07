@@ -55,17 +55,7 @@ PyObject* weighteddistance(char *s1, char *s2){
     }
   }
 
-  //construct python list of results
-  PyObject* result = PyList_New(WINTLEN);
-  unsigned int rawresults[WINTLEN];
-  winttolist(column[s1len], rawresults);
-  if (!result) cout << "python list created failed" << endl;
-  for(unsigned int i = 0; i < WINTLEN; ++i){
-    PyObject* number = PyInt_FromLong((long)rawresults[i]);
-    PyList_SetItem(result, i, number);
-  }
-    
-  return result;
+  return winttopydict(column[s1len]);
 }
 
 int plaindistance(char *s1, char *s2) {

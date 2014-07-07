@@ -14,21 +14,6 @@ Wint operator+(const Wint &w, const int &c){
   return n;
 }
 
-ostream& operator<<(ostream& o, const Wint &x){
-  o << "[" << x.w << ", ";
-  for(unsigned int i = 0; i < TAGNUM; ++i)
-    o << x.tags[i] << ", ";
-  o << x.norm << "]" << endl;
-  return o;
-}
-
-// void initialisewint(Wint &w){
-//   w.w = 0;
-//   w.norm = 0;
-//   for(unsigned int i = 0; i < TAGNUM; ++i)
-//     w.tags[i] = 0;
-// } 
-
 void winttolist(const Wint &wint, unsigned int *t){
   t[0] = wint.w;
   unsigned int i = 0;
@@ -76,13 +61,12 @@ int tagger(const char* str, unsigned int &upflag, const bool tagmutex){
   return 0;
 }
 
-  void flagset(int &release, bool &tagmutex, unsigned int &upflag, const char* str, const unsigned int index){
+void flagset(int &release, bool &tagmutex, unsigned int &upflag, const char* str, const unsigned int index){
   if(tagmutex && (release > 0)){
     --release;
   } else if (tagmutex && !release){
     tagmutex = false;
     release = -1;
-    //final elif == !tagmutex || (tagmutex && release == -1)
   } else if(indic(str[index], tagmutex)){
     int tagq = tagger(str+index, upflag, tagmutex);
     if(tagq){
@@ -117,11 +101,19 @@ void flagsum(Wint &wint, const bool &c, const unsigned int &pick, const bool &yt
   }
 }
 
-// void preparewints(Wint &lastnum, Wint &oldnum, Wint *column, const unsigned int &len){
-//   initialisewint(lastnum);
-//   initialisewint(oldnum);  
-//   for(unsigned int i = 0; i < len; ++i)
-//     initialisewint(column[i]);
-// }
+PyObject* winttopydict(const Wint &w){
+ PyObject* dict = PyDict_New();
+  unsigned int listwint[WINTLEN];
+  winttolist(w, listwint);
+  for(unsigned int i = 0; i < WINTLEN; ++i){
+    PyObject* value = PyInt_FromLong((long)listwint[i]);
+    PyObject* key = NULL;
+    if(!i) key = PyString_FromString("dist");
+    else if (i == WINTLEN-1) key = PyString_FromString("norm");
+    else key = PyString_FromString(TAGNAMES[i-1]);
+    PyDict_SetItem(dict, key, value);
+  }
+  return dict;
+}  
 
 #endif

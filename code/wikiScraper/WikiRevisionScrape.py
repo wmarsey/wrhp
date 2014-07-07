@@ -31,9 +31,18 @@ class WikiRevisionScrape:
     childid = 0
     db = None
     title = ""
+    dotcount = 1
 
-    def dot(self):
-        sys.stdout.write('.')
+    def dot(self, reset=False, final=False):
+        if reset:
+            self.dotcount = 1
+        if not (self.dotcount%50) and self.dotcount:
+            sys.stdout.write('|')
+        else:
+            sys.stdout.write('.')
+        if final or (not (self.dotcount%50) and self.dotcount):
+            sys.stdout.write('\n')
+        self.dotcount = self.dotcount + 1
         sys.stdout.flush()
 
     #atm naively assuming headers, params, titles to be in correct format
@@ -67,11 +76,10 @@ class WikiRevisionScrape:
                 if(self.rand):
                     self.par['titles'] = wikipedia.random() #get random title
                     self.title = self.par['titles'] 
-                print "fetching page", self.par['titles'] 
+                print "Fetching page", self.par['titles'] 
                 self._getlatest()
                 ids.append(self.pageid)
                 titles.append(self.title)
-                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                 self._rate()
                 del self.par['titles']
                 self._tracehist()
@@ -84,9 +92,8 @@ class WikiRevisionScrape:
                         del self.par['revids']
                     self.par['titles'] = wikipedia.random() #get random title
                     self.title = self.par['titles']
-                    print "fetching page", self.par['titles']
+                    print "Fetching page", self.par['titles']
                     self._getlatest()
-                    r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                     self._rate()
                     del self.par['titles']
                     if self._tracehist(): 
@@ -99,13 +106,12 @@ class WikiRevisionScrape:
                     del self.par['rvprop']
                 if 'revids' in self.par:
                     del self.par['revids']
-                print "fetching page", title
+                print "Fetching page", title
                 self.par['titles'] = title
                 self.title = self.par['titles']
                 self._getlatest()
                 ids.append(self.pageid)
                 titles.append(self.title)
-                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
                 self._rate()
                 del self.par['titles']
                 self._tracehist()   
@@ -115,17 +121,28 @@ class WikiRevisionScrape:
     def _getlatest(self):
         r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
         r = r.json()
-        #HACK = should grab multiple pages
         try:
             p = r['query']['pages']
         except:
             print r
         for key, value in r['query']['pages'].iteritems():
             self.pageid = key
-        #HACK = chould grab multiple revisions (for each pageid)
         self.parentid = self.childid = r['query']['pages'][self.pageid]['revisions'][0]['revid']
         return self.childid
     
+    def _remove_corruption(self, corrupt):
+        while True:
+            for c1 in corrupt:
+                for c2 in corrupt:
+                    if c1['parentid'] == c2['revid']:
+                        c1['parentid'] = c2['parentid']
+                        corrupt.pop(c2)
+                        continue
+            break
+        for c in corrupt:
+            if not self.db.bridgerevision(c['revid'], c['parentid']):
+                print "panic"
+
     def _tracehist(self):
         visited = []
         i = self.historylimit
@@ -134,52 +151,66 @@ class WikiRevisionScrape:
         self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|contentmodel|timestamp|content'
         pages = []
         b = False
+        failed = []
         while True:
             self.par['revids'] = self.parentid
             self._pace()
-            r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-            r = r.json()
-            self._rate()
-
-            try:
-                page = r['query']['pages'][self.pageid]['revisions'][0]
-            except:
-                print r
+            
             visited.append(self.childid)
-            pages.append(page)
-            self.childid =  page['revid']
-            self.parentid = page['parentid']
-            title = r['query']['pages'][self.pageid]['title']
-
+            
+            ##fetch only if not already in database
+            parent = -1
+            if self.childid == self.parentid:
+                parent = self.db.getparent(self.childid)
+            elif self.db.revexist(self.childid, self.parentid):
+                parent = self.db.getparent(self.parentid)
+            if parent > -1:
+                self.childid = self.parentid
+                self.parentid = parent
+            else:
+                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
+                r = r.json()
+                self._rate()
+                try:
+                    page = r['query']['pages'][self.pageid]['revisions'][0]
+                except:
+                    print r
+                if not self.db.revexist(page['revid'], page['parentid']):
+                    pages.append(page)
+                self.childid =  page['revid']
+                self.parentid = page['parentid']
+                title = r['query']['pages'][self.pageid]['title']
+            
+            ##determine whether to break later
             if i == 0 or self.parentid == 0 or self.parentid in visited:
                 b = True
 
+            ##fetch every 50, or before breaking
             if b or ((len(pages)%50) == 0 and len(pages)):
                 if len(visited) >= 50:
                     for p in pages:
                         user, size, timestamp, comment, content = "", "", "", "", ""
-                        self.childid =  p['revid']
-                        self.parentid = p['parentid']
-                        user = p['user']
                         try:
                             userid = p['userid']
                         except:
                             pass
                         try:
-                            size = p['size']
-                        except:
-                            pass
-                        try:
-                            timestamp = p['timestamp']
-                        except:
-                            pass
-                        try:
                             comment = p['comment']
                         except:
-                            pass    
-                        content = p['*']
-                        self.db.indexinsert([int(self.childid), 
-                                             int(self.pageid), 
+                            pass
+                        try:
+                            self.childid =  p['revid']
+                            self.parentid = p['parentid']
+                            user = p['user']
+                            timestamp = p['timestamp']
+                            content = p['*']
+                        except:
+                            failed.append(p)
+                            continue
+                        size = len(content)
+                        self.db.indexinsert([int(self.childid),
+                                             int(self.parentid),
+                                             int(self.pageid),
                                              user.encode("UTF-8"), 
                                              int(userid), 
                                              timestamp, 
@@ -189,22 +220,25 @@ class WikiRevisionScrape:
                                                int(self.pageid), 
                                                title, 
                                                content.encode("UTF-8")])
-                        pages = []
-                    sys.stdout.write('|\n')
-                    sys.stdout.flush()
+                    pages = []                        
                 else:
-                    print "\nArticle discarded"
+                    print "\nToo few revisions, article discarded"
                     return False
+            self.dot(reset=(not j),final=b)
             if b:
+                if len(failed):
+                    print len(failed), "corrupt pages fetched"
+                    print "circumnavigating corrupt pages"
+                    self._remove_corruption(failed)
                 break
             if(self.historylimit > 0):
                 i = i - 1
-            self.dot()
-            j = j + 1    
+            j = j + 1
         return True
         
     def _pace(self):
-        if self.rl and self.rl_last_call and self.rl_lastcall + self.rl_minwait > datetime.now():
+        if self.rl and self.rl_last_call \
+                and self.rl_lastcall + self.rl_minwait > datetime.now():
             wait_time = (self.rl_lastcall + self.rl_minwait) - datetime.now()
             time.sleep(int(wait_time.total_seconds()))
 
