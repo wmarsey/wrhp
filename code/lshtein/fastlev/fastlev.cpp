@@ -1,5 +1,5 @@
 #include <Python.h>
-//#include <iostream>
+#include <iostream>
 #include <cstring>
 #include <stdlib.h>
 #include "fastlevconst.hpp"
@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 PyObject* weighteddistance(char *s1, char *s2){
-  unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0, c, pick;
+  unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0, c, pick;// iterations = 0;
   int yrelease = -1, xrelease = -1;
   Wint lastnum, oldnum, addw, delw, keepswapw;
   bool xtagmutex = false, ytagmutex = false;;
@@ -28,14 +28,14 @@ PyObject* weighteddistance(char *s1, char *s2){
 
   //initialise first column
   for (j = 1; j <= s1len; j += 2)
-    column[j].w = j;//NEED TO INSERT TAG LOGIC HERE
+    column[j].norm = column[j].w = j; //NEED TO INSERT TAG LOGIC HERE
 
   for (i = 1; i <= s2len; ++i) {    
     flagset(yrelease, ytagmutex, yupflag, s2, j-1);        
 
     //initialise head of column
-    column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
-
+    column[j].norm = column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
+    
     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
       oldnum = column[j];
 
@@ -52,14 +52,16 @@ PyObject* weighteddistance(char *s1, char *s2){
       flagsum(column[j], c, pick, ytagmutex, xtagmutex, yupflag, xupflag); 
       
       lastnum = oldnum;
+      // ++iterations;
     }
   }
 
+  //cout << iterations << endl;
   return winttopydict(column[s1len]);
 }
 
 int plaindistance(char *s1, char *s2) {
-  unsigned int s1len, s2len, x, y, lastnum, oldnum;
+  unsigned int s1len, s2len, x, y, lastnum, oldnum;// iterations = 0;
   s1len = strlen(s1);
   s2len = strlen(s2);
   unsigned int column[s1len+1];
@@ -73,8 +75,10 @@ int plaindistance(char *s1, char *s2) {
 		       column[y-1] + 1, //del
 		       lastnum + (s1[y-1] == s2[x-1] ? 0 : 1)); //keepswap
       lastnum = oldnum;
+      //++iterations;
     }
   }
+  //cout << iterations << endl;
   return(column[s1len]);
 }
 

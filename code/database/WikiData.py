@@ -56,13 +56,24 @@ class Database:
         return -1
 
     def bridgerevision(self, revid, parentid):
-        #the one whose parent is the revid, their parent alters to be parentid
         alterchild = self.getchild(revid)
         sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s;"
         data = (parentid,alterchild)
         if(self._execute(sql, data)):
             return True
         return False
+
+    def gettime(self, data):
+        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
+        if(self._execute(sql, data)):
+            return crsrsanity()[0]
+        return None
+    
+    def gettrajheight(self, data):
+        sql = "SELECT distance FROM " + self.trajectorytable + " WHERE revid2 = %s;"
+        if(self._execute(sql, data)):
+            return crsrsanity()[0]
+        return None
         
     def getextantrevs(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid;"
@@ -105,15 +116,15 @@ class Database:
             return self.crsr.fetchall()
         return None
 
-    def getdist(self, param):
-        sql = "SELECT distance from " + self.distancetable + " WHERE revid1 = %s AND revid2 = %s;"
-        data = (param[0],param[1])
+    def getdist(self, revid):
+        sql = "SELECT distance from " + self.distancetable + " WHERE revid = %s;"
+        data = (revid,)
         if(self._execute(sql, data)):
             try:
                 result = self.crsr.fetchall()
                 return None if not len(result) else result[0][0]
             except:
-                print "error", param[0], param[1]
+                print "error", revid
                 pass
         return None
     
@@ -135,7 +146,7 @@ class Database:
         if(self._execute(sql,data)):
             return self.crsrsanity()
         return None 
-        
+
     def getrandom(self):
         sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.contenttable + ") AS w2) LIMIT 1;"
         while True:
@@ -160,15 +171,15 @@ class Database:
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
-    def getuserchange(self, revx):
-        sql = "SELECT username, sum(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid2 = b.revid AND b.pageid = %s GROUP BY username;"
-        data = (revx,)
+    def getuserchange(self, pageid):
+        sql = "SELECT username, sum(distance), sum(maths), sum(headings), sum(quotes), sum(filesimages), sum(links), sum(citations), sum(normal) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s GROUP BY username;"
+        data = (pageid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None
     
     def getusereditcounts(self, revx):
-        sql = "SELECT username, count(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid2 = b.revid AND b.pageid = %s GROUP BY username;"
+        sql = "SELECT username, count(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s GROUP BY username;"
         data = (revx,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
@@ -190,7 +201,8 @@ class Database:
         if self.getrevinfo(param[0]):
             print "content already exists"
             return False
-        sql = "INSERT INTO " + self.revisiontable + " VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
+        sql = "INSERT INTO " + self.revisiontable + \
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
         data = (param[0], 
                 param[1], 
                 param[2], 
@@ -202,19 +214,12 @@ class Database:
         return self._execute(sql,data)
 
     def distinsert(self, param):
-        if self.getdist([param[0], param[1]]):
-            print "distance already stored"
-            return False
-        sql = "INSERT INTO " + self.distancetable + " VALUES (%s, %s, %s);"
-        data = (param[0], param[1], param[2])
-        return self._execute(sql,data)
+        sql = "INSERT INTO " + self.distancetable + \
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+        return self._execute(sql,param)
 
-    def trajinsert(self, param):
-        if self.gettraj([param[0], param[1]]):
-            print "distance already stored"
-            return False
+    def trajinsert(self, data):
         sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
-        data = (param[0], param[1], param[2])
         return self._execute(sql,data)
 
     def _execute(self, sql, data, montcarlo=5):

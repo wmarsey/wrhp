@@ -32,6 +32,7 @@ class WikiRevisionScrape:
     db = None
     title = ""
     dotcount = 1
+    upperlimit = True
 
     def dot(self, reset=False, final=False):
         if reset:
@@ -46,7 +47,7 @@ class WikiRevisionScrape:
         sys.stdout.flush()
 
     #atm naively assuming headers, params, titles to be in correct format
-    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None):
+    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None, upperlimit=True):
         if(_params):
             params = _params
 
@@ -57,6 +58,9 @@ class WikiRevisionScrape:
             self.par['titles'] = _titles
             self.rand = False
 
+        if not upperlimit:
+            self.upperlimit = False
+        
         self.pagelimit = pagelimit
         self.historylimit = historylimit
         self.db = database.Database()
@@ -187,7 +191,7 @@ class WikiRevisionScrape:
 
             ##fetch every 50, or before breaking
             if b or ((len(pages)%50) == 0 and len(pages)):
-                if len(visited) >= 50:
+                if not self.upperlimit or len(visited) >= 50:
                     for p in pages:
                         user, size, timestamp, comment, content = "", "", "", "", ""
                         try:
