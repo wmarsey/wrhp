@@ -34,7 +34,7 @@ PyObject* weighteddistance(char *s1, char *s2){
     flagset(yrelease, ytagmutex, yupflag, s2, j-1);        
 
     //initialise head of column
-    column[j].norm = column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
+    column[0].norm = column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
     
     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
       oldnum = column[j];

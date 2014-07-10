@@ -325,15 +325,17 @@ def getweights(weights):
                 break
             message = "Invalid input. Please type Y or N [Y]:"
 
-def gradientadjust(revid, parentid, distuple):
-    x = gettime((revid,)) - gettime((parentid,))
-    y = gettrajheight((revid,)) - gettrajheight((parentid,))
+def gradientadjust(parentid, revid, distuple, database):
+    x = (database.gettime((revid,)) - \
+             database.gettime((parentid,))).total_seconds()/3600
+    #x = 200
+    y = database.gettrajheight((revid,)) - database.gettrajheight((parentid,))
     if x < 0:
         print "Error: Time travel"
-    elif not xchange:
+    elif not x:
         return wdata
     gradconst = 0.5 - m.atan(y/x)/m.pi
-    return (d*gradconst for d in distuple)
+    return tuple([revid] + [d*gradconst for d in distuple[1:]])
 
 def processweights(parentid, revid, database):
     contentx = database.getrevcontent(parentid)[0][0]
@@ -364,7 +366,7 @@ def processweights(parentid, revid, database):
                links,
                citations,
                normal)
-    return gradientadjust(parentid, revid, results)
+    return gradientadjust(parentid, revid, results, database)
     
 def gettrajdist(contentx, oldrev, database):
     contenty = database.getrevcontent(oldrev)[0][0] 
@@ -386,7 +388,6 @@ def analyse(params, flags):
         titles = [params['titles']]
     else:
         titles, pageids = scrape(params)
-        print pageids
     pagecount = 0
     for t, pageid in enumerate(pageids):
         print "Analysing", titles[t]
@@ -407,9 +408,9 @@ def analyse(params, flags):
         print "\nCalculating pairs"
         creward, i, v = 0, 0, 1
         while v < len(extantrevs):
-            if not database.getdist(extantrevs[v]):
-                database.distinsert(processweights(extantrevs[i], 
-                                                   extantrevs[v], 
+            if not database.getdist(extantrevs[i]):
+                database.distinsert(processweights(extantrevs[v], 
+                                                   extantrevs[i], 
                                                    database))
             dot((not i), (t != (len(pageids)-1)))
             i = v

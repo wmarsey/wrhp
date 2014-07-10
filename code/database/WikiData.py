@@ -26,7 +26,8 @@ class Database:
         self.crsr = self.cn.cursor()
 
     def crsrsanity(self):
-        return self.crsr.fetchall() if (len(self.crsr.fetchall()) > 0) else None 
+        cr = self.crsr.fetchall()
+        return cr if (len(cr) > 0) else None 
 
     def revexist(self, revid, parentid):
         sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s;"
@@ -66,17 +67,17 @@ class Database:
     def gettime(self, data):
         sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
         if(self._execute(sql, data)):
-            return crsrsanity()[0]
+            return self.crsrsanity()[0][0]
         return None
     
     def gettrajheight(self, data):
         sql = "SELECT distance FROM " + self.trajectorytable + " WHERE revid2 = %s;"
         if(self._execute(sql, data)):
-            return crsrsanity()[0]
+            return self.crsrsanity()[0][0]
         return None
         
     def getextantrevs(self, pageid):
-        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid;"
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid DESC;"
         data = (pageid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
