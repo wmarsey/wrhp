@@ -29,7 +29,9 @@ def intstring(s):
     except ValueError:
         return False
 
-class Analyser:
+class WikiInterface:
+    dat = None
+    plt = None
     dotcount = 1
     dtb = None
     params = {'scrape_limit': -1,
@@ -51,6 +53,77 @@ class Analyser:
              'weightsdefault' : True,
              'plotshow': False}
     
+    def __init__(self, params=None, flags=None):
+        if params:
+            self.params = params
+        if flags:
+            self.flags = flags
+        self.dtb = db.Database()
+        self.dat = Data(params['weights'])
+        self.plt = Plotter()
+
+    def analyse(self):
+        repeat = 1;
+        if(self.params['scrape_limit'] != -1):
+            repeat = self.params['scrape_limit']
+        self.params['scrape_limit'] = 1
+        self.database = db.Database()
+        pageid = None
+        if self.flags['offline']:
+            self.params['titles'], pageid = self.dtb.getrandom()
+            print "Fetching random article from database,", self.params['titles']
+            pageids = [pageid]
+            titles = [params['titles']]
+        else:
+            titles, pageids = self.scrape()
+        pagecount = 0
+        for t, pageid in enumerate(pageids):
+            print "Analysing", titles[t]
+            revs = [e[0] for e in self.dtb.getextantrevs(pageid)]
+            revx, oldrevs = revs[-1], revs[:-1]
+            contentx = self.dtb.getrevcontent(revx)[0][0]   
+            print "Tracing trajectory", len(revs), "revisions"
+            for oldrev in oldrevs:
+                dist1 = self.dtb.gettraj([revx, 
+                                          oldrev])
+                if not dist1:       
+                    self.dtb.trajinsert((revx, 
+                                         oldrev, 
+                                         self.dat.gettrajdist(contentx, 
+                                                              oldrev)))
+                dot()
+            print "\nCalculating pairs"
+            creward, i, v = 0, 0, 1
+            while v < len(revs):
+                if not self.dtb.getdist(revs[i]):
+                    self.dtb.distinsert(self.dat.processweights(revs[v], 
+                                                               revs[i]))
+                dot((not i), (t != (len(pageids)-1)))
+                i = v
+                v = v + 1
+                pagecount = pagecount + 1
+
+            if(flags['weightsdefault']):
+                getweights(self.params['weights'])
+
+            print
+            print "\nAnalysis complete, saving image files:"
+            title = titles[t].replace(" ","_")
+            print trajectory(*self.dat.gettrajdata(revx, 
+                                                   title,
+                                                   show=self.flags['plotshow']))
+            print count(*self.dat.getbardata(revx, 
+                                             pageid, 
+                                             title, 
+                                             "count",
+                                             show=self.flags['plotshow']))
+            print reward(*self.dat.getbardata(revx, 
+                                              pageid, 
+                                              title, 
+                                              "reward",
+                                              weights=self.params['weights'],
+                                              show=self.flags['plotshow']))
+            return True
 
     def dot(self, reset=False, final=False, slash=False):
         dot = '.'
@@ -67,7 +140,7 @@ class Analyser:
         self.dotcount = self.dotcount + 1
         sys.stdout.flush()
 
-    def scrape():
+    def scrape(self):
         scraper = None
         if self.params["page_titles"] == "random":
             scraper = wk.WikiRevisionScrape(
@@ -82,45 +155,19 @@ class Analyser:
                 )
         return scraper.scrape()
 
-    def count(revid, barheights, barlabels, title, show=False):
-        filename = title + 'count'
-        imagefile = BASEPATH + "plot/images/" + filename + ".png"
-        xaxis = 'Username'
-        yaxis = 'Contribution count'
-        title = 'User contribution counts for article "' + title + '"'.encode('utf-8')
+class Data:
+    dtb = None
 
-        if (show):
-            tfigsize, tdpi = None, None
-        else:
-            tfigsize, tdpi = (13,8), 600
-        fig = plt.figure(figsize=tfigsize, dpi=tdpi, tight_layout=True)
-        ax = fig.add_subplot(111)
-        h = ax.bar(xrange(len(barheights)), 
-                   barheights, 
-                   label=barlabels, 
-                   width=0.8)
-        xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
-        ax.get_yaxis().get_major_formatter().set_scientific(False)
-        plt.xlabel(xaxis)
-        plt.ylabel(yaxis)
-        plt.title(title)
-        plt.xticks(xticks_pos, 
-                   barlabels, 
-                   rotation=90, 
-                   ha='center')
-        if(show):
-            plt.show()
-        plt.savefig(imagefile)
-        return imagefile
+    def __init__(self, _weights):
+        self.dtb = db.Database()
+        self.weights = _weights
 
-    def weightdata(dbdata, weights):
-        if not weights:
-            return dbdata
+    def weightdata(dbdata):
         wdata = []
         for u in dbdata:
             sdist = 0
             for i,d in enumerate(u[2:]):
-                sdist = sdist + (d * (1+weights[WEIGHTLABELS[i]]))
+                sdist = sdist + (d * (1+self.weights[WEIGHTLABELS[i]]))
             wdata.append((u[0],sdist))
         shdata = []
         total = sum([e[1] for e in wdata])
@@ -132,9 +179,9 @@ class Analyser:
     def getbardata(revx, pageid, title, datatype, weights=None, show=False):
         dbdata = None
         if(datatype == "count"):
-            dbdata = database.getusereditcounts(pageid)
+            dbdata = self.dtb.getusereditcounts(pageid)
         elif(datatype == "reward"):
-            dbdata = weightdata(database.getuserchange(pageid),
+            dbdata = weightdata(self.dtb.getuserchange(pageid),
                                 weights)      
         sdata = sorted(dbdata, 
                        key = lambda x: x[1])
@@ -145,82 +192,14 @@ class Analyser:
             barheights.append(e[1])
         return (revx, barheights, barlabels, title, show)
 
-    def reward(revid, barheights, barlabels, title, show=False):
-        filename = title + 'reward'
-        imagefile = BASEPATH + "plot/images/" + filename + ".png"
-        xaxis = 'Username'
-        yaxis = 'Contribution weight'
-        title = 'User rewards for contributions to article "' + title + '"'.encode('utf-8')
-        filename = str(revid) + 'reward'
-
-        if (show):
-            tfigsize, tdpi = None, None
-        else:
-            tfigsize, tdpi = (13,8), 600
-        fig = plt.figure(figsize=tfigsize, 
-                         dpi=tdpi, 
-                         tight_layout=True)
-        ax = fig.add_subplot(111)
-        h = ax.bar(xrange(len(barheights)), 
-                   barheights, 
-                   label=barlabels, 
-                   width=0.8)
-        xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
-        ax.get_yaxis().get_major_formatter().set_scientific(False)    
-        plt.xlabel(xaxis)
-        plt.ylabel(yaxis)
-        plt.title(title)
-        plt.xticks(xticks_pos, 
-                   barlabels, 
-                   rotation=90, 
-                   ha='center')
-        if(show):
-            plt.show()
-        plt.savefig(imagefile)
-        return imagefile
-
     def gettrajdata(revx, title, show=False):
-        dbtraj = database.gettrajectory(revx)
+        dbtraj = self.dtb.gettrajectory(revx)
         traj = [e[1] for e in dbtraj]
-        dbgrowth = database.getgrowth(revx)
+        dbgrowth = self.dtb.getgrowth(revx)
         growth = [e[1] for e in dbgrowth]
         creation = dbtraj[0][0]
         times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]   
         return (revx, times, traj, growth, title, show)
-
-    def trajectory(revid, times, trajectory, growth, title, show=False):
-        ##prepare text
-        filename = title + 'traj'
-        imagefile = BASEPATH + "plot/images/" + filename + ".png"
-        xaxis = 'Hours since article creation'
-        yaxis1 = 'Edit distance from final'
-        yaxis2 = 'Article length'
-        title = 'Edit trajectory towards revision ' + str(revid) + ', article \'' + title + '\''.encode('utf-8')
-
-        ##prepare matplotlib
-        if (show):
-            tfigsize, tdpi = None, None
-        else:
-            tfigsize, tdpi = (13,8), 600
-        fig = plt.figure(figsize=tfigsize, 
-                         dpi=tdpi, 
-                         tight_layout=None)
-        ax1 = fig.add_subplot(111)
-        ax1.plot(times, trajectory, 'bo-', label='Edit distance from final')
-        ax1.set_xlabel(xaxis)
-        ax1.set_ylabel(yaxis1, color='b')
-        ax1.get_yaxis().get_major_formatter().set_scientific(False)
-        ax2 = ax1.twinx()
-        ax2.plot(times, growth, 'ko-', label='Article length')
-        ax2.set_ylabel(yaxis2, color='k')
-        ax2.get_yaxis().get_major_formatter().set_scientific(False)
-        for tl in ax1.get_yticklabels():
-            tl.set_color('b')
-        plt.title(title)
-        if(show):
-            plt.show()
-        plt.savefig(imagefile)
-        return imagefile
 
     def gradientadjust(self, parentid, revid, distuple):
         x = (self.dtb.gettime((revid,)) - \
@@ -266,68 +245,220 @@ class Analyser:
                                    contenty)
         return lev
 
-    def analyse(self):
-        repeat = 1;
-        if(self.params['scrape_limit'] != -1):
-            repeat = self.params['scrape_limit']
-        self.params['scrape_limit'] = 1
-        self.database = db.Database()
-        pageid = None
-        if flags['offline']:
-            self.params['titles'], pageid = self.dtb.getrandom()
-            print "Fetching random article from database,", self.params['titles']
-            pageids = [pageid]
-            titles = [params['titles']]
+class Plotter:
+    def barchart(revid, barheights, barlabels, title, ident, xaxisname, yaxisname, show=False):
+        filename = title + ident
+        imagefile = BASEPATH + "plot/images/" + filename + ".png"
+        
+        if (show):
+            tfigsize, tdpi = None, None
         else:
-            titles, pageids = scrape()
-        pagecount = 0
-        for t, pageid in enumerate(pageids):
-            print "Analysing", titles[t]
-            extantrevs = [e[0] for e in database.getextantrevs(pageid)]
-            revx, oldrevs = extantrevs[-1], extantrevs[:-1]
-            contentx = self.dtb.getrevcontent(revx)[0][0]   
-            print "Tracing trajectory", len(extantrevs), "revisions"
-            for oldrev in oldrevs:
-                dist1 = self.dtb.gettraj([revx, 
-                                          oldrev])
-                if not dist1:       
-                    self.dtb.trajinsert((revx, 
-                                         oldrev, 
-                                         gettrajdist(contentx, 
-                                                     oldrev)))
-                dot()
-            print "\nCalculating pairs"
-            creward, i, v = 0, 0, 1
-            while v < len(extantrevs):
-                if not self.dtb.getdist(extantrevs[i]):
-                    self.dtb.distinsert(processweights(extantrevs[v], 
-                                                       extantrevs[i]))
-                dot((not i), (t != (len(pageids)-1)))
-                i = v
-                v = v + 1
-                pagecount = pagecount + 1
+            tfigsize, tdpi = (13,8), 600
+        fig = plt.figure(figsize=tfigsize, dpi=tdpi, tight_layout=True)
+        ax = fig.add_subplot(111)
+        h = ax.bar(xrange(len(barheights)), 
+                   barheights, 
+                   label=barlabels, 
+                   width=0.8)
+        xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+        plt.xlabel(xaxis)
+        plt.ylabel(yaxis)
+        plt.title(title)
+        plt.xticks(xticks_pos, 
+                   barlabels, 
+                   rotation=90, 
+                   ha='center')
+        if(show):
+            plt.show()
+        plt.savefig(imagefile)
+        return imagefile
 
-            if(flags['weightsdefault']):
-                getweights(self.params['weights'])
+    # def count(revid, barheights, barlabels, title, show=False):
+    #     filename = title + 'count'
+    #     imagefile = BASEPATH + "plot/images/" + filename + ".png"
+    #     xaxis = 'Username'
+    #     yaxis = 'Contribution count'
+    #     title = 'User contribution counts for article "' + title + '"'.encode('utf-8')
 
-            print
-            print "\nAnalysis complete, saving image files:"
-            title = titles[t].replace(" ","_")
-            print trajectory(*gettrajdata(revx, 
-                                          title,
-                                          show=self.flags['plotshow']))
-            print count(*getbardata(revx, 
-                                    pageid, 
-                                    title, 
-                                    "count",
-                                    show=self.flags['plotshow']))        
-            print reward(*getbardata(revx, 
-                                     pageid, 
-                                     title, 
-                                     "reward",
-                                     weights=self.params['weights'],
-                                     show=self.flags['plotshow']))
-            return True
+    #     if (show):
+    #         tfigsize, tdpi = None, None
+    #     else:
+    #         tfigsize, tdpi = (13,8), 600
+    #     fig = plt.figure(figsize=tfigsize, dpi=tdpi, tight_layout=True)
+    #     ax = fig.add_subplot(111)
+    #     h = ax.bar(xrange(len(barheights)), 
+    #                barheights, 
+    #                label=barlabels, 
+    #                width=0.8)
+    #     xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
+    #     ax.get_yaxis().get_major_formatter().set_scientific(False)
+    #     plt.xlabel(xaxis)
+    #     plt.ylabel(yaxis)
+    #     plt.title(title)
+    #     plt.xticks(xticks_pos, 
+    #                barlabels, 
+    #                rotation=90, 
+    #                ha='center')
+    #     if(show):
+    #         plt.show()
+    #     plt.savefig(imagefile)
+    #     return imagefile
+
+    # def weightdata(dbdata, weights):
+    #     if not weights:
+    #         return dbdata
+    #     wdata = []
+    #     for u in dbdata:
+    #         sdist = 0
+    #         for i,d in enumerate(u[2:]):
+    #             sdist = sdist + (d * (1+weights[WEIGHTLABELS[i]]))
+    #         wdata.append((u[0],sdist))
+    #     shdata = []
+    #     total = sum([e[1] for e in wdata])
+    #     for user, reward in wdata:
+    #         share = reward / total
+    #         shdata.append((u[0], share))
+    #     return shdata
+
+    # def getbardata(revx, pageid, title, datatype, weights=None, show=False):
+    #     dbdata = None
+    #     if(datatype == "count"):
+    #         dbdata = database.getusereditcounts(pageid)
+    #     elif(datatype == "reward"):
+    #         dbdata = weightdata(database.getuserchange(pageid),
+    #                             weights)      
+    #     sdata = sorted(dbdata, 
+    #                    key = lambda x: x[1])
+    #     barlabels = [] 
+    #     barheights = []
+    #     for i, e in enumerate(sdata):
+    #         barlabels.append(e[0].decode('utf-8').strip())
+    #         barheights.append(e[1])
+    #     return (revx, barheights, barlabels, title, show)
+
+    # def reward(revid, barheights, barlabels, title, show=False):
+    #     filename = title + 'reward'
+    #     imagefile = BASEPATH + "plot/images/" + filename + ".png"
+    #     xaxis = 'Username'
+    #     yaxis = 'Contribution weight'
+    #     title = 'User rewards for contributions to article "' + title + '"'.encode('utf-8')
+    #     filename = str(revid) + 'reward'
+
+    #     if (show):
+    #         tfigsize, tdpi = None, None
+    #     else:
+    #         tfigsize, tdpi = (13,8), 600
+    #     fig = plt.figure(figsize=tfigsize, 
+    #                      dpi=tdpi, 
+    #                      tight_layout=True)
+    #     ax = fig.add_subplot(111)
+    #     h = ax.bar(xrange(len(barheights)), 
+    #                barheights, 
+    #                label=barlabels, 
+    #                width=0.8)
+    #     xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
+    #     ax.get_yaxis().get_major_formatter().set_scientific(False)    
+    #     plt.xlabel(xaxis)
+    #     plt.ylabel(yaxis)
+    #     plt.title(title)
+    #     plt.xticks(xticks_pos, 
+    #                barlabels, 
+    #                rotation=90, 
+    #                ha='center')
+    #     if(show):
+    #         plt.show()
+    #     plt.savefig(imagefile)
+    #     return imagefile
+
+    # def gettrajdata(revx, title, show=False):
+    #     dbtraj = database.gettrajectory(revx)
+    #     traj = [e[1] for e in dbtraj]
+    #     dbgrowth = database.getgrowth(revx)
+    #     growth = [e[1] for e in dbgrowth]
+    #     creation = dbtraj[0][0]
+    #     times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]   
+    #     return (revx, times, traj, growth, title, show)
+
+    def trajectory(revid, times, trajectory, growth, title, show=False):
+        ##prepare text
+        filename = title + 'traj'
+        imagefile = BASEPATH + "plot/images/" + filename + ".png"
+        xaxis = 'Hours since article creation'
+        yaxis1 = 'Edit distance from final'
+        yaxis2 = 'Article length'
+        title = 'Edit trajectory towards revision ' + str(revid) + ', article \'' + title + '\''.encode('utf-8')
+
+        ##prepare matplotlib
+        if (show):
+            tfigsize, tdpi = None, None
+        else:
+            tfigsize, tdpi = (13,8), 600
+        fig = plt.figure(figsize=tfigsize, 
+                         dpi=tdpi, 
+                         tight_layout=None)
+        ax1 = fig.add_subplot(111)
+        ax1.plot(times, trajectory, 'bo-', label='Edit distance from final')
+        ax1.set_xlabel(xaxis)
+        ax1.set_ylabel(yaxis1, color='b')
+        ax1.get_yaxis().get_major_formatter().set_scientific(False)
+        ax2 = ax1.twinx()
+        ax2.plot(times, growth, 'ko-', label='Article length')
+        ax2.set_ylabel(yaxis2, color='k')
+        ax2.get_yaxis().get_major_formatter().set_scientific(False)
+        for tl in ax1.get_yticklabels():
+            tl.set_color('b')
+        plt.title(title)
+        if(show):
+            plt.show()
+        plt.savefig(imagefile)
+        return imagefile
+
+    # def gradientadjust(self, parentid, revid, distuple):
+    #     x = (self.dtb.gettime((revid,)) - \
+    #              self.dtb.gettime((parentid,))).total_seconds()/3600
+    #     y = self.dtb.gettrajheight((revid,)) - self.dtb.gettrajheight((parentid,))
+    #     if x < 0:
+    #         print "Error: Time travel"
+    #     elif not x:
+    #         return wdata
+    #     gradconst = 0.5 - m.atan(y/x)/m.pi
+    #     return tuple([revid] + [d*gradconst for d in distuple[1:]])
+
+    # def processweights(self, parentid, revid):
+    #     contentx = self.dtb.getrevcontent(parentid)[0][0]
+    #     contenty = self.dtb.getrevcontent(revid)[0][0]
+    #     levresults = lv.fastlev.weightdist(contentx, contenty)
+    #     plaindist = levresults['dist']
+    #     maths = levresults['maths1'] + levresults['maths2']
+    #     headings = levresults['h2'] + levresults['h3'] + \
+    #         levresults['h4'] + levresults['h4'] + levresults['h5'] + \
+    #         levresults['h6']
+    #     quotes = levresults['blockquote']
+    #     filesimages = levresults['file'] + levresults['table'] + \
+    #         levresults['table'] + levresults['score'] + \
+    #         levresults['media']
+    #     links = levresults['linkinternal'] + levresults['linkexternal']
+    #     citations = levresults['citation'] + levresults['citationneeded']
+    #     normal = levresults['norm']
+    #     results = (revid, 
+    #                plaindist,
+    #                maths,
+    #                headings,
+    #                quotes,
+    #                filesimages,
+    #                links,
+    #                citations,
+    #                normal)
+    #     return self.gradientadjust(parentid, revid, results)
+
+    # def gettrajdist(self, contentx, oldrev):
+    #     contenty = self.dtb.getrevcontent(oldrev)[0][0] 
+    #     lev = lv.fastlev.plaindist(contentx, 
+    #                                contenty)
+    #     return lev
+
+    
 
     def fetch():
         contentparams = {}
@@ -422,160 +553,160 @@ def _flag_sanity(flags):
             flags['offline'] = True
     return flags
 
-def scrape(params):
-    scraper = None
-    if params["page_titles"] == "random":
-        scraper = wk.WikiRevisionScrape(
-            historylimit=params['depth_limit'],
-            pagelimit=params['scrape_limit']
-            )
-    else:
-        scraper = wk.WikiRevisionScrape(
-            historylimit=params['depth_limit'],
-            _titles=params['page_titles'],
-            upperlimit=False
-            )
-    return scraper.scrape()
+# def scrape(params):
+#     scraper = None
+#     if params["page_titles"] == "random":
+#         scraper = wk.WikiRevisionScrape(
+#             historylimit=params['depth_limit'],
+#             pagelimit=params['scrape_limit']
+#             )
+#     else:
+#         scraper = wk.WikiRevisionScrape(
+#             historylimit=params['depth_limit'],
+#             _titles=params['page_titles'],
+#             upperlimit=False
+#             )
+#     return scraper.scrape()
 
-def count(revid, barheights, barlabels, title, show=False):
-    filename = title + 'count'
-    imagefile = BASEPATH + "plot/images/" + filename + ".png"
-    xaxis = 'Username'
-    yaxis = 'Contribution count'
-    title = 'User contribution counts for article "' + title + '"'.encode('utf-8')
+# def count(revid, barheights, barlabels, title, show=False):
+#     filename = title + 'count'
+#     imagefile = BASEPATH + "plot/images/" + filename + ".png"
+#     xaxis = 'Username'
+#     yaxis = 'Contribution count'
+#     title = 'User contribution counts for article "' + title + '"'.encode('utf-8')
     
-    if (show):
-        tfigsize, tdpi = None, None
-    else:
-        tfigsize, tdpi = (13,8), 600
-    fig = plt.figure(figsize=tfigsize, dpi=tdpi, tight_layout=True)
-    ax = fig.add_subplot(111)
-    h = ax.bar(xrange(len(barheights)), 
-               barheights, 
-               label=barlabels, 
-               width=0.8)
-    xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
-    ax.get_yaxis().get_major_formatter().set_scientific(False)
-    plt.xlabel(xaxis)
-    plt.ylabel(yaxis)
-    plt.title(title)
-    plt.xticks(xticks_pos, 
-               barlabels, 
-               rotation=90, 
-               ha='center')
-    if(show):
-        plt.show()
-    plt.savefig(imagefile)
-    return imagefile
+#     if (show):
+#         tfigsize, tdpi = None, None
+#     else:
+#         tfigsize, tdpi = (13,8), 600
+#     fig = plt.figure(figsize=tfigsize, dpi=tdpi, tight_layout=True)
+#     ax = fig.add_subplot(111)
+#     h = ax.bar(xrange(len(barheights)), 
+#                barheights, 
+#                label=barlabels, 
+#                width=0.8)
+#     xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
+#     ax.get_yaxis().get_major_formatter().set_scientific(False)
+#     plt.xlabel(xaxis)
+#     plt.ylabel(yaxis)
+#     plt.title(title)
+#     plt.xticks(xticks_pos, 
+#                barlabels, 
+#                rotation=90, 
+#                ha='center')
+#     if(show):
+#         plt.show()
+#     plt.savefig(imagefile)
+#     return imagefile
 
-def weightdata(dbdata, weights):
-    if not weights:
-        return dbdata
-    wdata = []
-    for u in dbdata:
-        sdist = 0
-        for i,d in enumerate(u[2:]):
-            sdist = sdist + (d * (1+weights[WEIGHTLABELS[i]]))
-        wdata.append((u[0],sdist))
-    shdata = []
-    total = sum([e[1] for e in wdata])
-    for user, reward in wdata:
-        share = reward / total
-        shdata.append((u[0], share))
-    return shdata
+# def weightdata(dbdata, weights):
+#     if not weights:
+#         return dbdata
+#     wdata = []
+#     for u in dbdata:
+#         sdist = 0
+#         for i,d in enumerate(u[2:]):
+#             sdist = sdist + (d * (1+weights[WEIGHTLABELS[i]]))
+#         wdata.append((u[0],sdist))
+#     shdata = []
+#     total = sum([e[1] for e in wdata])
+#     for user, reward in wdata:
+#         share = reward / total
+#         shdata.append((u[0], share))
+#     return shdata
 
-def getbardata(revx, pageid, database, title, datatype, weights=None, show=False):
-    dbdata = None
-    if(datatype == "count"):
-        dbdata = database.getusereditcounts(pageid)
-    elif(datatype == "reward"):
-        dbdata = weightdata(database.getuserchange(pageid),
-                            weights)      
-    sdata = sorted(dbdata, 
-                   key = lambda x: x[1])
-    barlabels = [] 
-    barheights = []
-    for i, e in enumerate(sdata):
-        barlabels.append(e[0].decode('utf-8').strip())
-        barheights.append(e[1])
-    return (revx, barheights, barlabels, title, show)
+# def getbardata(revx, pageid, database, title, datatype, weights=None, show=False):
+#     dbdata = None
+#     if(datatype == "count"):
+#         dbdata = database.getusereditcounts(pageid)
+#     elif(datatype == "reward"):
+#         dbdata = weightdata(database.getuserchange(pageid),
+#                             weights)      
+#     sdata = sorted(dbdata, 
+#                    key = lambda x: x[1])
+#     barlabels = [] 
+#     barheights = []
+#     for i, e in enumerate(sdata):
+#         barlabels.append(e[0].decode('utf-8').strip())
+#         barheights.append(e[1])
+#     return (revx, barheights, barlabels, title, show)
 
-def reward(revid, barheights, barlabels, title, show=False):
-    filename = title + 'reward'
-    imagefile = BASEPATH + "plot/images/" + filename + ".png"
-    xaxis = 'Username'
-    yaxis = 'Contribution weight'
-    title = 'User rewards for contributions to article "' + title + '"'.encode('utf-8')
-    filename = str(revid) + 'reward'
+# def reward(revid, barheights, barlabels, title, show=False):
+#     filename = title + 'reward'
+#     imagefile = BASEPATH + "plot/images/" + filename + ".png"
+#     xaxis = 'Username'
+#     yaxis = 'Contribution weight'
+#     title = 'User rewards for contributions to article "' + title + '"'.encode('utf-8')
+#     filename = str(revid) + 'reward'
     
-    if (show):
-        tfigsize, tdpi = None, None
-    else:
-        tfigsize, tdpi = (13,8), 600
-    fig = plt.figure(figsize=tfigsize, 
-                     dpi=tdpi, 
-                     tight_layout=True)
-    ax = fig.add_subplot(111)
-    h = ax.bar(xrange(len(barheights)), 
-               barheights, 
-               label=barlabels, 
-               width=0.8)
-    xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
-    ax.get_yaxis().get_major_formatter().set_scientific(False)    
-    plt.xlabel(xaxis)
-    plt.ylabel(yaxis)
-    plt.title(title)
-    plt.xticks(xticks_pos, 
-               barlabels, 
-               rotation=90, 
-               ha='center')
-    if(show):
-        plt.show()
-    plt.savefig(imagefile)
-    return imagefile
+#     if (show):
+#         tfigsize, tdpi = None, None
+#     else:
+#         tfigsize, tdpi = (13,8), 600
+#     fig = plt.figure(figsize=tfigsize, 
+#                      dpi=tdpi, 
+#                      tight_layout=True)
+#     ax = fig.add_subplot(111)
+#     h = ax.bar(xrange(len(barheights)), 
+#                barheights, 
+#                label=barlabels, 
+#                width=0.8)
+#     xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
+#     ax.get_yaxis().get_major_formatter().set_scientific(False)    
+#     plt.xlabel(xaxis)
+#     plt.ylabel(yaxis)
+#     plt.title(title)
+#     plt.xticks(xticks_pos, 
+#                barlabels, 
+#                rotation=90, 
+#                ha='center')
+#     if(show):
+#         plt.show()
+#     plt.savefig(imagefile)
+#     return imagefile
 
-def gettrajdata(revx, database, title, show=False):
-    dbtraj = database.gettrajectory(revx)
-    traj = [e[1] for e in dbtraj]
-    dbgrowth = database.getgrowth(revx)
-    growth = [e[1] for e in dbgrowth]
-    creation = dbtraj[0][0]
-    times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]   
-    return (revx, times, traj, growth, title, show)
+# def gettrajdata(revx, database, title, show=False):
+#     dbtraj = database.gettrajectory(revx)
+#     traj = [e[1] for e in dbtraj]
+#     dbgrowth = database.getgrowth(revx)
+#     growth = [e[1] for e in dbgrowth]
+#     creation = dbtraj[0][0]
+#     times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]   
+#     return (revx, times, traj, growth, title, show)
 
-def trajectory(revid, times, trajectory, growth, title, show=False):
-    ##prepare text
-    filename = title + 'traj'
-    imagefile = BASEPATH + "plot/images/" + filename + ".png"
-    xaxis = 'Hours since article creation'
-    yaxis1 = 'Edit distance from final'
-    yaxis2 = 'Article length'
-    title = 'Edit trajectory towards revision ' + str(revid) + ', article \'' + title + '\''.encode('utf-8')
+# def trajectory(revid, times, trajectory, growth, title, show=False):
+#     ##prepare text
+#     filename = title + 'traj'
+#     imagefile = BASEPATH + "plot/images/" + filename + ".png"
+#     xaxis = 'Hours since article creation'
+#     yaxis1 = 'Edit distance from final'
+#     yaxis2 = 'Article length'
+#     title = 'Edit trajectory towards revision ' + str(revid) + ', article \'' + title + '\''.encode('utf-8')
  
-    ##prepare matplotlib
-    if (show):
-        tfigsize, tdpi = None, None
-    else:
-        tfigsize, tdpi = (13,8), 600
-    fig = plt.figure(figsize=tfigsize, 
-                     dpi=tdpi, 
-                     tight_layout=None)
-    ax1 = fig.add_subplot(111)
-    ax1.plot(times, trajectory, 'bo-', label='Edit distance from final')
-    ax1.set_xlabel(xaxis)
-    ax1.set_ylabel(yaxis1, color='b')
-    ax1.get_yaxis().get_major_formatter().set_scientific(False)
-    ax2 = ax1.twinx()
-    ax2.plot(times, growth, 'ko-', label='Article length')
-    ax2.set_ylabel(yaxis2, color='k')
-    ax2.get_yaxis().get_major_formatter().set_scientific(False)
-    for tl in ax1.get_yticklabels():
-        tl.set_color('b')
-    plt.title(title)
-    if(show):
-        plt.show()
-    plt.savefig(imagefile)
-    return imagefile
+#     ##prepare matplotlib
+#     if (show):
+#         tfigsize, tdpi = None, None
+#     else:
+#         tfigsize, tdpi = (13,8), 600
+#     fig = plt.figure(figsize=tfigsize, 
+#                      dpi=tdpi, 
+#                      tight_layout=None)
+#     ax1 = fig.add_subplot(111)
+#     ax1.plot(times, trajectory, 'bo-', label='Edit distance from final')
+#     ax1.set_xlabel(xaxis)
+#     ax1.set_ylabel(yaxis1, color='b')
+#     ax1.get_yaxis().get_major_formatter().set_scientific(False)
+#     ax2 = ax1.twinx()
+#     ax2.plot(times, growth, 'ko-', label='Article length')
+#     ax2.set_ylabel(yaxis2, color='k')
+#     ax2.get_yaxis().get_major_formatter().set_scientific(False)
+#     for tl in ax1.get_yticklabels():
+#         tl.set_color('b')
+#     plt.title(title)
+#     if(show):
+#         plt.show()
+#     plt.savefig(imagefile)
+#     return imagefile
 
 def getweights(weights):
     print
@@ -632,54 +763,54 @@ def getweights(weights):
                 break
             message = "Invalid input. Please type Y or N [Y]:"
 
-def gradientadjust(parentid, revid, distuple, database):
-    x = (database.gettime((revid,)) - \
-             database.gettime((parentid,))).total_seconds()/3600
-    #x = 200
-    y = database.gettrajheight((revid,)) - database.gettrajheight((parentid,))
-    if x < 0:
-        print "Error: Time travel"
-    elif not x:
-        return wdata
-    gradconst = 0.5 - m.atan(y/x)/m.pi
-    return tuple([revid] + [d*gradconst for d in distuple[1:]])
+# def gradientadjust(parentid, revid, distuple, database):
+#     x = (database.gettime((revid,)) - \
+#              database.gettime((parentid,))).total_seconds()/3600
+#     #x = 200
+#     y = database.gettrajheight((revid,)) - database.gettrajheight((parentid,))
+#     if x < 0:
+#         print "Error: Time travel"
+#     elif not x:
+#         return wdata
+#     gradconst = 0.5 - m.atan(y/x)/m.pi
+#     return tuple([revid] + [d*gradconst for d in distuple[1:]])
 
-def processweights(parentid, revid, database):
-    contentx = database.getrevcontent(parentid)[0][0]
-    contenty = database.getrevcontent(revid)[0][0]
-    levresults = lv.fastlev.weightdist(contentx, contenty)
-    # lev = lv.fastlev.plaindist(contentx,contenty)
-    # if lev != levresults['dist']:
-    #     print lev, levresults['dist']
-    #     print levresults
-    plaindist = levresults['dist']
-    maths = levresults['maths1'] + levresults['maths2']
-    headings = levresults['h2'] + levresults['h3'] + \
-        levresults['h4'] + levresults['h4'] + levresults['h5'] + \
-        levresults['h6']
-    quotes = levresults['blockquote']
-    filesimages = levresults['file'] + levresults['table'] + \
-        levresults['table'] + levresults['score'] + \
-        levresults['media']
-    links = levresults['linkinternal'] + levresults['linkexternal']
-    citations = levresults['citation'] + levresults['citationneeded']
-    normal = levresults['norm']
-    results = (revid, 
-               plaindist,
-               maths,
-               headings,
-               quotes,
-               filesimages,
-               links,
-               citations,
-               normal)
-    return gradientadjust(parentid, revid, results, database)
+# def processweights(parentid, revid, database):
+#     contentx = database.getrevcontent(parentid)[0][0]
+#     contenty = database.getrevcontent(revid)[0][0]
+#     levresults = lv.fastlev.weightdist(contentx, contenty)
+#     # lev = lv.fastlev.plaindist(contentx,contenty)
+#     # if lev != levresults['dist']:
+#     #     print lev, levresults['dist']
+#     #     print levresults
+#     plaindist = levresults['dist']
+#     maths = levresults['maths1'] + levresults['maths2']
+#     headings = levresults['h2'] + levresults['h3'] + \
+#         levresults['h4'] + levresults['h4'] + levresults['h5'] + \
+#         levresults['h6']
+#     quotes = levresults['blockquote']
+#     filesimages = levresults['file'] + levresults['table'] + \
+#         levresults['table'] + levresults['score'] + \
+#         levresults['media']
+#     links = levresults['linkinternal'] + levresults['linkexternal']
+#     citations = levresults['citation'] + levresults['citationneeded']
+#     normal = levresults['norm']
+#     results = (revid, 
+#                plaindist,
+#                maths,
+#                headings,
+#                quotes,
+#                filesimages,
+#                links,
+#                citations,
+#                normal)
+#     return gradientadjust(parentid, revid, results, database)
     
-def gettrajdist(contentx, oldrev, database):
-    contenty = database.getrevcontent(oldrev)[0][0] 
-    lev = lv.fastlev.plaindist(contentx, 
-                               contenty)
-    return lev
+# def gettrajdist(contentx, oldrev, database):
+#     contenty = database.getrevcontent(oldrev)[0][0] 
+#     lev = lv.fastlev.plaindist(contentx, 
+#                                contenty)
+#     return lev
 
 def analyse(params, flags):
     repeat = 1;
@@ -698,10 +829,10 @@ def analyse(params, flags):
     pagecount = 0
     for t, pageid in enumerate(pageids):
         print "Analysing", titles[t]
-        extantrevs = [e[0] for e in database.getextantrevs(pageid)]
-        revx, oldrevs = extantrevs[-1], extantrevs[:-1]
+        revs = [e[0] for e in database.getextantrevs(pageid)]
+        revx, oldrevs = revs[-1], revs[:-1]
         contentx = database.getrevcontent(revx)[0][0]   
-        print "Tracing trajectory", len(extantrevs), "revisions"
+        print "Tracing trajectory", len(revs), "revisions"
         for oldrev in oldrevs:
             dist1 = database.gettraj([revx, 
                                       oldrev])
@@ -714,11 +845,11 @@ def analyse(params, flags):
             dot()
         print "\nCalculating pairs"
         creward, i, v = 0, 0, 1
-        while v < len(extantrevs):
-            if not database.getdist(extantrevs[i]):
-                database.distinsert(processweights(extantrevs[v], 
-                                                   extantrevs[i], 
-                                                   database))
+        while v < len(revs):
+            if not database.getdist(revs[i]):
+                database.distinsert(self.dat.processweights(revs[v], 
+                                                            revs[i], 
+                                                            database))
             dot((not i), (t != (len(pageids)-1)))
             i = v
             v = v + 1
@@ -734,13 +865,13 @@ def analyse(params, flags):
                                       database, 
                                       title,
                                       show=flags['plotshow']))
-        print count(*getbardata(revx, 
+        print count(*self.dat.getbardata(revx, 
                                 pageid, 
                                 database, 
                                 title, 
                                 "count",
                                 show=flags['plotshow']))        
-        print reward(*getbardata(revx, 
+        print reward(*self.dat.getbardata(revx, 
                                  pageid, 
                                  database, 
                                  title, 
@@ -803,9 +934,11 @@ def main():
             sys.exit(-1)
     
     print "---------------ANALYSE MODE---------------"
-    params['freward'] = 3
-    params['creward'] = 10
-    if(analyse(params, flags)):
+    # params['freward'] = 3
+    # params['creward'] = 10
+    
+    analyser = WikiInterface(params, flags)
+    if(analyser.analyse()):
         sys.exit(0)
     else:
         sys.exit(-1)
