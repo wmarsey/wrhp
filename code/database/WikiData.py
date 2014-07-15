@@ -33,8 +33,8 @@ class Database:
         sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s;"
         data = (revid, parentid)
         if(self._execute(sql, data)):
-            result = self.crsr.fetchall()
-            if len(result) > 0:
+            result = self.crsrsanity()
+            if result:
                 return True
         return False
 
@@ -42,8 +42,8 @@ class Database:
         sql = "SELECT parentid FROM " + self.revisiontable + " WHERE revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
-            result = self.crsr.fetchall()
-            if len(result) > 0:
+            result = self.crsrsanity()
+            if result:
                 return result[0][0]
         return -1
 
@@ -51,8 +51,8 @@ class Database:
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE parentid = %s;"
         data = (parentid,)
         if(self._execute(sql, data)):
-            result = self.crsr.fetchall()
-            if len(result) > 0:
+            result = self.crsrsanity()
+            if result:
                 return result[0][0]
         return -1
 
@@ -71,16 +71,21 @@ class Database:
         return None
     
     def gettrajheight(self, data):
+        print "lookingfor traj", data[0]
         sql = "SELECT distance FROM " + self.trajectorytable + " WHERE revid2 = %s;"
         if(self._execute(sql, data)):
-            return self.crsrsanity()[0][0]
+            result = self.crsrsanity()
+            if result:
+                return result[0][0]
         return None
         
     def getextantrevs(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid DESC;"
         data = (pageid,)
         if(self._execute(sql,data)):
-            return self.crsr.fetchall()
+            result = self.crsrsanity()
+            if result:
+                return [e[0] for e in result]
         return None
 
     def gettimestamp(self, revid):
@@ -100,7 +105,9 @@ class Database:
         sql = "SELECT content FROM " + self.contenttable + " WHERE revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
-            return self.crsr.fetchall()
+            result = self.crsrsanity()
+            if result:
+                return result[0][0]
         return None
 
     def getrevinfo(self, revid):
@@ -118,27 +125,35 @@ class Database:
         return None
 
     def getdist(self, revid):
+        print "testing for", revid
         sql = "SELECT distance from " + self.distancetable + " WHERE revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
             try:
-                result = self.crsr.fetchall()
-                return None if not len(result) else result[0][0]
+                result = self.crsrsanity()
+                if result:
+                    print "found", result[0][0]
+                    return result[0][0]
             except:
                 print "error", revid
                 pass
-        return None
+        print "didn't find"
+        return -1
     
     def gettraj(self, param):
+        print "getting traj", param[0], param[1]
         sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s;"
         data = (param[0],param[1])
         if(self._execute(sql, data)):
             try:
-                result = self.crsr.fetchall()
-                return None if not len(result) else result[0][0]
+                result = self.crsrsanity()
+                if result:
+                    print "found"
+                    return result[0][0]
             except:
                 print "error", param[0], param[1]
                 pass
+        print "didn't find"
         return None
 
     def getrevid(self, title):
@@ -215,11 +230,13 @@ class Database:
         return self._execute(sql,data)
 
     def distinsert(self, param):
+        print "inserting", param[0]
         sql = "INSERT INTO " + self.distancetable + \
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
         return self._execute(sql,param)
 
     def trajinsert(self, data):
+        print "trajectory", [d for d in data]
         sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
         return self._execute(sql,data)
 

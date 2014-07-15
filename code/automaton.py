@@ -79,23 +79,18 @@ class WikiInterface:
         pagecount = 0
         for t, pageid in enumerate(pageids):
             print "Analysing", titles[t]
-            revs = [e[0] for e in self.dtb.getextantrevs(pageid)]
-            revx, oldrevs = revs[-1], revs[:-1]
-            contentx = self.dtb.getrevcontent(revx)[0][0]   
+            revs = self.dtb.getextantrevs(pageid)
+            revx = revs[-1]
+            contentx = self.dtb.getrevcontent(revx)   
             print "Tracing trajectory", len(revs), "revisions"
-            for oldrev in oldrevs:
-                dist1 = self.dtb.gettraj([revx, 
-                                          oldrev])
-                if not dist1:       
-                    self.dtb.trajinsert((revx, 
-                                         oldrev, 
-                                         self.dat.gettrajdist(contentx, 
-                                                              oldrev)))
+            for rev in revs:
+                self.dat.gettraj(contentx, revx, rev)
                 dot()
             print "\nCalculating pairs"
             creward, i, v = 0, 0, 1
             while v < len(revs):
-                if not self.dtb.getdist(revs[i]):
+                if self.dtb.getdist(revs[i]) < 0:
+                    print "didn't get anything"
                     self.dtb.distinsert(self.dat.processweights(revs[v], 
                                                                revs[i]))
                 dot((not i), (t != (len(pageids)-1)))
@@ -103,26 +98,24 @@ class WikiInterface:
                 v = v + 1
                 pagecount = pagecount + 1
 
-            if(flags['weightsdefault']):
+            if(self.flags['weightsdefault']):
                 getweights(self.params['weights'])
 
             print
             print "\nAnalysis complete, saving image files:"
             title = titles[t].replace(" ","_")
-            print trajectory(*self.dat.gettrajdata(revx, 
-                                                   title,
-                                                   show=self.flags['plotshow']))
-            print count(*self.dat.getbardata(revx, 
+            print self.plt.trajectory(*self.dat.gettrajdata(revx, 
+                                                            title,
+                                                            show=self.flags['plotshow']))
+            print self.plt.count(*self.dat.getbardata(revx, 
                                              pageid, 
                                              title, 
-                                             "count",
-                                             show=self.flags['plotshow']))
-            print reward(*self.dat.getbardata(revx, 
+                                             "count"))
+            print self.plt.reward(*self.dat.getbardata(revx, 
                                               pageid, 
                                               title, 
                                               "reward",
-                                              weights=self.params['weights'],
-                                              show=self.flags['plotshow']))
+                                              weights=self.params['weights']))
             return True
 
     def dot(self, reset=False, final=False, slash=False):
@@ -192,7 +185,7 @@ class Data:
             barheights.append(e[1])
         return (revx, barheights, barlabels, title, show)
 
-    def gettrajdata(revx, title, show=False):
+    def gettrajdata(self, revx, title, show=False):
         dbtraj = self.dtb.gettrajectory(revx)
         traj = [e[1] for e in dbtraj]
         dbgrowth = self.dtb.getgrowth(revx)
@@ -210,11 +203,12 @@ class Data:
         elif not x:
             return wdata
         gradconst = 0.5 - m.atan(y/x)/m.pi
+        print "returning", revid, "for insert"
         return tuple([revid] + [d*gradconst for d in distuple[1:]])
 
     def processweights(self, parentid, revid):
-        contentx = self.dtb.getrevcontent(parentid)[0][0]
-        contenty = self.dtb.getrevcontent(revid)[0][0]
+        contentx = self.dtb.getrevcontent(parentid)
+        contenty = self.dtb.getrevcontent(revid)
         levresults = lv.fastlev.weightdist(contentx, contenty)
         plaindist = levresults['dist']
         maths = levresults['maths1'] + levresults['maths2']
@@ -239,11 +233,19 @@ class Data:
                    normal)
         return self.gradientadjust(parentid, revid, results)
 
-    def gettrajdist(self, contentx, oldrev):
-        contenty = self.dtb.getrevcontent(oldrev)[0][0] 
-        lev = lv.fastlev.plaindist(contentx, 
-                                   contenty)
-        return lev
+    def gettraj(self, contentx, revx, oldrev):
+        dist = self.dtb.gettraj([revx, 
+                                 oldrev])
+        if not dist:
+            contenty = self.dtb.getrevcontent(oldrev) 
+            lev = 0
+            if revx == oldrev:
+                lev = len(contenty) ##HACKKK
+            else:
+                lev = lv.fastlev.plaindist(contentx, 
+                                           contenty)
+            self.dtb.trajinsert((revx, oldrev, lev))
+        #return lev         
 
 class Plotter:
     def barchart(revid, barheights, barlabels, title, ident, xaxisname, yaxisname, show=False):
@@ -380,7 +382,7 @@ class Plotter:
     #     times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]   
     #     return (revx, times, traj, growth, title, show)
 
-    def trajectory(revid, times, trajectory, growth, title, show=False):
+    def trajectory(self, revid, times, trajectory, growth, title, show=False):
         ##prepare text
         filename = title + 'traj'
         imagefile = BASEPATH + "plot/images/" + filename + ".png"
@@ -811,84 +813,85 @@ def getweights(weights):
 #     lev = lv.fastlev.plaindist(contentx, 
 #                                contenty)
 #     return lev
-
-def analyse(params, flags):
-    repeat = 1;
-    if(params['scrape_limit'] != -1):
-        repeat = params['scrape_limit']
-    params['scrape_limit'] = 1
-    database = db.Database()
-    pageid = None
-    if flags['offline']:
-        params['titles'], pageid = database.getrandom()
-        print "Fetching random article from database,", params['titles']
-        pageids = [pageid]
-        titles = [params['titles']]
-    else:
-        titles, pageids = scrape(params)
-    pagecount = 0
-    for t, pageid in enumerate(pageids):
-        print "Analysing", titles[t]
-        revs = [e[0] for e in database.getextantrevs(pageid)]
-        revx, oldrevs = revs[-1], revs[:-1]
-        contentx = database.getrevcontent(revx)[0][0]   
-        print "Tracing trajectory", len(revs), "revisions"
-        for oldrev in oldrevs:
-            dist1 = database.gettraj([revx, 
-                                      oldrev])
-            if not dist1:       
-                database.trajinsert((revx, 
-                                     oldrev, 
-                                     gettrajdist(contentx, 
-                                                 oldrev, 
-                                                 database)))
-            dot()
-        print "\nCalculating pairs"
-        creward, i, v = 0, 0, 1
-        while v < len(revs):
-            if not database.getdist(revs[i]):
-                database.distinsert(self.dat.processweights(revs[v], 
-                                                            revs[i], 
-                                                            database))
-            dot((not i), (t != (len(pageids)-1)))
-            i = v
-            v = v + 1
-            pagecount = pagecount + 1
+# 
+# def analyse(params, flags):
+#     repeat = 1;
+#     if(params['scrape_limit'] != -1):
+#         repeat = params['scrape_limit']
+#     params['scrape_limit'] = 1
+#     database = db.Database()
+#     pageid = None
+#     if flags['offline']:
+#         params['titles'], pageid = database.getrandom()
+#         print "Fetching random article from database,", params['titles']
+#         pageids = [pageid]
+#         titles = [params['titles']]
+#     else:
+#         titles, pageids = scrape(params)
+#     pagecount = 0
+#     for t, pageid in enumerate(pageids):
+#         print "Analysing", titles[t]
+#         revs = [e[0] for e in database.getextantrevs(pageid)]
+#         revx, oldrevs = revs[-1], revs[:-1]
+#         contentx = database.getrevcontent(revx)[0][0]   
+#         print "Tracing trajectory", len(revs), "revisions"
+#         for oldrev in oldrevs:
+#             gettrajdist(revx, oldrev)
+#             # dist1 = database.gettraj([revx, 
+#             #                           oldrev])
+#             # if not dist1:       
+#             #     database.trajinsert((revx, 
+#             #                          oldrev, 
+#             #                          gettrajdist(contentx, 
+#             #                                      oldrev, 
+#             #                                      database)))
+#             dot()
+#         print "\nCalculating pairs"
+#         creward, i, v = 0, 0, 1
+#         while v < len(revs):
+#             if not database.getdist(revs[i]):
+#                 database.distinsert(self.dat.processweights(revs[v], 
+#                                                             revs[i], 
+#                                                             database))
+#             dot((not i), (t != (len(pageids)-1)))
+#             i = v
+#             v = v + 1
+#             pagecount = pagecount + 1
         
-        if(flags['weightsdefault']):
-            getweights(params['weights'])
+#         if(flags['weightsdefault']):
+#             getweights(params['weights'])
             
-        print
-        print "\nAnalysis complete, saving image files:"
-        title = titles[t].replace(" ","_")
-        print trajectory(*gettrajdata(revx, 
-                                      database, 
-                                      title,
-                                      show=flags['plotshow']))
-        print count(*self.dat.getbardata(revx, 
-                                pageid, 
-                                database, 
-                                title, 
-                                "count",
-                                show=flags['plotshow']))        
-        print reward(*self.dat.getbardata(revx, 
-                                 pageid, 
-                                 database, 
-                                 title, 
-                                 "reward",
-                                 weights=params['weights'],
-                                 show=flags['plotshow']))
-        return True
+#         print
+#         print "\nAnalysis complete, saving image files:"
+#         title = titles[t].replace(" ","_")
+#         print trajectory(*gettrajdata(revx, 
+#                                       database, 
+#                                       title,
+#                                       show=flags['plotshow']))
+#         print count(*self.dat.getbardata(revx, 
+#                                 pageid, 
+#                                 database, 
+#                                 title, 
+#                                 "count",
+#                                 show=flags['plotshow']))        
+#         print reward(*self.dat.getbardata(revx, 
+#                                  pageid, 
+#                                  database, 
+#                                  title, 
+#                                  "reward",
+#                                  weights=params['weights'],
+#                                  show=flags['plotshow']))
+#         return True
 
-def fetch():
-    contentparams = {}
-    contentparams.update({'titles':params['titles']})
-    if params['page_titles'] != "random" and params['revids']:
-        contentparams.update({'revids':params['revids']})
-    if params['userids']:
-        contentparams.update({'userids':params['userids']})
-    print "Fetching from database"
-    return db.getrevfull(**contentparams)
+# def fetch():
+#     contentparams = {}
+#     contentparams.update({'titles':params['titles']})
+#     if params['page_titles'] != "random" and params['revids']:
+#         contentparams.update({'revids':params['revids']})
+#     if params['userids']:
+#         contentparams.update({'userids':params['userids']})
+#     print "Fetching from database"
+#     return db.getrevfull(**contentparams)
 
 def main():
     params = {'scrape_limit': -1,
