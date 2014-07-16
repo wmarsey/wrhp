@@ -17,7 +17,7 @@ class Database:
     crsr = None
 
     def __init__(self):
-        with open('/homes/wm613/individual-project/code/dbpas','r') as pasfil:
+        with open('/homes/wm613/individual-project/WikiInterface/dbpas','r') as pasfil:
             self.password = pasfil.read().strip()
         self.cn = db.connect(host = self.host,
                              user = self.user,
@@ -71,7 +71,6 @@ class Database:
         return None
     
     def gettrajheight(self, data):
-        print "lookingfor traj", data[0]
         sql = "SELECT distance FROM " + self.trajectorytable + " WHERE revid2 = %s;"
         if(self._execute(sql, data)):
             result = self.crsrsanity()
@@ -125,35 +124,29 @@ class Database:
         return None
 
     def getdist(self, revid):
-        print "testing for", revid
         sql = "SELECT distance from " + self.distancetable + " WHERE revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
             try:
                 result = self.crsrsanity()
                 if result:
-                    print "found", result[0][0]
                     return result[0][0]
             except:
                 print "error", revid
                 pass
-        print "didn't find"
         return -1
     
     def gettraj(self, param):
-        print "getting traj", param[0], param[1]
         sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s;"
         data = (param[0],param[1])
         if(self._execute(sql, data)):
             try:
                 result = self.crsrsanity()
                 if result:
-                    print "found"
                     return result[0][0]
             except:
                 print "error", param[0], param[1]
                 pass
-        print "didn't find"
         return None
 
     def getrevid(self, title):
@@ -199,7 +192,14 @@ class Database:
         data = (revx,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
-        return None        
+        return None  
+
+    def getuserinfo(self, revx):
+        sql = "SELECT DISTINCT c.username, c.userid FROM " + self.trajectorytable + " AS b JOIN " + self.revisiontable + " as c ON b.revid1 = %s AND b.revid2 = c.revid";
+        data = (revx,)
+        if(self._execute(sql,data)):
+            return self.crsrsanity()
+        return None 
     
     def existencequery(self, sql, data):
         self.crsr._execute(sql, data)
@@ -207,7 +207,6 @@ class Database:
 
     def contentinsert(self, param):
         if self.getrevcontent(param[0]):
-            print "content already exists"
             return False
         sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s, %s);"
         data = (param[0],param[1],param[2],param[3])
@@ -215,7 +214,6 @@ class Database:
 
     def indexinsert(self, param):
         if self.getrevinfo(param[0]):
-            print "content already exists"
             return False
         sql = "INSERT INTO " + self.revisiontable + \
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
@@ -230,13 +228,11 @@ class Database:
         return self._execute(sql,data)
 
     def distinsert(self, param):
-        print "inserting", param[0]
         sql = "INSERT INTO " + self.distancetable + \
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
         return self._execute(sql,param)
 
     def trajinsert(self, data):
-        print "trajectory", [d for d in data]
         sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
         return self._execute(sql,data)
 

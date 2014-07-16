@@ -1,19 +1,16 @@
-from __future__ import division
+from __future__ import division ##for float-returning divisor
 import database as db
 import wikiScraper as wk
 import lshtein as lv
 import errno
 import re
 import datetime, time
-import scipy
-import os, sys
-import signal
+import sys
 import matplotlib.pyplot as plt
-#import csv
 import math as m
 
 VERSION_NUMBER = "0.0.0.0.00.1"
-BASEPATH = "/homes/wm613/individual-project/code/"
+BASEPATH = "/homes/wm613/individual-project/WikiInterface/"
 WEIGHTLABELS = ["maths",
                 "headings",
                 "quotes", 
@@ -21,14 +18,6 @@ WEIGHTLABELS = ["maths",
                 "links",
                 "citations",
                 "normal"]
-
-def intstring(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
 class WikiInterface:
     dat = None
     plt = None
@@ -59,8 +48,8 @@ class WikiInterface:
         if flags:
             self.flags = flags
         self.dtb = db.Database()
-        self.dat = Data(params['weights'])
-        self.plt = Plotter()
+        self.dat = Data(self.params['weights'])
+        #self.plt = Plotter()
 
     def analyse(self):
         repeat = 1;
@@ -80,7 +69,7 @@ class WikiInterface:
         for t, pageid in enumerate(pageids):
             print "Analysing", titles[t]
             revs = self.dtb.getextantrevs(pageid)
-            revx = revs[-1]
+            revx = revs[0]
             contentx = self.dtb.getrevcontent(revx)   
             print "Tracing trajectory", len(revs), "revisions"
             for rev in revs:
@@ -88,11 +77,14 @@ class WikiInterface:
                 dot()
             print "\nCalculating pairs"
             creward, i, v = 0, 0, 1
-            while v < len(revs):
-                if self.dtb.getdist(revs[i]) < 0:
-                    print "didn't get anything"
-                    self.dtb.distinsert(self.dat.processweights(revs[v], 
-                                                               revs[i]))
+            while not v > len(revs):
+                parentid = 0
+                if v < len(revs):
+                    parentid = revs[v]
+                childid = revs[i]
+                if self.dtb.getdist(childid) < 0:
+                    self.dtb.distinsert(self.dat.processweights(parentid, 
+                                                                childid))
                 dot((not i), (t != (len(pageids)-1)))
                 i = v
                 v = v + 1
@@ -101,22 +93,50 @@ class WikiInterface:
             if(self.flags['weightsdefault']):
                 _get_weights(self.params['weights'])
 
-            print
-            print "\nAnalysis complete, saving image files:"
-            title = titles[t].replace(" ","_")
-            print self.plt.trajectory(*self.dat.gettrajdata(revx, 
-                                                            title,
-                                                            show=self.flags['plotshow']))
-            print self.plt.count(*self.dat.getbardata(revx, 
-                                             pageid, 
-                                             title, 
-                                             "count"))
-            print self.plt.reward(*self.dat.getbardata(revx, 
-                                              pageid, 
-                                              title, 
-                                              "reward",
-                                              weights=self.params['weights']))
-            return True
+            analysis = {pageid:{'title':titles[t],
+                                'revs':revs,
+                                'trajectory':self.dat.gettrajdata(revx),
+                                'editcounts':self.dat.getbardata(pageid, 
+                                                                 "count"),
+                                'rewards':self.dat.getbardata(pageid,
+                                                              "reward"),
+                                'userinfo':self.dtb.getuserinfo(revx)
+                                }
+                        }
+
+            return analysis
+                
+            # print
+            # print "\nAnalysis complete, saving image files:"
+            # title = titles[t].replace(" ","_")
+            # print self.plt.trajectory(*self.dat.gettrajdata(revx, 
+            #                                                 title,
+            #                                                 show=self.flags['plotshow']))
+            # title = "Contributors by edit count"
+            # ident = "count"
+            # print self.plt.barchart(revx, 
+            #                         *self.dat.getbardata(revx, 
+            #                                              pageid, 
+            #                                              title, 
+            #                                              ident), ##barheights/labels
+            #                         title,
+            #                         ident,
+            #                         xaxisname,
+            #                         yaxisname
+            #                         )
+            # #(revid, barheights, barlabels, title, ident, xaxisname, yaxisname, show=False):
+            # title = "Contributors by reward"
+            # ident = "reward"
+            # print self.plt.barchart(revx, 
+            #                         *self.dat.getbardata(revx, 
+            #                                              pageid, 
+            #                                              title, 
+            #                                              ident),
+            #                         title,
+            #                         ident,
+            #                         xaxisname,
+            #                         yaxisname)
+            # return True
 
     def dot(self, reset=False, final=False, slash=False):
         dot = '.'
@@ -155,9 +175,9 @@ class Data:
         self.dtb = db.Database()
         self.weights = _weights
 
-    def weightdata(dbdata):
+    def weightdata(self, pageid):
         wdata = []
-        for u in dbdata:
+        for u in self.dtb.getuserchange(pageid):
             sdist = 0
             for i,d in enumerate(u[2:]):
                 sdist = sdist + (d * (1+self.weights[WEIGHTLABELS[i]]))
@@ -166,16 +186,15 @@ class Data:
         total = sum([e[1] for e in wdata])
         for user, reward in wdata:
             share = reward / total
-            shdata.append((u[0], share))
+            shdata.append((user, share))
         return shdata
 
-    def getbardata(revx, pageid, title, datatype, weights=None, show=False):
+    def getbardata(self, pageid, datatype):
         dbdata = None
         if(datatype == "count"):
             dbdata = self.dtb.getusereditcounts(pageid)
         elif(datatype == "reward"):
-            dbdata = weightdata(self.dtb.getuserchange(pageid),
-                                weights)      
+            dbdata = self.weightdata(pageid)      
         sdata = sorted(dbdata, 
                        key = lambda x: x[1])
         barlabels = [] 
@@ -183,31 +202,36 @@ class Data:
         for i, e in enumerate(sdata):
             barlabels.append(e[0].decode('utf-8').strip())
             barheights.append(e[1])
-        return (revx, barheights, barlabels, title, show)
+        return (barheights, barlabels)
 
-    def gettrajdata(self, revx, title, show=False):
+    def gettrajdata(self, revx):
         dbtraj = self.dtb.gettrajectory(revx)
         traj = [e[1] for e in dbtraj]
         dbgrowth = self.dtb.getgrowth(revx)
         growth = [e[1] for e in dbgrowth]
         creation = dbtraj[0][0]
-        times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]   
-        return (revx, times, traj, growth, title, show)
+        times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]
+        for i,e in enumerate(dbgrowth):
+            print dbtraj[i], e
+        return (times, traj, growth)
 
     def gradientadjust(self, parentid, revid, distuple):
-        x = (self.dtb.gettime((revid,)) - \
-                 self.dtb.gettime((parentid,))).total_seconds()/3600
-        y = self.dtb.gettrajheight((revid,)) - self.dtb.gettrajheight((parentid,))
-        if x < 0:
-            print "Error: Time travel"
-        elif not x:
-            return wdata
-        gradconst = 0.5 - m.atan(y/x)/m.pi
-        print "returning", revid, "for insert"
+        gradconst = 1
+        if parentid:
+            x = (self.dtb.gettime((revid,)) - \
+                     self.dtb.gettime((parentid,))).total_seconds()/3600
+            y = self.dtb.gettrajheight((revid,)) - self.dtb.gettrajheight((parentid,))
+            if x < 0:
+                print "Error: Time travel"
+            elif not x:
+                return wdata
+            gradconst = 0.5 - m.atan(y/x)/m.pi
         return tuple([revid] + [d*gradconst for d in distuple[1:]])
 
     def processweights(self, parentid, revid):
-        contentx = self.dtb.getrevcontent(parentid)
+        contentx = ""
+        if parentid:
+            contentx = self.dtb.getrevcontent(parentid)
         contenty = self.dtb.getrevcontent(revid)
         levresults = lv.fastlev.weightdist(contentx, contenty)
         plaindist = levresults['dist']
@@ -240,18 +264,18 @@ class Data:
             contenty = self.dtb.getrevcontent(oldrev) 
             lev = 0
             if revx == oldrev:
-                lev = len(contenty) ##HACKKK
+                lev = 0
             else:
                 lev = lv.fastlev.plaindist(contentx, 
                                            contenty)
-            self.dtb.trajinsert((revx, oldrev, lev))
-        #return lev         
+            self.dtb.trajinsert((revx, 
+                                 oldrev, 
+                                 lev))
 
 class Plotter:
-    def barchart(revid, barheights, barlabels, title, ident, xaxisname, yaxisname, show=False):
-        filename = title + ident
+    def barchart(self, revid, barheights, barlabels, pageid, title, ident, xaxisname, yaxisname, show=False): 
+        filename = pageid + ident
         imagefile = BASEPATH + "plot/images/" + filename + ".png"
-        
         if (show):
             tfigsize, tdpi = None, None
         else:
@@ -264,8 +288,8 @@ class Plotter:
                    width=0.8)
         xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
         ax.get_yaxis().get_major_formatter().set_scientific(False)
-        plt.xlabel(xaxis)
-        plt.ylabel(yaxis)
+        plt.xlabel(xaxisname)
+        plt.ylabel(yaxisname)
         plt.title(title)
         plt.xticks(xticks_pos, 
                    barlabels, 
@@ -276,9 +300,9 @@ class Plotter:
         plt.savefig(imagefile)
         return imagefile
 
-    def trajectory(self, revid, times, trajectory, growth, title, show=False):
+    def trajectory(self, revid, times, trajectory, growth, pageid, title, show=False):
         ##prepare text
-        filename = title + 'traj'
+        filename = pageid + 'traj'
         imagefile = BASEPATH + "plot/images/" + filename + ".png"
         xaxis = 'Hours since article creation'
         yaxis1 = 'Edit distance from final'
@@ -351,6 +375,13 @@ def echo_params(flags, params):
             print "mode:\t\t", key
     for key, val in params.iteritems():
         print key, ":\t", val
+
+def intstring(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 ##HANDLES COMMAND-LINE ARGUMENTS
 def _arg_sanity(params):
@@ -501,15 +532,44 @@ def main():
             print "error"
             sys.exit(-1)
     
-    print "---------------ANALYSE MODE---------------"
-    # params['freward'] = 3
-    # params['creward'] = 10
-    
+    print "---------------ANALYSE MODE---------------"    
     analyser = WikiInterface(params, flags)
-    if(analyser.analyse()):
-        sys.exit(0)
-    else:
-        sys.exit(-1)
+    results = analyser.analyse()
+    if(results):
+        plt = Plotter()
+        for k, t in results.iteritems():
+            print
+            print "\nAnalysis of article " + t['title'] + " complete, saving image files:"
+            title = "Edit trajectory of article '" + t['title'] + "'" 
+            revx = t['revs'][-1]
+            print plt.trajectory(revx, 
+                                 *t['trajectory'],
+                                 pageid=k,
+                                 title=title)
+            title = "Contributors to " + t['title'] + " by edit count"
+            ident = "count"
+            xaxisname = "Hours since creation"
+            yaxisname = "Edit count"
+            print plt.barchart(revx,
+                               *t['editcounts'], ##barheights/labels
+                               pageid=k,
+                               title=title,
+                               ident=ident,
+                               xaxisname=xaxisname,
+                               yaxisname=yaxisname)
+            title = "Contributors by reward"
+            ident = "reward"
+            yaxisname = "Reward share"
+            print plt.barchart(revx, 
+                               *t['rewards'], ##barheights/labels
+                               pageid=k,
+                               title=title,
+                               ident=ident,
+                               xaxisname=xaxisname,
+                               yaxisname=yaxisname)
+            sys.exit(0)
+        else:
+            sys.exit(-1)
 
 if __name__ == "__main__":
     try:

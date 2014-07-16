@@ -1,11 +1,9 @@
-import requests
-import time
+from requests import get 
 import json
-import wikipedia
-import sys, os
-import inspect
+from sys import stdout, path
+from time import sleep
 from datetime import datetime, timedelta
-sys.path.append("..")
+path.append("/homes/wm613/individual-project/WikiInterface/")
 import database
 
 WIKI_API_URL = 'http://en.wikipedia.org/w/api.php'
@@ -38,13 +36,13 @@ class WikiRevisionScrape:
         if reset:
             self.dotcount = 1
         if not (self.dotcount%50) and self.dotcount:
-            sys.stdout.write('|')
+            stdout.write('|')
         else:
-            sys.stdout.write('.')
+            stdout.write('.')
         if final or (not (self.dotcount%50) and self.dotcount):
-            sys.stdout.write('\n')
+            stdout.write('\n')
         self.dotcount = self.dotcount + 1
-        sys.stdout.flush()
+        stdout.flush()
 
     #atm naively assuming headers, params, titles to be in correct format
     def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None, upperlimit=True):
@@ -78,7 +76,7 @@ class WikiRevisionScrape:
                 if 'revids' in self.par:
                     del self.par['revids']
                 if(self.rand):
-                    self.par['titles'] = wikipedia.random() #get random title
+                    self.par['titles'] = self._getrandom() #get random title
                     self.title = self.par['titles'] 
                 print "Fetching page", self.par['titles'] 
                 self._getlatest()
@@ -94,7 +92,7 @@ class WikiRevisionScrape:
                         del self.par['rvprop']
                     if 'revids' in self.par:
                         del self.par['revids']
-                    self.par['titles'] = wikipedia.random() #get random title
+                    self.par['titles'] = self._getrandom() #get random title
                     self.title = self.par['titles']
                     print "Fetching page", self.par['titles']
                     self._getlatest()
@@ -122,9 +120,25 @@ class WikiRevisionScrape:
         return titles, ids
 
 
+    def _getrandom(self, pages=1):
+        query_params = {
+            'action': 'query',
+            'list': 'random',
+            'rnnamespace': 0,
+            'rnlimit': pages,
+            'format':'json'
+            }
+        
+        request = get(WIKI_API_URL, params=query_params, headers=self.head).json()
+        titles = [page['title'] for page in request['query']['random']]
+        
+        if len(titles) == 1:
+            return titles[0]
+        
+        return titles
+
     def _getlatest(self):
-        r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-        r = r.json()
+        r = get(WIKI_API_URL, params=self.par, headers=self.head).json()
         try:
             p = r['query']['pages']
         except:
@@ -172,8 +186,7 @@ class WikiRevisionScrape:
                 self.childid = self.parentid
                 self.parentid = parent
             else:
-                r = requests.get(WIKI_API_URL, params=self.par, headers=self.head)
-                r = r.json()
+                r = get(WIKI_API_URL, params=self.par, headers=self.head).json()
                 self._rate()
                 try:
                     page = r['query']['pages'][self.pageid]['revisions'][0]
