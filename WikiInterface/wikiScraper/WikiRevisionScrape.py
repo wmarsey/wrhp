@@ -1,5 +1,6 @@
 from requests import get 
 import json
+from random import choice
 from sys import stdout, path
 from time import sleep
 from datetime import datetime, timedelta
@@ -7,6 +8,26 @@ path.append("/homes/wm613/individual-project/WikiInterface/")
 import database
 
 WIKI_API_URL = 'http://en.wikipedia.org/w/api.php'
+WIKI_API_TEMPLATE = 'http://|.wikipedia.org/w/api.php'
+WIKI_DOMAINS_MAJ = [('en','English'),
+                    ('nl','Dutch'),
+                    ('sv','Swedish'),
+                    ('de','German'),
+                    ('fr','French'),
+                    ('it','Italian'),
+                    ('ru','Russian'),
+                    ('es','Spanish'),
+                    ('vi','Vietnamese'),
+                    ('war','Waray-Waray'),
+                    ('pl','Polish'),
+                    ('ceb','Cebuano')]
+WIKI_DOMAINS_MIN = [('nso','Northern Sotho'),
+                    ('kg','Kongo'),
+                    ('tet','Tetum'),
+                    ('kaa','Karakalpak'),
+                    ('ab','Abkhazian'),
+                    ('ltg','Latgalian'),
+                    ('zu','zulu')]
 WIKI_USER_AGENT = 'wikipedia (https://github.com/goldsmith/Wikipedia/)'
 
 class WikiRevisionScrape:
@@ -31,6 +52,7 @@ class WikiRevisionScrape:
     title = ""
     dotcount = 1
     upperlimit = True
+    api_url = ""
 
     def dot(self, reset=False, final=False):
         if reset:
@@ -63,6 +85,11 @@ class WikiRevisionScrape:
         self.historylimit = historylimit
         self.db = database.Database()
 
+    def picklang(self):
+        s = WIKI_API_TEMPLATE
+        d = choice(WIKI_DOMAINS_MAJ)
+        return s.replace("|", d[0]), d[1]
+
     def scrape(self):
         self._pace()
         ids = []
@@ -71,6 +98,8 @@ class WikiRevisionScrape:
         ## NEEDS TO BE LIKE while self.pagelimit != 0 or something
         if self.pagelimit == -1 and self.rand:
             while True:
+                self.api_url, api_lang = self.picklang()
+                print "chose", api_lang
                 if 'rvprop' in self.par:
                     del self.par['rvprop']
                 if 'revids' in self.par:
@@ -88,6 +117,8 @@ class WikiRevisionScrape:
         elif self.rand:
             for i in range(self.pagelimit):
                 while True:
+                    self.api_url, api_lang = self.picklang()
+                    print "chose", api_lang
                     if 'rvprop' in self.par:
                         del self.par['rvprop']
                     if 'revids' in self.par:
@@ -129,7 +160,7 @@ class WikiRevisionScrape:
             'format':'json'
             }
         
-        request = get(WIKI_API_URL, params=query_params, headers=self.head).json()
+        request = get(self.api_url, params=query_params, headers=self.head).json()
         titles = [page['title'] for page in request['query']['random']]
         
         if len(titles) == 1:
@@ -138,13 +169,14 @@ class WikiRevisionScrape:
         return titles
 
     def _getlatest(self):
-        r = get(WIKI_API_URL, params=self.par, headers=self.head).json()
+        r = get(self.api_url, params=self.par, headers=self.head).json()
         try:
             p = r['query']['pages']
         except:
             print r
         for key, value in r['query']['pages'].iteritems():
             self.pageid = key
+        #print r
         self.parentid = self.childid = r['query']['pages'][self.pageid]['revisions'][0]['revid']
         return self.childid
     
@@ -186,12 +218,15 @@ class WikiRevisionScrape:
                 self.childid = self.parentid
                 self.parentid = parent
             else:
-                r = get(WIKI_API_URL, params=self.par, headers=self.head).json()
+                #print "getting", self.par, self.head
+                r = get(self.api_url, params=self.par, headers=self.head).json()
                 self._rate()
                 try:
                     page = r['query']['pages'][self.pageid]['revisions'][0]
                 except:
                     print r
+                #if "undo" in str(r):
+                    #print r
                 if not self.db.revexist(page['revid'], page['parentid']):
                     pages.append(page)
                 self.childid =  page['revid']

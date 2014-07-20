@@ -514,9 +514,11 @@ def main():
     flags = _flag_sanity(flags) ##FLAG SANITY 
     #echo_params(flags, params) ##ECHO PARAMETERS 
     
+    analyser = WikiInterface(params, flags)
+
     if flags['scrape']:
         print "---------------SCRAPE MODE---------------"
-        if scrape(params):
+        if analyser.scrape():
             sys.exit(0)
         else:
             print "error"
@@ -533,7 +535,7 @@ def main():
             sys.exit(-1)
     
     print "---------------ANALYSE MODE---------------"    
-    analyser = WikiInterface(params, flags)
+    #analyser = WikiInterface(params, flags)
     results = analyser.analyse()
     if(results):
         plt = Plotter()
