@@ -6,28 +6,12 @@ from time import sleep
 from datetime import datetime, timedelta
 path.append("/homes/wm613/individual-project/WikiInterface/")
 import database
+import csv
+from bs4 import BeautifulSoup
+import re
 
 WIKI_API_URL = 'http://en.wikipedia.org/w/api.php'
 WIKI_API_TEMPLATE = 'http://|.wikipedia.org/w/api.php'
-WIKI_DOMAINS_MAJ = [('en','English'),
-                    ('nl','Dutch'),
-                    ('sv','Swedish'),
-                    ('de','German'),
-                    ('fr','French'),
-                    ('it','Italian'),
-                    ('ru','Russian'),
-                    ('es','Spanish'),
-                    ('vi','Vietnamese'),
-                    ('war','Waray-Waray'),
-                    ('pl','Polish'),
-                    ('ceb','Cebuano')]
-WIKI_DOMAINS_MIN = [('nso','Northern Sotho'),
-                    ('kg','Kongo'),
-                    ('tet','Tetum'),
-                    ('kaa','Karakalpak'),
-                    ('ab','Abkhazian'),
-                    ('ltg','Latgalian'),
-                    ('zu','zulu')]
 WIKI_USER_AGENT = 'wikipedia (https://github.com/goldsmith/Wikipedia/)'
 
 class WikiRevisionScrape:
@@ -53,6 +37,41 @@ class WikiRevisionScrape:
     dotcount = 1
     upperlimit = True
     api_url = ""
+    api_lang = ""
+    domains = []
+
+    #atm naively assuming headers, params, titles to be in correct format
+    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None, upperlimit=True, domain="en"):
+        if(_params):
+            params = _params
+
+        if(_headers):
+            self.head = _headers
+
+        if(_titles):
+            self.par['titles'] = _titles
+            self.rand = False
+            self.api_domain = domain
+
+        if not upperlimit:
+            self.upperlimit = False
+        
+        self.pagelimit = pagelimit
+        self.historylimit = historylimit
+        self.db = database.Database()
+        self.domains = self.langsreader()
+
+    def langsreader(self):
+        langs = []
+        try:
+            with open('/homes/wm613/individual-project/WikiInterface/wikiScraper/langs.csv', 'r') as langfile:
+                lread = csv.reader(langfile, delimiter='\t', quotechar='"')
+                for row in lread:
+                    langs.append(tuple(row))
+        except:
+            print "langs.csv missing. Using only English wikipedia"
+            langs = [('en', 'English')]
+        return langs
 
     def dot(self, reset=False, final=False):
         if reset:
@@ -66,90 +85,56 @@ class WikiRevisionScrape:
         self.dotcount = self.dotcount + 1
         stdout.flush()
 
-    #atm naively assuming headers, params, titles to be in correct format
-    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None, upperlimit=True):
-        if(_params):
-            params = _params
-
-        if(_headers):
-            self.head = _headers
-
-        if(_titles):
-            self.par['titles'] = _titles
-            self.rand = False
-
-        if not upperlimit:
-            self.upperlimit = False
-        
-        self.pagelimit = pagelimit
-        self.historylimit = historylimit
-        self.db = database.Database()
-
-    def picklang(self):
+    def picklang(self, domainset=False):
         s = WIKI_API_TEMPLATE
-        d = choice(WIKI_DOMAINS_MAJ)
+        if domainset:
+            lname = ""
+            for ds in self.domains:
+                if ds[0] == self.api_domain:
+                    lname = ds[1]
+                    break
+            return s.replace("|", self.api_domain), lname
+        d = self.domains[0]
+        if self.rand:
+            d = choice(self.domains)
+            print d[1], "Wikipedia"
         return s.replace("|", d[0]), d[1]
 
     def scrape(self):
         self._pace()
         ids = []
         titles = []
-        ## IMPROVE THIS LOGICAL FLOW COULD BE JUST TWO IF ELSE DECISIONS
-        ## NEEDS TO BE LIKE while self.pagelimit != 0 or something
-        if self.pagelimit == -1 and self.rand:
-            while True:
-                self.api_url, api_lang = self.picklang()
-                print "chose", api_lang
-                if 'rvprop' in self.par:
-                    del self.par['rvprop']
-                if 'revids' in self.par:
-                    del self.par['revids']
-                if(self.rand):
-                    self.par['titles'] = self._getrandom() #get random title
-                    self.title = self.par['titles'] 
-                print "Fetching page", self.par['titles'] 
-                self._getlatest()
-                ids.append(self.pageid)
-                titles.append(self.title)
-                self._rate()
-                del self.par['titles']
-                self._tracehist()
-        elif self.rand:
-            for i in range(self.pagelimit):
-                while True:
-                    self.api_url, api_lang = self.picklang()
-                    print "chose", api_lang
-                    if 'rvprop' in self.par:
-                        del self.par['rvprop']
-                    if 'revids' in self.par:
-                        del self.par['revids']
-                    self.par['titles'] = self._getrandom() #get random title
-                    self.title = self.par['titles']
-                    print "Fetching page", self.par['titles']
-                    self._getlatest()
-                    self._rate()
-                    del self.par['titles']
-                    if self._tracehist(): 
-                        ids.append(self.pageid)
-                        titles.append(self.title)
-                        break
-        else:
-            for title in self.par['titles'].split('|'):
-                if 'rvprop' in self.par:
-                    del self.par['rvprop']
-                if 'revids' in self.par:
-                    del self.par['revids']
-                print "Fetching page", title
-                self.par['titles'] = title
+        while True:
+            ##prepare params for choosing article
+            self.api_url, self.api_lang = self.picklang()##LOGIC
+            if 'rvprop' in self.par:
+                del self.par['rvprop']
+            if 'revids' in self.par:
+                del self.par['revids']
+            
+            ## choose article
+            if self.rand:
+                self.par['titles'] = self._getrandom() #get random title
                 self.title = self.par['titles']
-                self._getlatest()
+            else:
+                self.title = self.par['titles']
+            print "Fetching page", self.par['titles']
+
+            ##fetch versions
+            self._getlatest()
+            self._rate()
+            del self.par['titles']
+            if self._tracehist() and self._tracediffs():
                 ids.append(self.pageid)
                 titles.append(self.title)
-                self._rate()
-                del self.par['titles']
-                self._tracehist()   
+                self.db.fetchedinsert((self.pageid,
+                                       self.title,
+                                       self.api_lang));
+            
+            ##finish if necessary
+            if not self.rand or len(ids) == self.pagelimit:
+                break
         return titles, ids
-
 
     def _getrandom(self, pages=1):
         query_params = {
@@ -225,8 +210,6 @@ class WikiRevisionScrape:
                     page = r['query']['pages'][self.pageid]['revisions'][0]
                 except:
                     print r
-                #if "undo" in str(r):
-                    #print r
                 if not self.db.revexist(page['revid'], page['parentid']):
                     pages.append(page)
                 self.childid =  page['revid']
@@ -269,8 +252,7 @@ class WikiRevisionScrape:
                                              size, 
                                              comment.encode("UTF-8")])
                         self.db.contentinsert([int(self.childid), 
-                                               int(self.pageid), 
-                                               title, 
+                                               int(self.pageid),
                                                content.encode("UTF-8")])
                     pages = []                        
                 else:
@@ -287,7 +269,79 @@ class WikiRevisionScrape:
                 i = i - 1
             j = j + 1
         return True
-        
+
+    def _tracediffs(self):
+        print "Fetching diffs"
+        del self.par['rvprop']
+        revs = self.db.getextantrevs(self.pageid)
+        revs.reverse()
+        for i in xrange(len(revs)-1):
+            actions = []
+            killme = True
+            self.par['revids'] = revs[i]
+            self.par['rvdiffto']=revs[i+1]
+            request = get(self.api_url, params=self.par, headers=self.head).json()
+            html = request['query']['pages'][self.pageid]['revisions'][0]['diff']['*']
+            parsed = BeautifulSoup(html)
+            #print parsed.prettify()
+            tags = [("td","diff-deletedline","deleted"),
+                    ("td","diff-addedline", "added")]
+            # subtags = [("ins", "diffchange", "changed"),
+            #            ("del", "diffchange", "changed")]
+            changeswap = {}
+            for t in tags:
+                found = parsed.find_all(t[0], attrs={"class": t[1]})
+                for f in found:
+                    action = ""
+                    line = 0
+                    text = ""
+                    ##get line number
+                    prev = f.find_parent().find_previous_siblings("tr")
+                    for p in prev:
+                        lineno = p.find_all("td", attrs={"class":"diff-lineno"})
+                        if len(lineno):
+                            line = int(re.findall(r'\b\d+\b', lineno[-1].text)[0])
+                            break
+
+                    ##get action
+                    action = t[2]
+                    # for st in subtags:
+                    #     subfound = f.find(st[0], attrs={"class": st[1]})
+                    #     if subfound:
+                    #         action = st[2]
+                    #         text = subfound.text
+                    #         break
+                    
+                    subdiv = f.find("div")
+                    if subdiv:
+                        text = subdiv.text
+                    else:
+                        text = f.text
+                    toinsert = (line, action)
+                    index = self._findaction(actions,toinsert)
+                    if index > -1:
+                        actions[index][-1].append(text)
+                        actions[index][-2] = actions[index][-2] + 1 
+                    else:
+                        actions.append([revs[i],
+                                        revs[i+1],
+                                        toinsert[0],
+                                        toinsert[1],
+                                        1,
+                                        [text]])
+                    
+            for a in actions:
+                self.db.diffinsert(tuple(a))
+            self.dot(not i)
+        return True
+
+    def _findaction(self,actions,action):
+        for i,e in enumerate(actions):
+            if e[2] == action[0]:
+                if e[3] == action[1]:
+                    return i
+        return -1
+
     def _pace(self):
         if self.rl and self.rl_last_call \
                 and self.rl_lastcall + self.rl_minwait > datetime.now():

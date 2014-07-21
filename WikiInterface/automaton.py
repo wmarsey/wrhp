@@ -164,7 +164,8 @@ class WikiInterface:
             scraper = wk.WikiRevisionScrape(
                 historylimit=self.params['depth_limit'],
                 _titles=self.params['page_titles'],
-                upperlimit=False
+                upperlimit=False,
+                domain=self.params['domain']
                 )
         return scraper.scrape()
 
@@ -416,6 +417,8 @@ def _arg_sanity(params):
             titles = title.replace("| ","|")
         params["page_titles"] = titles
         print titles.count('|')+1, "page(s) chosen:", ", ".join(titles.split('|'))
+    if "--domain" in a:
+        params["domain"] = a[a.index("--domain") + 1] 
     return params
 
 def _flag_sanity(flags):

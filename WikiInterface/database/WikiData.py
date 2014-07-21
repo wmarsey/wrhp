@@ -13,6 +13,8 @@ class Database:
     revisiontable = "wikirevisions"
     distancetable = "wikidistance"
     trajectorytable = "wikitrajectory"
+    fetchedtable = "wikifetched"
+    difftable = "wikidiff"
     cn = None
     crsr = None
 
@@ -149,15 +151,8 @@ class Database:
                 pass
         return None
 
-    def getrevid(self, title):
-        sql = "SELECT revid FROM " + self.contenttable + " WHERE title = %s LIMIT 1;"
-        data = (title,)
-        if(self._execute(sql,data)):
-            return self.crsrsanity()
-        return None 
-
     def getrandom(self):
-        sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.contenttable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.contenttable + ") AS w2) LIMIT 1;"
+        sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.fetchedtable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.fetchedtable + ") AS w2) LIMIT 1;"
         while True:
             if(self._execute(sql,())):
                 try: 
@@ -205,12 +200,39 @@ class Database:
         self.crsr._execute(sql, data)
         return cursor.fetchall()
 
+    def getfetched(self, pageid):
+        sql = "SELECT language FROM " + self.fetchedtable + " WHERE pageid = %s";
+        if(self._execute(sql, (pageid,))):
+            result = self.crsrsanity()
+            if result:
+                return result[0][0]
+        return None
+
+    def fetchedinsert(self, param):
+        if self.getfetched(param[0]):
+            return False
+        sql = "INSERT INTO " + self.fetchedtable + " VALUES (%s, %s, %s);"
+        return self._execute(sql, param)
+
+    def getdiff(self, params):
+        sql = "SELECT * FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND line = %s AND action = %s;";
+        if(self._execute(sql, params)):
+            result = self.crsrsanity()
+            if result:
+                return True
+        return False
+
+    def diffinsert(self, param):
+        if self.getdiff(param[:-2]):
+            return False
+        sql = "INSERT INTO " + self.difftable + " VALUES (%s, %s, %s, %s, %s, %s);"
+        return self._execute(sql, param)
+
     def contentinsert(self, param):
         if self.getrevcontent(param[0]):
             return False
-        sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s, %s);"
-        data = (param[0],param[1],param[2],param[3])
-        return self._execute(sql,data)
+        sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s);"
+        return self._execute(sql, param)
 
     def indexinsert(self, param):
         if self.getrevinfo(param[0]):
