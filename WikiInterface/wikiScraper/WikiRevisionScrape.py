@@ -38,19 +38,26 @@ class WikiRevisionScrape:
     upperlimit = True
     api_url = ""
     api_lang = ""
+    api_domain = ""
+    domainset = False
     domains = []
 
     #atm naively assuming headers, params, titles to be in correct format
-    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None, upperlimit=True, domain="en"):
-        if(_params):
+    def __init__(self, pagelimit=-1, historylimit=-1, _headers=None, _params=None, _titles=None, upperlimit=True, domain=None):
+        if _params:
             params = _params
 
-        if(_headers):
+        if _headers:
             self.head = _headers
 
-        if(_titles):
+        if _titles:
             self.par['titles'] = _titles
             self.rand = False
+            self.domainset = True
+            self.api_domain = domain
+
+        if domain:
+            self.domainset = True
             self.api_domain = domain
 
         if not upperlimit:
@@ -97,7 +104,7 @@ class WikiRevisionScrape:
         d = self.domains[0]
         if self.rand:
             d = choice(self.domains)
-            print d[1], "Wikipedia"
+            print d[1], "Wikipedia", "(" + d[0] + ".)"
         return s.replace("|", d[0]), d[1]
 
     def scrape(self):
@@ -106,7 +113,7 @@ class WikiRevisionScrape:
         titles = []
         while True:
             ##prepare params for choosing article
-            self.api_url, self.api_lang = self.picklang()##LOGIC
+            self.api_url, self.api_lang = self.picklang(self.domainset)##LOGIC
             if 'rvprop' in self.par:
                 del self.par['rvprop']
             if 'revids' in self.par:
@@ -118,13 +125,13 @@ class WikiRevisionScrape:
                 self.title = self.par['titles']
             else:
                 self.title = self.par['titles']
-            print "Fetching page", self.par['titles']
+            print "Fetching page", self.par['titles'], "(" + self.api_url + ")"
 
             ##fetch versions
             self._getlatest()
             self._rate()
             del self.par['titles']
-            if self._tracehist() and self._tracediffs():
+            if self._tracehist():# and self._tracediffs():
                 ids.append(self.pageid)
                 titles.append(self.title)
                 self.db.fetchedinsert((self.pageid,
@@ -243,6 +250,11 @@ class WikiRevisionScrape:
                             failed.append(p)
                             continue
                         size = len(content)
+                        if not size:
+                            failed.append(p)
+                            continue
+                        #print self.childid, timestamp, size
+                        #print content
                         self.db.indexinsert([int(self.childid),
                                              int(self.parentid),
                                              int(self.pageid),
@@ -261,7 +273,12 @@ class WikiRevisionScrape:
             self.dot(reset=(not j),final=b)
             if b:
                 if len(failed):
-                    print len(failed), "corrupt pages fetched"
+                    print len(failed), "corrupt pages fetched, revids:"
+                    for f in failed:
+                        try:
+                            print f['revid']
+                        except:
+                            pass
                     print "circumnavigating corrupt pages"
                     self._remove_corruption(failed)
                 break
@@ -332,7 +349,7 @@ class WikiRevisionScrape:
                     
             for a in actions:
                 self.db.diffinsert(tuple(a))
-            self.dot(not i)
+            self.dot(not i, i == (len(revs)-2))
         return True
 
     def _findaction(self,actions,action):

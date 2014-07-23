@@ -81,7 +81,7 @@ class Database:
         return None
         
     def getextantrevs(self, pageid):
-        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY revid DESC;"
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY time DESC;"
         data = (pageid,)
         if(self._execute(sql,data)):
             result = self.crsrsanity()
@@ -139,6 +139,7 @@ class Database:
         return -1
     
     def gettraj(self, param):
+        #print "looking for", param[0], param[1]
         sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s;"
         data = (param[0],param[1])
         if(self._execute(sql, data)):
@@ -149,7 +150,7 @@ class Database:
             except:
                 print "error", param[0], param[1]
                 pass
-        return None
+        return -1
 
     def getrandom(self):
         sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.fetchedtable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.fetchedtable + ") AS w2) LIMIT 1;"
@@ -170,7 +171,7 @@ class Database:
             return self.crsr.fetchall()
 
     def getgrowth(self, revid):
-        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " ON revid2 = a.revid WHERE revid1 = %s ORDER BY time;"
+        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid WHERE revid1 = %s ORDER BY time;"
         data = (revid,)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
@@ -221,6 +222,29 @@ class Database:
             if result:
                 return True
         return False
+
+    def getdifftexts(self, oldrev, newrev):
+        texts = []
+        for a in ("deleted", "added"):
+            sql = "SELECT diff FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND action = %s;"
+            textpile = ""
+            if(self._execute(sql, (oldrev, newrev, a))):
+                result = self.crsrsanity()
+                if result:
+                    #print a, len(result), result
+                    for r in result:
+                        #print r[0]
+                        textpile = textpile + r[0]
+                    #texts.append(result[0][0])
+                    # linepile = ""
+                    # print a, result[0][0], result[0][1]
+                    # lines = result[0][1][1:-1].split(',')
+                    # print a, result[0][0], len(lines), lines
+                    # for line in result[0][0]:
+                    #     linepile = linepile + line + "\n"
+                    # texts.append(linepile)
+            texts.append(textpile)
+        return texts
 
     def diffinsert(self, param):
         if self.getdiff(param[:-2]):

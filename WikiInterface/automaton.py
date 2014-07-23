@@ -62,7 +62,7 @@ class WikiInterface:
             self.params['titles'], pageid = self.dtb.getrandom()
             print "Fetching random article from database,", self.params['titles']
             pageids = [pageid]
-            titles = [params['titles']]
+            titles = [self.params['titles']]
         else:
             titles, pageids = self.scrape()
         pagecount = 0
@@ -105,38 +105,6 @@ class WikiInterface:
                         }
 
             return analysis
-                
-            # print
-            # print "\nAnalysis complete, saving image files:"
-            # title = titles[t].replace(" ","_")
-            # print self.plt.trajectory(*self.dat.gettrajdata(revx, 
-            #                                                 title,
-            #                                                 show=self.flags['plotshow']))
-            # title = "Contributors by edit count"
-            # ident = "count"
-            # print self.plt.barchart(revx, 
-            #                         *self.dat.getbardata(revx, 
-            #                                              pageid, 
-            #                                              title, 
-            #                                              ident), ##barheights/labels
-            #                         title,
-            #                         ident,
-            #                         xaxisname,
-            #                         yaxisname
-            #                         )
-            # #(revid, barheights, barlabels, title, ident, xaxisname, yaxisname, show=False):
-            # title = "Contributors by reward"
-            # ident = "reward"
-            # print self.plt.barchart(revx, 
-            #                         *self.dat.getbardata(revx, 
-            #                                              pageid, 
-            #                                              title, 
-            #                                              ident),
-            #                         title,
-            #                         ident,
-            #                         xaxisname,
-            #                         yaxisname)
-            # return True
 
     def dot(self, reset=False, final=False, slash=False):
         dot = '.'
@@ -158,7 +126,8 @@ class WikiInterface:
         if self.params["page_titles"] == "random":
             scraper = wk.WikiRevisionScrape(
                 historylimit=self.params['depth_limit'],
-                pagelimit=self.params['scrape_limit']
+                pagelimit=self.params['scrape_limit'],
+                domain=self.params['domain']
                 )
         else:
             scraper = wk.WikiRevisionScrape(
@@ -235,6 +204,8 @@ class Data:
             contentx = self.dtb.getrevcontent(parentid)
         contenty = self.dtb.getrevcontent(revid)
         levresults = lv.fastlev.weightdist(contentx, contenty)
+        #lev2 = lv.fastlev.weightdist(*self.dtb.getdifftexts(parentid, revid))
+        #print levresults['dist'], lev2['dist']
         plaindist = levresults['dist']
         maths = levresults['maths1'] + levresults['maths2']
         headings = levresults['h2'] + levresults['h3'] + \
@@ -261,7 +232,8 @@ class Data:
     def gettraj(self, contentx, revx, oldrev):
         dist = self.dtb.gettraj([revx, 
                                  oldrev])
-        if not dist:
+        print dist
+        if dist < 0:
             contenty = self.dtb.getrevcontent(oldrev) 
             lev = 0
             if revx == oldrev:
@@ -272,6 +244,13 @@ class Data:
             self.dtb.trajinsert((revx, 
                                  oldrev, 
                                  lev))
+
+    # def diff(self, oldrev, newrev):
+    #     oldtext, newtext = self.dtb.getdifftexts(oldrev, newrev)
+        
+    #     if oldtext:
+    #         return result
+        
 
 class Plotter:
     def barchart(self, revid, barheights, barlabels, pageid, title, ident, xaxisname, yaxisname, show=False): 
@@ -303,7 +282,7 @@ class Plotter:
 
     def trajectory(self, revid, times, trajectory, growth, pageid, title, show=False):
         ##prepare text
-        filename = pageid + 'traj'
+        filename = str(pageid) + 'traj'
         imagefile = BASEPATH + "plot/images/" + filename + ".png"
         xaxis = 'Hours since article creation'
         yaxis1 = 'Edit distance from final'
@@ -498,6 +477,7 @@ def main():
               'page_titles': 'random',
               'revids': 0,
               'userids': 0,
+              'domain':None,
               'weights':{'maths':0,
                         'headings':0,
                         'quotes':0,
