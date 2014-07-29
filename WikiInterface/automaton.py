@@ -232,7 +232,7 @@ class Data:
     def gettraj(self, contentx, revx, oldrev):
         dist = self.dtb.gettraj([revx, 
                                  oldrev])
-        print dist
+        #print dist
         if dist < 0:
             contenty = self.dtb.getrevcontent(oldrev) 
             lev = 0
