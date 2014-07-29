@@ -1,0 +1,45 @@
+/*@font-face {
+    font-family: 'Oxygen';
+    font-style: normal;
+    font-weight: 300;
+    src: local('Oxygen Light'), local('Oxygen-Light'), url('fonts/OxygenLight.woff') format('woff');
+}
+@font-face {
+    font-family: 'Oxygen';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Oxygen'), local('Oxygen-Regular'), url('fonts/OxygenRegular.woff') format('woff');
+}
+@font-face {
+    font-family: 'Oxygen';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Oxygen Bold'), local('Oxygen-Bold'), url('fonts/OxygenBold.woff') format('woff');
+} */
+
+QLabel.h1{
+    font-weight:200;
+    font-size:32px;
+    margin:5px 0;
+}
+QLabel#masthead{
+    margin-top:50px;
+    qproperty-alignment: AlignCenter;
+}
+QLabel.h2{
+    font-family:Oxygen;
+    font-size:20px;
+    margin: 0 0 10px;
+    qproperty-alignment: AlignCenter;
+}
+QLabel.p{
+    font-weight:100;
+    font-size:16px;
+    margin: 5px 0;
+    qproperty-alignment: AlignCenter;
+}
+QLabel.h1,
+QLabel.h2,
+QLabel.p{
+    color:#344459;
+}

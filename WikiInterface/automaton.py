@@ -8,6 +8,7 @@ import datetime, time
 import sys
 import matplotlib.pyplot as plt
 import math as m
+from wikipedia import search
 
 VERSION_NUMBER = "0.0.0.0.00.1"
 BASEPATH = "/homes/wm613/individual-project/WikiInterface/"
@@ -49,7 +50,17 @@ class WikiInterface:
             self.flags = flags
         self.dtb = db.Database()
         self.dat = Data(self.params['weights'])
-        #self.plt = Plotter()
+
+    def checktitle(self):
+        return self.scrape(test=True)
+
+    def config(self, params=None, flags=None):
+        if params:
+            self.params.update(params)
+        if flags:
+            self.flags.update(flags)
+        self.dtb = db.Database()
+        self.dat = Data(self.params['weights'])
 
     def analyse(self):
         repeat = 1;
@@ -121,9 +132,9 @@ class WikiInterface:
         self.dotcount = self.dotcount + 1
         sys.stdout.flush()
 
-    def scrape(self):
+    def scrape(self, test=False):
         scraper = None
-        if self.params["page_titles"] == "random":
+        if not test and self.params["page_titles"] == "random":
             scraper = wk.WikiRevisionScrape(
                 historylimit=self.params['depth_limit'],
                 pagelimit=self.params['scrape_limit'],
@@ -136,6 +147,8 @@ class WikiInterface:
                 upperlimit=False,
                 domain=self.params['domain']
                 )
+        if test:
+            return scraper.test()
         return scraper.scrape()
 
 class Data:

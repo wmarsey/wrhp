@@ -68,6 +68,19 @@ class WikiRevisionScrape:
         self.db = database.Database()
         self.domains = self.langsreader()
 
+    def test(self):
+        print self.par
+        self.par['rvprop'] = 'userid|user|ids|flags|tags|size|comment|timestamp|content'
+        self.api_url, self.api_lang = self.picklang(True)
+        r = get(self.api_url, params=self.par, headers=self.head).json()
+        try:
+            if '-1' in r['query']['pages']:
+                return False
+        except:
+            print "failed"
+            return False
+        return True
+        
     def langsreader(self):
         langs = []
         try:
@@ -167,7 +180,7 @@ class WikiRevisionScrape:
         except:
             print r
         for key, value in r['query']['pages'].iteritems():
-            self.pageid = key
+             self.pageid = key
         #print r
         self.parentid = self.childid = r['query']['pages'][self.pageid]['revisions'][0]['revid']
         return self.childid
