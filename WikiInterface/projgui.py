@@ -1,13 +1,14 @@
 import sys
 from PyQt4 import QtGui
 from PyQt4.QtCore import Qt
+from PyQt4 import QtCore
 from automaton import WikiInterface as wk
-import csv
+from wikipedia import search
+from customWidgets import *
 
-IMGBASE = 'img/'
+IMGBASE = '/homes/wm613/individual-project/WikiInterface/img/'
 
 class wikiDistance(QtGui.QMainWindow):
-   
     def __init__(self):
         super(wikiDistance, self).__init__()
         self.dsktp = QtGui.QDesktopWidget()
@@ -71,12 +72,10 @@ class wikiDistance(QtGui.QMainWindow):
         self.move(qr.topLeft())
 
 class mainWidget(QtGui.QWidget):
-    interface = None
-    
     def __init__(self, parent):
         super(mainWidget, self).__init__(parent)
         self.parent = parent
-        self.interface = wk()
+        self.interface = projectInterface()
 
     def layout(self,search=False,title=None,subtitle=None,blurb=None):
         # self.txtwdg = QtGui.QWidget(self) ##subwidget
@@ -118,13 +117,25 @@ class mainWidget(QtGui.QWidget):
         self.setLayout(grid) 
 
     def search(self, text):
-        print text
-        
+        title = str(text)
+        domain = str(self.langslist.currentText())
         self.parent.status("Searching for article")
-        self.interface.config(params={'page_titles': str(text),
-                                      'domain':str(self.langslist.currentText())})
-        result = self.interface.checktitle()
-        self.parent.status("Page found." if result else "Page not found.")
+        self.interface.config(title=title, domain=domain, check=True)
+        self.connect( self.interface, QtCore.SIGNAL("resultsreturn"), self.testrespond)
+        self.interface.start()
+        
+    def testrespond(self,results):
+        print results
+        check = results
+        self.parent.status("Page found." if check else "Page not found.")
+        if check:
+            self.parent.status("Fetching and analysing article")
+            self.interface.config(check=False)
+            self.connect( self.interface, QtCore.SIGNAL("resultsreturn"), self.analysisrespond)
+            self.interface.start()
+
+    def analysisrespond(self,results):
+        print results
 
     def formpart(self,search):
         textEditPairs = []
@@ -148,55 +159,60 @@ class mainWidget(QtGui.QWidget):
         self.frmwdg.setLayout(grid)
         return self.frmwdg
 
-class langsComboBox(QtGui.QComboBox):
-    def __init__(self, parent=None):
-        super(langsComboBox,self).__init__(parent)
-        self.settings()
-        self.getitems()
-        self.parent = parent
+class projectInterface(QtCore.QThread):
+    wk = None
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+        self.params = {'scrape_limit': -1,
+                       'depth_limit': -1,
+                       'page_titles': 'random',
+                       'revids': 0,
+                       'userids': 0,
+                       'domain':None,
+                       'weights':{'maths':0,
+                                  'headings':0,
+                                  'quotes':0,
+                                  'files/images':0,
+                                  'links':0,
+                                  'citations':0,
+                                  'normal':0}}
+        self.flags = {'scrape': False,
+                      'fetch': False,
+                      'analyse': False,
+                      'offline': False,
+                      'weightsdefault' : True,
+                      'plotshow': False}
+        self.params['page_titles'] = "" 
+        self.params['domain'] = ""
+        self.check = None
 
-    def settings(self):
-        delegate = QtGui.QStyledItemDelegate(self);
-        self.setMaximumHeight(40)
-        self.setItemDelegate(delegate)
-        self.setCurrentIndex(0)
+    def __del__(self):
+        self.wait()
 
-    def getitems(self):
-        with open('wikiScraper/langs.csv','r') as langs:
-            lread = csv.reader(langs, delimiter='\t')
-            for l in lread:
-                self.addItem(l[0])
-                           
-class titleLineEdit(QtGui.QLineEdit):
-    firstfocus = False
-
-    def __init__(self, parent=None):
-        super(titleLineEdit,self).__init__(parent)
-        self.settings()
-        self.parent = parent    
-
-    def settings(self):
-        self.setText('Search for a title here')
-        self.setAlignment(Qt.AlignCenter)
-        self.setMaximumHeight(40)
-        self.selectAll()
+    def config(self, title=None, domain=None, check=False):
+        if self.wk:
+            del self.wk
+        if title:
+            self.params['page_titles']=title
+        if domain:
+            self.params['domain']=domain
+        self.wk = wk(self.params, self.flags)
+        self.check = check
         
-    def mousePressEvent(self, event):
-        if self.firstfocus:
-            return
+    def run(self):
+        if self.check:
+            self.emit(QtCore.SIGNAL("resultsreturn"), self.wk.checktitle())
+            del self.wk
         else:
-            self.setText('')
-            self.setAlignment(Qt.AlignCenter)
-            self.firstfocus = True
-            self.returnPressed.connect(self.sendToParent)
+            self.emit(QtCore.SIGNAL("resultsreturn"), self.wk.analyse())
+            del self.wk
+        
+    def autocomplete(self, word):
+        results = self.wk.search(word)
+        results[0] + results[1]
+        return results[0] + results[1]
 
-    def sendToParent(self):
-        self.parent.search(self.text())
-    
-# class projectInterface:
-    
-def main():
-    
+def main():  
     app = QtGui.QApplication(sys.argv)
     ex = wikiDistance()
     sys.exit(app.exec_())

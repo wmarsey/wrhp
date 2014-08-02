@@ -1,1 +1,8 @@
-wikiScraper/Wikipedia
+BwikiScraper/Wikipedia
+*.pdf
+*.pyc
+*.log
+*.aux
+*.toc
+*#
+*~

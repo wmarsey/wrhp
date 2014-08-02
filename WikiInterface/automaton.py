@@ -54,6 +54,10 @@ class WikiInterface:
     def checktitle(self):
         return self.scrape(test=True)
 
+    def search(self, word):
+        searcher = wk.WikiRevisionScrape()
+        return searcher.search(query=word, suggestion=True)     
+
     def config(self, params=None, flags=None):
         if params:
             self.params.update(params)

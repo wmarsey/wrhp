@@ -80,6 +80,38 @@ class WikiRevisionScrape:
             print "failed"
             return False
         return True
+
+    def search(query, results=8, suggestion=False):     
+        params = {
+            'list': 'search',
+            'srprop': '',
+            'srlimit': results,
+            'limit': results,
+            'srsearch': query,
+            'action': 'query',
+            'format': 'json',
+            }
+        
+        if suggestion:
+            search_params['srinfo'] = 'suggestion'
+
+        raw_results = get(self.api_url, params, headers=self.head).json()
+
+        if 'error' in raw_results:
+            if raw_results['error']['info'] in ('HTTP request timed out.', 'Pool queue is full'):
+                raise HTTPTimeoutError(query)
+            else:
+                raise WikipediaException(raw_results['error']['info'])
+
+        search_results = (d['title'] for d in raw_results['query']['search'])
+
+        if suggestion:
+            if raw_results['query'].get('searchinfo'):
+                return list(search_results), raw_results['query']['searchinfo']['suggestion']
+            else:
+                return list(search_results), None
+
+        return list(search_results)
         
     def langsreader(self):
         langs = []
