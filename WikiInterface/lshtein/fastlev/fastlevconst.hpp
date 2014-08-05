@@ -5,7 +5,7 @@ const unsigned int INDICNUM = 3; //LENGTH OF LIST BELOW
 char INDIC[][INDICNUM] = 
   {
     {'<', '{', '='},
-    {'<', '}', ' '}
+    {'>', '}', ' '}
   };
 const unsigned int TAGNUM = 17; //LENGTH OF TAGS
 const unsigned int WINTLEN = TAGNUM + 2;
