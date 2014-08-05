@@ -6,6 +6,8 @@ import errno
 import re
 import datetime, time
 import sys
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import math as m
 from wikipedia import search
@@ -49,7 +51,7 @@ class WikiInterface:
         if flags:
             self.flags = flags
         self.dtb = db.Database()
-        self.dat = Data(self.params['weights'])
+        self.dat = Data(self.params['weights'], self.flags)
 
     def checktitle(self):
         return self.scrape(test=True)
@@ -106,7 +108,8 @@ class WikiInterface:
                 pagecount = pagecount + 1
 
             if(self.flags['weightsdefault']):
-                _get_weights(self.params['weights'])
+                if not self.flags['noweight']:
+                    _get_weights(self.params['weights'])
 
             analysis = {pageid:{'title':titles[t],
                                 'revs':revs,
@@ -158,9 +161,10 @@ class WikiInterface:
 class Data:
     dtb = None
 
-    def __init__(self, _weights):
+    def __init__(self, _weights, _flags=None):
         self.dtb = db.Database()
         self.weights = _weights
+        self.flags = _flags
 
     def weightdata(self, pageid):
         wdata = []
@@ -198,8 +202,6 @@ class Data:
         growth = [e[1] for e in dbgrowth]
         creation = dbtraj[0][0]
         times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]
-        for i,e in enumerate(dbgrowth):
-            print dbtraj[i], e
         return (times, traj, growth)
 
     def gradientadjust(self, parentid, revid, distuple):
@@ -210,9 +212,8 @@ class Data:
             y = self.dtb.gettrajheight((revid,)) - self.dtb.gettrajheight((parentid,))
             if x < 0:
                 print "Error: Time travel"
-            elif not x:
-                return wdata
-            gradconst = 0.5 - m.atan(y/x)/m.pi
+            elif x != 0:
+                gradconst = 0.5 - m.atan(y/x)/m.pi
         return tuple([revid] + [d*gradconst for d in distuple[1:]])
 
     def processweights(self, parentid, revid):
@@ -220,30 +221,43 @@ class Data:
         if parentid:
             contentx = self.dtb.getrevcontent(parentid)
         contenty = self.dtb.getrevcontent(revid)
-        levresults = lv.fastlev.weightdist(contentx, contenty)
-        #lev2 = lv.fastlev.weightdist(*self.dtb.getdifftexts(parentid, revid))
+        results = None
+        if self.flags['noweight']:
+            levresults = lv.fastlev.plaindist(contentx, contenty)
+            results = (revid, 
+                       levresults,
+                       0,
+                       0,
+                       0,
+                       0,
+                       0,
+                       0,
+                       levresults)
+        else:
+            levresults = lv.fastlev.weightdist(contentx, contenty)
+#lev2 = lv.fastlev.weightdist(*self.dtb.getdifftexts(parentid, revid))
         #print levresults['dist'], lev2['dist']
-        plaindist = levresults['dist']
-        maths = levresults['maths1'] + levresults['maths2']
-        headings = levresults['h2'] + levresults['h3'] + \
-            levresults['h4'] + levresults['h4'] + levresults['h5'] + \
-            levresults['h6']
-        quotes = levresults['blockquote']
-        filesimages = levresults['file'] + levresults['table'] + \
-            levresults['table'] + levresults['score'] + \
-            levresults['media']
-        links = levresults['linkinternal'] + levresults['linkexternal']
-        citations = levresults['citation'] + levresults['citationneeded']
-        normal = levresults['norm']
-        results = (revid, 
-                   plaindist,
-                   maths,
-                   headings,
-                   quotes,
-                   filesimages,
-                   links,
-                   citations,
-                   normal)
+            plaindist = levresults['dist']
+            maths = levresults['maths1'] + levresults['maths2']
+            headings = levresults['h2'] + levresults['h3'] + \
+                levresults['h4'] + levresults['h4'] + levresults['h5'] + \
+                levresults['h6']
+            quotes = levresults['blockquote']
+            filesimages = levresults['file'] + levresults['table'] + \
+                levresults['table'] + levresults['score'] + \
+                levresults['media']
+            links = levresults['linkinternal'] + levresults['linkexternal']
+            citations = levresults['citation'] + levresults['citationneeded']
+            normal = levresults['norm']
+            results = (revid, 
+                       plaindist,
+                       maths,
+                       headings,
+                       quotes,
+                       filesimages,
+                       links,
+                       citations,
+                       normal)
         return self.gradientadjust(parentid, revid, results)
 
     def gettraj(self, contentx, revx, oldrev):
@@ -261,13 +275,6 @@ class Data:
             self.dtb.trajinsert((revx, 
                                  oldrev, 
                                  lev))
-
-    # def diff(self, oldrev, newrev):
-    #     oldtext, newtext = self.dtb.getdifftexts(oldrev, newrev)
-        
-    #     if oldtext:
-    #         return result
-        
 
 class Plotter:
     def barchart(self, revid, barheights, barlabels, pageid, title, ident, xaxisname, yaxisname, show=False): 
@@ -431,6 +438,11 @@ def _flag_sanity(flags):
                     flags['plotshow'] = True
         if arg == "--offline":
             flags['offline'] = True
+        if arg == "--no-weights":
+            flags['noweight'] = True
+            print "flagged"
+        if arg == "--trundle":
+            flags['trundle'] = True
     return flags
 
 def _get_weights(weights):
@@ -507,7 +519,9 @@ def main():
              'analyse': False,
              'offline': False,
              'weightsdefault' : True,
-             'plotshow': False}
+             'plotshow': False,
+             'noweight':False,
+             'trundle':False}
 
     
     params = _arg_sanity(params) ##ARGUMENT HANDLING
@@ -536,43 +550,54 @@ def main():
     
     print "---------------ANALYSE MODE---------------"    
     #analyser = WikiInterface(params, flags)
-    results = analyser.analyse()
-    if(results):
-        plt = Plotter()
-        for k, t in results.iteritems():
-            print
-            print "\nAnalysis of article " + t['title'] + " complete, saving image files:"
-            title = "Edit trajectory of article '" + t['title'] + "'" 
-            revx = t['revs'][-1]
-            print plt.trajectory(revx, 
-                                 *t['trajectory'],
-                                 pageid=k,
-                                 title=title)
-            title = "Contributors to " + t['title'] + " by edit count"
-            ident = "count"
-            xaxisname = "Hours since creation"
-            yaxisname = "Edit count"
-            print plt.barchart(revx,
-                               *t['editcounts'], ##barheights/labels
-                               pageid=k,
-                               title=title,
-                               ident=ident,
-                               xaxisname=xaxisname,
-                               yaxisname=yaxisname)
-            title = "Contributors by reward"
-            ident = "reward"
-            yaxisname = "Reward share"
-            print plt.barchart(revx, 
-                               *t['rewards'], ##barheights/labels
-                               pageid=k,
-                               title=title,
-                               ident=ident,
-                               xaxisname=xaxisname,
-                               yaxisname=yaxisname)
-            sys.exit(0)
+    while True:
+        "hey"
+        results = analyser.analyse()
+        "hi"
+        if(results):
+            plt = Plotter()
+            for k, t in results.iteritems():
+                print
+                print "\nAnalysis of article " + t['title'] + " complete, saving image files:"
+                title = "Edit trajectory of article '" + t['title'] + "'" 
+                revx = t['revs'][-1]
+                print plt.trajectory(revx, 
+                                     *t['trajectory'],
+                                     pageid=k,
+                                     title=title)
+                title = "Contributors to " + t['title'] + " by edit count"
+                ident = "count"
+                xaxisname = "Hours since creation"
+                yaxisname = "Edit count"
+                print plt.barchart(revx,
+                                   *t['editcounts'], ##barheights/labels
+                                   pageid=k,
+                                   title=title,
+                                   ident=ident,
+                                   xaxisname=xaxisname,
+                                   yaxisname=yaxisname)
+                title = "Contributors by reward"
+                ident = "reward"
+                yaxisname = "Reward share"
+                print plt.barchart(revx, 
+                                   *t['rewards'], ##barheights/labels
+                                   pageid=k,
+                                   title=title,
+                                   ident=ident,
+                                   xaxisname=xaxisname,
+                                   yaxisname=yaxisname)
         else:
+            print "ho"
             sys.exit(-1)
-
+        if not (flags['trundle'] and params['page_titles'] == 'random'):
+            if not flags['trundle']:
+                print "trundle broke"
+            if not params['page_titles']:
+                print 'page titles broke'
+            print "breaking"
+            break
+    print "hey"
+    sys.exit(0)
 if __name__ == "__main__":
     try:
         main()
