@@ -150,15 +150,17 @@ class WikiRevisionScrape:
         if self.rand:
             d = choice(self.domains)
             print d[1], "Wikipedia", "(" + d[0] + ".)"
+            self.api_domain = d[0]
         return s.replace("|", d[0]), d[1]
 
     def scrape(self):
         self._pace()
         ids = []
         titles = []
+        domains = []
         while True:
             ##prepare params for choosing article
-            self.api_url, self.api_lang = self.picklang(self.domainset)##LOGIC
+            self.api_url, self.api_lang = self.picklang(self.domainset)
             if 'rvprop' in self.par:
                 del self.par['rvprop']
             if 'revids' in self.par:
@@ -179,6 +181,7 @@ class WikiRevisionScrape:
             if self._tracehist():# and self._tracediffs():
                 ids.append(self.pageid)
                 titles.append(self.title)
+                domains.append(self.api_domain)
                 self.db.fetchedinsert((self.pageid,
                                        self.title,
                                        self.api_lang));
@@ -186,7 +189,7 @@ class WikiRevisionScrape:
             ##finish if necessary
             if not self.rand or len(ids) == self.pagelimit:
                 break
-        return titles, ids
+        return titles, ids, domains
 
     def _getrandom(self, pages=1):
         query_params = {
@@ -212,7 +215,7 @@ class WikiRevisionScrape:
         except:
             print r
         for key, value in r['query']['pages'].iteritems():
-             self.pageid = key
+            self.pageid = key
         #print r
         self.parentid = self.childid = r['query']['pages'][self.pageid]['revisions'][0]['revid']
         return self.childid
@@ -227,8 +230,7 @@ class WikiRevisionScrape:
                         continue
             break
         for c in corrupt:
-            if not self.db.bridgerevision(c['revid'], c['parentid']):
-                print "panic"
+            self.db.bridgerevision(c['revid'], c['parentid'])
 
     def _tracehist(self):
         visited = []
@@ -248,9 +250,9 @@ class WikiRevisionScrape:
             ##fetch only if not already in database
             parent = -1
             if self.childid == self.parentid:
-                parent = self.db.getparent(self.childid)
-            elif self.db.revexist(self.childid, self.parentid):
-                parent = self.db.getparent(self.parentid)
+                parent = self.db.getparent(self.childid, self.api_domain)
+            elif self.db.revexist(self.childid, self.parentid, self.api_domain):
+                parent = self.db.getparent(self.parentid, self.api_domain)
             if parent > -1:
                 self.childid = self.parentid
                 self.parentid = parent
@@ -262,17 +264,16 @@ class WikiRevisionScrape:
                     page = r['query']['pages'][self.pageid]['revisions'][0]
                 except:
                     print r
-                if not self.db.revexist(page['revid'], page['parentid']):
+                if not self.db.revexist(page['revid'], page['parentid'],self.api_domain):
                     pages.append(page)
                 self.childid =  page['revid']
                 self.parentid = page['parentid']
                 title = r['query']['pages'][self.pageid]['title']
             
-            ##determine whether to break later
+
             if i == 0 or self.parentid == 0 or self.parentid in visited:
                 b = True
 
-            ##fetch every 50, or before breaking
             if b or ((len(pages)%50) == 0 and len(pages)):
                 if not self.upperlimit or len(visited) >= 50:
                     for p in pages:
@@ -292,14 +293,12 @@ class WikiRevisionScrape:
                             timestamp = p['timestamp']
                             content = p['*']
                         except:
-                            failed.append(p)
+                            failed.append(p)  
                             continue
                         size = len(content)
                         if not size:
                             failed.append(p)
                             continue
-                        #print self.childid, timestamp, size
-                        #print content
                         self.db.indexinsert([int(self.childid),
                                              int(self.parentid),
                                              int(self.pageid),
@@ -307,10 +306,12 @@ class WikiRevisionScrape:
                                              int(userid), 
                                              timestamp, 
                                              size, 
-                                             comment.encode("UTF-8")])
+                                             comment.encode("UTF-8"),
+                                             self.api_domain])
                         self.db.contentinsert([int(self.childid), 
                                                int(self.pageid),
-                                               content.encode("UTF-8")])
+                                               content.encode("UTF-8"),
+                                               self.api_domain])
                     pages = []                        
                 else:
                     print "\nToo few revisions, article discarded"
@@ -330,71 +331,6 @@ class WikiRevisionScrape:
             if(self.historylimit > 0):
                 i = i - 1
             j = j + 1
-        return True
-
-    def _tracediffs(self):
-        print "Fetching diffs"
-        del self.par['rvprop']
-        revs = self.db.getextantrevs(self.pageid)
-        revs.reverse()
-        for i in xrange(len(revs)-1):
-            actions = []
-            killme = True
-            self.par['revids'] = revs[i]
-            self.par['rvdiffto']=revs[i+1]
-            request = get(self.api_url, params=self.par, headers=self.head).json()
-            html = request['query']['pages'][self.pageid]['revisions'][0]['diff']['*']
-            parsed = BeautifulSoup(html)
-            #print parsed.prettify()
-            tags = [("td","diff-deletedline","deleted"),
-                    ("td","diff-addedline", "added")]
-            # subtags = [("ins", "diffchange", "changed"),
-            #            ("del", "diffchange", "changed")]
-            changeswap = {}
-            for t in tags:
-                found = parsed.find_all(t[0], attrs={"class": t[1]})
-                for f in found:
-                    action = ""
-                    line = 0
-                    text = ""
-                    ##get line number
-                    prev = f.find_parent().find_previous_siblings("tr")
-                    for p in prev:
-                        lineno = p.find_all("td", attrs={"class":"diff-lineno"})
-                        if len(lineno):
-                            line = int(re.findall(r'\b\d+\b', lineno[-1].text)[0])
-                            break
-
-                    ##get action
-                    action = t[2]
-                    # for st in subtags:
-                    #     subfound = f.find(st[0], attrs={"class": st[1]})
-                    #     if subfound:
-                    #         action = st[2]
-                    #         text = subfound.text
-                    #         break
-                    
-                    subdiv = f.find("div")
-                    if subdiv:
-                        text = subdiv.text
-                    else:
-                        text = f.text
-                    toinsert = (line, action)
-                    index = self._findaction(actions,toinsert)
-                    if index > -1:
-                        actions[index][-1].append(text)
-                        actions[index][-2] = actions[index][-2] + 1 
-                    else:
-                        actions.append([revs[i],
-                                        revs[i+1],
-                                        toinsert[0],
-                                        toinsert[1],
-                                        1,
-                                        [text]])
-                    
-            for a in actions:
-                self.db.diffinsert(tuple(a))
-            self.dot(not i, i == (len(revs)-2))
         return True
 
     def _findaction(self,actions,action):

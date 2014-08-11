@@ -31,6 +31,7 @@ class WikiInterface:
               'page_titles': 'random',
               'revids': 0,
               'userids': 0,
+              'domain':None,
               'weights':{'maths':0,
                         'headings':0,
                         'quotes':0,
@@ -43,7 +44,9 @@ class WikiInterface:
              'analyse': False,
              'offline': False,
              'weightsdefault' : True,
-             'plotshow': False}
+             'plotshow': False,
+             'noweight':False,
+             'trundle':False}
     
     def __init__(self, params=None, flags=None):
         if params:
@@ -80,17 +83,18 @@ class WikiInterface:
             print "Fetching random article from database,", self.params['titles']
             pageids = [pageid]
             titles = [self.params['titles']]
+            domains = [self.params['domain']]
         else:
-            titles, pageids = self.scrape()
+            titles, pageids, domains = self.scrape()
         pagecount = 0
         for t, pageid in enumerate(pageids):
-            print "Analysing", titles[t]
-            revs = self.dtb.getextantrevs(pageid)
+            print "Analysing", titles[t], pageid, domains[t]
+            revs = self.dtb.getextantrevs(pageid, domains[t])
             revx = revs[0]
-            contentx = self.dtb.getrevcontent(revx)   
+            contentx = self.dtb.getrevcontent(revx, domains[t])   
             print "Tracing trajectory", len(revs), "revisions"
             for rev in revs:
-                self.dat.gettraj(contentx, revx, rev)
+                self.dat.gettraj(contentx, revx, rev, domains[t])
                 dot()
             print "\nCalculating pairs"
             creward, i, v = 0, 0, 1
@@ -101,7 +105,8 @@ class WikiInterface:
                 childid = revs[i]
                 if self.dtb.getdist(childid) < 0:
                     self.dtb.distinsert(self.dat.processweights(parentid, 
-                                                                childid))
+                                                                childid,
+                                                                domains[t]))
                 dot((not i), (t != (len(pageids)-1)))
                 i = v
                 v = v + 1
@@ -216,11 +221,11 @@ class Data:
                 gradconst = 0.5 - m.atan(y/x)/m.pi
         return tuple([revid] + [d*gradconst for d in distuple[1:]])
 
-    def processweights(self, parentid, revid):
+    def processweights(self, parentid, revid, domain):
         contentx = ""
         if parentid:
-            contentx = self.dtb.getrevcontent(parentid)
-        contenty = self.dtb.getrevcontent(revid)
+            contentx = self.dtb.getrevcontent(parentid,domain)
+        contenty = self.dtb.getrevcontent(revid, domain)
         results = None
         if self.flags['noweight']:
             levresults = lv.fastlev.plaindist(contentx, contenty)
@@ -260,12 +265,12 @@ class Data:
                        normal)
         return self.gradientadjust(parentid, revid, results)
 
-    def gettraj(self, contentx, revx, oldrev):
+    def gettraj(self, contentx, revx, oldrev, domain):
         dist = self.dtb.gettraj([revx, 
                                  oldrev])
         #print dist
         if dist < 0:
-            contenty = self.dtb.getrevcontent(oldrev) 
+            contenty = self.dtb.getrevcontent(oldrev, domain) 
             lev = 0
             if revx == oldrev:
                 lev = 0

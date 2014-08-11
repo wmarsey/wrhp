@@ -31,27 +31,27 @@ class Database:
         cr = self.crsr.fetchall()
         return cr if (len(cr) > 0) else None 
 
-    def revexist(self, revid, parentid):
-        sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s;"
-        data = (revid, parentid)
+    def revexist(self, revid, parentid, domain):
+        sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s AND domain = %s;"
+        data = (revid, parentid, domain)
         if(self._execute(sql, data)):
             result = self.crsrsanity()
             if result:
                 return True
         return False
 
-    def getparent(self, revid):
-        sql = "SELECT parentid FROM " + self.revisiontable + " WHERE revid = %s;"
-        data = (revid,)
+    def getparent(self, revid, domain):
+        sql = "SELECT parentid FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
+        data = (revid,domain)
         if(self._execute(sql, data)):
             result = self.crsrsanity()
             if result:
                 return result[0][0]
         return -1
 
-    def getchild(self, parentid):
-        sql = "SELECT revid FROM " + self.revisiontable + " WHERE parentid = %s;"
-        data = (parentid,)
+    def getchild(self, parentid, domain):
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE parentid = %s AND domain = %s;"
+        data = (parentid,domain)
         if(self._execute(sql, data)):
             result = self.crsrsanity()
             if result:
@@ -80,9 +80,10 @@ class Database:
                 return result[0][0]
         return None
         
-    def getextantrevs(self, pageid):
-        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s ORDER BY time DESC;"
-        data = (pageid,)
+    def getextantrevs(self, pageid, domain):
+        #print "looking for", pageid, domain
+        sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s AND domain = %s ORDER BY time DESC;"
+        data = (pageid,domain)
         if(self._execute(sql,data)):
             result = self.crsrsanity()
             if result:
@@ -102,18 +103,18 @@ class Database:
             return self.crsr.fetchall()
         return None
 
-    def getrevcontent(self, revid):
-        sql = "SELECT content FROM " + self.contenttable + " WHERE revid = %s;"
-        data = (revid,)
+    def getrevcontent(self, revid, domain):
+        sql = "SELECT content FROM " + self.contenttable + " WHERE revid = %s AND domain = %s;"
+        data = (revid,domain)
         if(self._execute(sql, data)):
             result = self.crsrsanity()
             if result:
                 return result[0][0]
         return None
 
-    def getrevinfo(self, revid):
-        sql = "select revid from " + self.revisiontable + " where revid = %s;"
-        data = (revid,)
+    def getrevinfo(self, revid, domain):
+        sql = "select revid from " + self.revisiontable + " where revid = %s AND domain = %s;"
+        data = (revid,domain)
         if(self._execute(sql, data)):
             return self.crsr.fetchall()
         return None
@@ -223,54 +224,49 @@ class Database:
                 return True
         return False
 
-    def getdifftexts(self, oldrev, newrev):
-        texts = []
-        for a in ("deleted", "added"):
-            sql = "SELECT diff FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND action = %s;"
-            textpile = ""
-            if(self._execute(sql, (oldrev, newrev, a))):
-                result = self.crsrsanity()
-                if result:
-                    #print a, len(result), result
-                    for r in result:
-                        #print r[0]
-                        textpile = textpile + r[0]
-                    #texts.append(result[0][0])
-                    # linepile = ""
-                    # print a, result[0][0], result[0][1]
-                    # lines = result[0][1][1:-1].split(',')
-                    # print a, result[0][0], len(lines), lines
-                    # for line in result[0][0]:
-                    #     linepile = linepile + line + "\n"
-                    # texts.append(linepile)
-            texts.append(textpile)
-        return texts
+    # def getdifftexts(self, oldrev, newrev):
+    #     texts = []
+    #     for a in ("deleted", "added"):
+    #         sql = "SELECT diff FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND action = %s;"
+    #         textpile = ""
+    #         if(self._execute(sql, (oldrev, newrev, a))):
+    #             result = self.crsrsanity()
+    #             if result:
+    #                 #print a, len(result), result
+    #                 for r in result:
+    #                     #print r[0]
+    #                     textpile = textpile + r[0]
+    #                 #texts.append(result[0][0])
+    #                 # linepile = ""
+    #                 # print a, result[0][0], result[0][1]
+    #                 # lines = result[0][1][1:-1].split(',')
+    #                 # print a, result[0][0], len(lines), lines
+    #                 # for line in result[0][0]:
+    #                 #     linepile = linepile + line + "\n"
+    #                 # texts.append(linepile)
+    #         texts.append(textpile)
+    #     return texts
 
-    def diffinsert(self, param):
-        if self.getdiff(param[:-2]):
-            return False
-        sql = "INSERT INTO " + self.difftable + " VALUES (%s, %s, %s, %s, %s, %s);"
-        return self._execute(sql, param)
+    # def diffinsert(self, param):
+    #     if self.getdiff(param[:-2]):
+    #         return False
+    #     sql = "INSERT INTO " + self.difftable + " VALUES (%s, %s, %s, %s, %s, %s);"
+    #     return self._execute(sql, param)
 
     def contentinsert(self, param):
-        if self.getrevcontent(param[0]):
+        #print "inserting content", param[0],param[-1]
+        if self.getrevcontent(param[0],param[-1]):
             return False
-        sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s);"
+        sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s, %s);"
         return self._execute(sql, param)
 
     def indexinsert(self, param):
-        if self.getrevinfo(param[0]):
+        #print "inserting index", param[0],param[-1]
+        if self.getrevinfo(param[0], param[-1]):
             return False
         sql = "INSERT INTO " + self.revisiontable + \
-            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
-        data = (param[0], 
-                param[1], 
-                param[2], 
-                param[3], 
-                param[4], 
-                param[5], 
-                param[6], 
-                param[7])
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+        data = tuple(param)
         return self._execute(sql,data)
 
     def distinsert(self, param):
