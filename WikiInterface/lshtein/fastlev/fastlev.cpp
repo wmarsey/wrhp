@@ -18,7 +18,7 @@ PyObject* weighteddistance(char *s1, char *s2){
   unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0, c, pick;// iterations = 0;
   int yrelease = -1, xrelease = -1;
   Wint lastnum, oldnum, addw, delw, keepswapw;
-  bool xtagmutex = false, ytagmutex = false;;
+  bool xtagmutex = false, ytagmutex = false;
   s1len = strlen(s1);
   s2len = strlen(s2);
   Wint column[s1len+1];
@@ -27,7 +27,7 @@ PyObject* weighteddistance(char *s1, char *s2){
   //preparewints(lastnum, oldnum, column, s1len+1);
 
   //initialise first column
-  for (j = 1; j <= s1len; j += 2)
+  for (j = 1; j <= s1len; ++j)
     column[j].norm = column[j].w = j; //NEED TO INSERT TAG LOGIC HERE
 
   for (i = 1; i <= s2len; ++i) {    
@@ -38,7 +38,6 @@ PyObject* weighteddistance(char *s1, char *s2){
     
     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
       oldnum = column[j];
-
       flagset(xrelease, xtagmutex, xupflag, s1, i-1);
 
       c = (s1[j-1] == s2[i-1] ? 0 : 1);
