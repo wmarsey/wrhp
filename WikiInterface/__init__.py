@@ -1,1 +1,1 @@
-from automaton import WikiInterface
+from interface import WikiInterface

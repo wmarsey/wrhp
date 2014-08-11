@@ -1,7 +1,9 @@
 import database as db 
 import Queue,threading,re
+import lshtein as lv
 
 def extract(start, stop, string):
+    
     return string[start:stop], string[:start]+string[stop:]
 
 def distancecalc(queue, reg, revid, domain, string1, string2):
@@ -42,29 +44,44 @@ class WDistanceCalc:
     def processdistance(self, revid, domain, string1, string2):
         #lists of lists of regexes
         #seperated by species
-        for key,regs in self.regexdict.iteritems():
-            compare = {'m1':'',
-                       'm2':''}
-            for r in regs:
-                while True:
-                    m = r.search(string1)
-                    if not m:
-                        break
-                    match, string1 = extract(m.start(), m.end(), string1)
-                    compare['m1'] += match
-                while True:
-                    m = r.search(string2)
-                    if not m:
-                        break
-                    match, string2 = extract(m.start(), m.end(), string2)
-                    compare['m2'] += match
-            #send off
-            if len(compare['m1']) or len(compare['m2']):
-                self.distancethread(revid, domain, key, compare['m1'], compare['m2'])
-        #send off remainder
-        self.distancethread(revid, domain, 'normal', string1, string2)
-        #wait for completion
-        self.q.join()
+        with open('regexlog.txt','w') as log:
+            for key,regs in self.regexdict.iteritems():
+                compare = {'m1':'',
+                           'm2':''}
+                for r in regs:
+                    while True:
+                        m = r.search(string1)
+                        if not m:
+                            break
+                        match, string1 = extract(m.start(), m.end(), string1)
+                        compare['m1'] += match
+                        message = "MATCH calculating for revid " + str(revid) + " \n"
+                        message += "text: " + match + "\n"
+                        message += "pattern: " + r.pattern + "\n\n"
+                        log.write(message)
+                    while True:
+                        m = r.search(string2)
+                        if not m:
+                            break
+                        match, string2 = extract(m.start(), m.end(), string2)
+                        compare['m2'] += match
+                        match, string1 = extract(m.start(), m.end(), string1)
+                        compare['m1'] += match
+                        message = "MATCH calculating for revid " + str(revid) + " \n"
+                        message += "text: " + match + "\n"
+                        message += "pattern: " + r.pattern + "\n\n"
+                        log.write(message)
+                #send off
+                if len(compare['m1']) or len(compare['m2']):
+                    message = "COMPARING SLICES\n"
+                    message += "SLICE 1: " + compare['m1'] + "\n"
+                    message += "SLICE 2: " + compare['m2'] + "\n"
+                    log.write(message)
+                    self.distancethread(revid, domain, key, compare['m1'], compare['m2'])
+            #send off remainder
+            self.distancethread(revid, domain, 'normal', string1, string2)
+            #wait for completion
+            self.q.join()
 
     def distancethread(self, revid, domain, reg, string1, string2):
         t = threading.Thread(target=distancecalc,args=(self.q,reg,revid,domain,string1,string2))

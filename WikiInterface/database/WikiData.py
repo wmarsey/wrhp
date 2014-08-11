@@ -82,7 +82,6 @@ class Database:
         return None
         
     def getextantrevs(self, pageid, domain):
-        #print "looking for", pageid, domain
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s AND domain = %s ORDER BY time DESC;"
         data = (pageid,domain)
         if(self._execute(sql,data)):
@@ -90,12 +89,6 @@ class Database:
             if result:
                 return [e[0] for e in result]
         return None
-
-    # def gettimestamp(self, revid):
-    #     sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
-    #     data = (revid,)
-    #     if(self._execute(sql,data)):
-    #         return self.crsr.fetchall()
 
     def getyoungestrev(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE pageid = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE pageid = %s AND b.time > a.time);"
@@ -226,35 +219,6 @@ class Database:
                 return True
         return False
 
-    # def getdifftexts(self, oldrev, newrev):
-    #     texts = []
-    #     for a in ("deleted", "added"):
-    #         sql = "SELECT diff FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND action = %s;"
-    #         textpile = ""
-    #         if(self._execute(sql, (oldrev, newrev, a))):
-    #             result = self.crsrsanity()
-    #             if result:
-    #                 #print a, len(result), result
-    #                 for r in result:
-    #                     #print r[0]
-    #                     textpile = textpile + r[0]
-    #                 #texts.append(result[0][0])
-    #                 # linepile = ""
-    #                 # print a, result[0][0], result[0][1]
-    #                 # lines = result[0][1][1:-1].split(',')
-    #                 # print a, result[0][0], len(lines), lines
-    #                 # for line in result[0][0]:
-    #                 #     linepile = linepile + line + "\n"
-    #                 # texts.append(linepile)
-    #         texts.append(textpile)
-    #     return texts
-
-    # def diffinsert(self, param):
-    #     if self.getdiff(param[:-2]):
-    #         return False
-    #     sql = "INSERT INTO " + self.difftable + " VALUES (%s, %s, %s, %s, %s, %s);"
-    #     return self._execute(sql, param)
-
     def contentinsert(self, param):
         #print "inserting content", param[0],param[-1]
         if self.getrevcontent(param[0],param[-1]):
@@ -300,22 +264,11 @@ class Database:
             self._execute(sql, data)
             return True if self.crsrsanity() else False 
 
-    def updateweight(self, column, value, revid, domain):
-        # print "column:",column
-        # print "value:", value
-        # print "revid:", revid
-        # print "domain:", domain    
-        
+    def updateweight(self, column, value, revid, domain):        
         sql = "UPDATE " + self.weighttable + " SET " + column + " = %s WHERE revid = %s AND domain = %s"
         if(self._execute(sql, (value, revid, domain))):
             return True
         return False
-
-    # def weightcomplete(self, data):
-    #     sql = "select revid from " + self.weighttable + " where revid = %s AND domain = %s AND complete = %s;"
-    #     if(self._execute(sql, (data[0], data[1], True))):
-    #         return self.crsr.fetchall()
-    #     return None
 
     def _execute(self, sql, data, montcarlo=5):
         for _ in xrange(montcarlo):

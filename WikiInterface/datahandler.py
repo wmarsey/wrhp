@@ -1,4 +1,7 @@
+from weighteddistance import WDistanceCalc
 import database as db
+import lshtein as lv
+import math as m
 
 class DHandler:
     dtb = None
@@ -46,18 +49,6 @@ class DHandler:
         times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]
         return (times, traj, growth)
 
-    # def gradientadjust(self, parentid, revid, distuple):
-    #     gradconst = 1
-    #     if parentid:
-    #         x = (self.dtb.gettime((revid,)) - \
-    #                  self.dtb.gettime((parentid,))).total_seconds()/3600
-    #         y = self.dtb.gettrajheight((revid,)) - self.dtb.gettrajheight((parentid,))
-    #         if x < 0:
-    #             print "Error: Time travel"
-    #         elif x != 0:
-    #             gradconst = 0.5 - m.atan(y/x)/m.pi
-    #     return tuple([revid] + [d*gradconst for d in distuple[1:]])
-
     def processweights(self, parentid, revid, domain):
         contentx = ""
         if parentid:
@@ -80,51 +71,6 @@ class DHandler:
         self.dtb.updateweight('gradient',gradconst,revid,domain)
         self.dtb.updateweight('complete',True,revid,domain)
         
-
-#     def processweights(self, parentid, revid, domain):
-#         contentx = ""
-#         if parentid:
-#             contentx = self.dtb.getrevcontent(parentid,domain)
-#         contenty = self.dtb.getrevcontent(revid, domain)
-#         results = None
-#         if self.flags['noweight']:
-#             levresults = lv.fastlev.plaindist(contentx, contenty)
-#             results = (revid, 
-#                        levresults,
-#                        0,
-#                        0,
-#                        0,
-#                        0,
-#                        0,
-#                        0,
-#                        levresults)
-#         else:
-#             levresults = lv.fastlev.weightdist(contentx, contenty)
-# #lev2 = lv.fastlev.weightdist(*self.dtb.getdifftexts(parentid, revid))
-#         #print levresults['dist'], lev2['dist']
-#             plaindist = levresults['dist']
-#             maths = levresults['maths1'] + levresults['maths2']
-#             headings = levresults['h2'] + levresults['h3'] + \
-#                 levresults['h4'] + levresults['h4'] + levresults['h5'] + \
-#                 levresults['h6']
-#             quotes = levresults['blockquote']
-#             filesimages = levresults['file'] + levresults['table'] + \
-#                 levresults['table'] + levresults['score'] + \
-#                 levresults['media']
-#             links = levresults['linkinternal'] + levresults['linkexternal']
-#             citations = levresults['citation'] + levresults['citationneeded']
-#             normal = levresults['norm']
-#             results = (revid, 
-#                        plaindist,
-#                        maths,
-#                        headings,
-#                        quotes,
-#                        filesimages,
-#                        links,
-#                        citations,
-#                        normal)
-#         return self.gradientadjust(parentid, revid, results)
-
     def gettraj(self, contentx, revx, oldrev, domain):
         dist = self.dtb.gettraj([revx, 
                                  oldrev])
