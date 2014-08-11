@@ -15,6 +15,7 @@ class Database:
     trajectorytable = "wikitrajectory"
     fetchedtable = "wikifetched"
     difftable = "wikidiff"
+    weighttable = "wikiweights"
     cn = None
     crsr = None
 
@@ -67,13 +68,13 @@ class Database:
         return False
 
     def gettime(self, data):
-        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
+        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
         if(self._execute(sql, data)):
             return self.crsrsanity()[0][0]
         return None
     
     def gettrajheight(self, data):
-        sql = "SELECT distance FROM " + self.trajectorytable + " WHERE revid2 = %s;"
+        sql = "SELECT distance FROM " + self.trajectorytable + " JOIN " + self.revisiontable + " ON revid = revid1 WHERE revid2 = %s AND domain = %s;"
         if(self._execute(sql, data)):
             result = self.crsrsanity()
             if result:
@@ -90,11 +91,11 @@ class Database:
                 return [e[0] for e in result]
         return None
 
-    def gettimestamp(self, revid):
-        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
-        data = (revid,)
-        if(self._execute(sql,data)):
-            return self.crsr.fetchall()
+    # def gettimestamp(self, revid):
+    #     sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s;"
+    #     data = (revid,)
+    #     if(self._execute(sql,data)):
+    #         return self.crsr.fetchall()
 
     def getyoungestrev(self, pageid):
         sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE pageid = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE pageid = %s AND b.time > a.time);"
@@ -165,9 +166,9 @@ class Database:
                     return result[0], result[1]
         return None
 
-    def gettrajectory(self, revid):
-        sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s ORDER BY time;"
-        data = (revid,)
+    def gettrajectory(self, revid, domain):
+        sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s AND domain = %s ORDER BY time;"
+        data = (revid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
@@ -177,23 +178,24 @@ class Database:
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
-    def getuserchange(self, pageid):
-        sql = "SELECT username, sum(distance), sum(maths), sum(headings), sum(quotes), sum(filesimages), sum(links), sum(citations), sum(normal) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s GROUP BY username;"
-        data = (pageid,)
+    def getuserchange(self, pageid, domain):
+        print pageid, domain
+        sql = "SELECT username, sum(distance), sum(maths), sum(headings), sum(quotes), sum(filesimages), sum(links), sum(citations), sum(normal) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s AND domain = %s GROUP BY username;"
+        data = (pageid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None
     
-    def getusereditcounts(self, revx):
-        sql = "SELECT username, count(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s GROUP BY username;"
-        data = (revx,)
+    def getusereditcounts(self, revx, domain):
+        sql = "SELECT username, count(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s AND domain = %s GROUP BY username;"
+        data = (revx,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None  
 
-    def getuserinfo(self, revx):
-        sql = "SELECT DISTINCT c.username, c.userid FROM " + self.trajectorytable + " AS b JOIN " + self.revisiontable + " as c ON b.revid1 = %s AND b.revid2 = c.revid";
-        data = (revx,)
+    def getuserinfo(self, revx, domain):
+        sql = "SELECT DISTINCT c.username, c.userid FROM " + self.trajectorytable + " AS b JOIN " + self.revisiontable + " as c ON b.revid1 = %s AND b.revid2 = c.revid AND domain = %s";
+        data = (revx,domain)
         if(self._execute(sql,data)):
             return self.crsrsanity()
         return None 
@@ -277,6 +279,43 @@ class Database:
     def trajinsert(self, data):
         sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
         return self._execute(sql,data)
+
+    def getweight(self, revid, domain):
+        sql = "select * from " + self.weighttable + " where revid = %s AND domain = %s;"
+        if(self._execute(sql, (revid, domain))):
+            result = self.crsrsanity()
+            if result:
+                return result[0]
+        return None
+
+    def completeweight(self, revid, domain):
+        if not self.getweight(revid, domain):
+            sql = "INSERT INTO " + self.weighttable + " VALUES (%s, %s, 0, 0, 0, 0, 0, 0, 0, %s)"
+            data = (revid, domain, False)
+            self._execute(sql, data)
+            return False
+        else:
+            sql = "SELECT * FROM " + self.weighttable + " WHERE revid = %s and domain = %s and complete = %s"
+            data = (revid, domain, True)
+            self._execute(sql, data)
+            return True if self.crsrsanity() else False 
+
+    def updateweight(self, column, value, revid, domain):
+        # print "column:",column
+        # print "value:", value
+        # print "revid:", revid
+        # print "domain:", domain    
+        
+        sql = "UPDATE " + self.weighttable + " SET " + column + " = %s WHERE revid = %s AND domain = %s"
+        if(self._execute(sql, (value, revid, domain))):
+            return True
+        return False
+
+    # def weightcomplete(self, data):
+    #     sql = "select revid from " + self.weighttable + " where revid = %s AND domain = %s AND complete = %s;"
+    #     if(self._execute(sql, (data[0], data[1], True))):
+    #         return self.crsr.fetchall()
+    #     return None
 
     def _execute(self, sql, data, montcarlo=5):
         for _ in xrange(montcarlo):
