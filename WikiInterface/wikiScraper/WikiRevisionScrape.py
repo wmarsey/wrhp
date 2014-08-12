@@ -184,7 +184,7 @@ class WikiRevisionScrape:
                 domains.append(self.api_domain)
                 self.db.fetchedinsert((self.pageid,
                                        self.title,
-                                       self.api_lang));
+                                       self.api_domain));
             
             ##finish if necessary
             if not self.rand or len(ids) == self.pagelimit:
@@ -230,7 +230,7 @@ class WikiRevisionScrape:
                         continue
             break
         for c in corrupt:
-            self.db.bridgerevision(c['revid'], c['parentid'])
+            self.db.bridgerevision(c['revid'], c['parentid'], self.api_domain)
 
     def _tracehist(self):
         visited = []

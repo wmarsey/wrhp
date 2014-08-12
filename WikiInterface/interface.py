@@ -100,19 +100,23 @@ class WikiInterface:
             #     if not self.flags['noweight']:
             #         _get_weights(self.params['weights'])
 
-            analysis = {pageid:{'title':titles[t],
-                                'revs':revs,
-                                'trajectory':self.dat.gettrajdata(revx, domains[t]),
-                                'editcounts':self.dat.getbardata(pageid, domains[t],
-                                                                 "count"),
-                                # 'rewards':self.dat.getbardata(pageid,
-                                #                               "reward"),
-                                'rewards':self.dat.getweights(pageid, domains[t]),
-                                'userinfo':self.dtb.getuserinfo(revx, domains[t])
-                                }
-                        }
+            results = {'title':titles[t]}
+            data = self.dtb.getresults(pageid, domains[t])
+            return data            
 
-            return analysis
+            # analysis = {pageid:{'title':titles[t],
+            #                     'revs':revs,
+            #                     'trajectory':self.dat.gettrajdata(revx, domains[t]),
+            #                     'editcounts':self.dat.getbardata(pageid, domains[t],
+            #                                                      "count"),
+            #                     # 'rewards':self.dat.getbardata(pageid,
+            #                     #                               "reward"),
+            #                     'rewards':self.dat.getweights(pageid, domains[t]),
+            #                     'userinfo':self.dtb.getuserinfo(revx, domains[t])
+            #                     }
+            #             }
+
+            # return analysis
 
     def dot(self, reset=False, final=False, slash=False):
         dot = '.'

@@ -5,8 +5,10 @@ import sys
 import math as m
 from wikipedia import search
 from dataplotter import Plotter
-from interface import WikiInterface 
+from interface import WikiInterface
+from interactiveplotter import IPlot 
 from consts import *
+import datetime
 
 def print_help():
     with open("../README", "r") as helpfile:
@@ -193,52 +195,71 @@ def main():
     print "---------------ANALYSE MODE---------------"    
     #analyser = WikiInterface(params, flags)
     while True:
-        "hey"
+        
         results = analyser.analyse()
-        "hi"
-        if(results):
-            plt = Plotter()
-            for k, t in results.iteritems():
-                print
-                print "\nAnalysis of article " + t['title'] + " complete, saving image files:"
-                title = "Edit trajectory of article '" + t['title'] + "'" 
-                revx = t['revs'][-1]
-                print plt.trajectory(revx, 
-                                     *t['trajectory'],
-                                     pageid=k,
-                                     title=title)
-                title = "Contributors to " + t['title'] + " by edit count"
-                ident = "count"
-                xaxisname = "Hours since creation"
-                yaxisname = "Edit count"
-                print plt.barchart(revx,
-                                   *t['editcounts'], ##barheights/labels
-                                   pageid=k,
-                                   title=title,
-                                   ident=ident,
-                                   xaxisname=xaxisname,
-                                   yaxisname=yaxisname)
-                title = "Contributors by reward"
-                ident = "reward"
-                yaxisname = "Reward share"
-                print plt.barchart(revx, 
-                                   *t['rewards'], ##barheights/labels
-                                   pageid=k,
-                                   title=title,
-                                   ident=ident,
-                                   xaxisname=xaxisname,
-                                   yaxisname=yaxisname)
-        else:
-            print "ho"
-            sys.exit(-1)
+        form = ['revid',
+                'Maths',
+                'Citations',
+                'Files / Images',
+                'Links',
+                'Structure',
+                'Normal',
+                'Gradient',
+                'user',
+                'trajectory',
+                'timestamp']
+        formresults = []
+        for r in results:
+            res = {}
+            for i, f in enumerate(form):
+                res.update({f:r[i]})
+            formresults.append(res)                 
+        IPlot(formresults)
         if not (flags['trundle'] and params['page_titles'] == 'random'):
-            if not flags['trundle']:
-                print "trundle broke"
-            if not params['page_titles']:
-                print 'page titles broke'
-            print "breaking"
             break
-    print "hey"
+
+        # if(results):
+        #     plt = Plotter()
+        #     for k, t in results.iteritems():
+        #         print
+        #         print "\nAnalysis of article " + t['title'] + " complete, saving image files:"
+        #         title = "Edit trajectory of article '" + t['title'] + "'" 
+        #         revx = t['revs'][-1]
+        #         print plt.trajectory(revx, 
+        #                              *t['trajectory'],
+        #                              pageid=k,
+        #                              title=title)
+        #         title = "Contributors to " + t['title'] + " by edit count"
+        #         ident = "count"
+        #         xaxisname = "Hours since creation"
+        #         yaxisname = "Edit count"
+        #         print plt.barchart(revx,
+        #                            *t['editcounts'], ##barheights/labels
+        #                            pageid=k,
+        #                            title=title,
+        #                            ident=ident,
+        #                            xaxisname=xaxisname,
+        #                            yaxisname=yaxisname)
+        #         title = "Contributors by reward"
+        #         ident = "reward"
+        #         yaxisname = "Reward share"
+        #         print plt.barchart(revx, 
+        #                            *t['rewards'], ##barheights/labels
+        #                            pageid=k,
+        #                            title=title,
+        #                            ident=ident,
+        #                            xaxisname=xaxisname,
+        #                            yaxisname=yaxisname)
+        # else:
+        #     print "ho"
+        #     sys.exit(-1)
+        # if not (flags['trundle'] and params['page_titles'] == 'random'):
+        #     if not flags['trundle']:
+        #         print "trundle broke"
+        #     if not params['page_titles']:
+        #         print 'page titles broke'
+        #     print "breaking"
+        #     break
     sys.exit(0)
 if __name__ == "__main__":
     try:
