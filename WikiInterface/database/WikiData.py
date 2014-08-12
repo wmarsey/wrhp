@@ -59,8 +59,8 @@ class Database:
                 return result[0][0]
         return -1
 
-    def bridgerevision(self, revid, parentid):
-        alterchild = self.getchild(revid)
+    def bridgerevision(self, revid, parentid, domain):
+        alterchild = self.getchild(revid, domain)
         sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s;"
         data = (parentid,alterchild)
         if(self._execute(sql, data)):
@@ -113,12 +113,12 @@ class Database:
             return self.crsr.fetchall()
         return None
 
-    def getrevfull(self, titles="random", revids=None, userids=None):
-        sql = "SELECT * from " + self.contenttable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND a.revid = %s;"
-        data = (revid,)
-        if(self._execute(sql, data)):
-            return self.crsr.fetchall()
-        return None
+    # def getrevfull(self, titles="random", revids=None, userids=None):
+    #     sql = "SELECT * from " + self.contenttable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND a.revid = %s;"
+    #     data = (revid,)
+    #     if(self._execute(sql, data)):
+    #         return self.crsr.fetchall()
+    #     return None
 
     def getdist(self, revid):
         sql = "SELECT distance from " + self.distancetable + " WHERE revid = %s;"
@@ -148,15 +148,12 @@ class Database:
         return -1
 
     def getrandom(self):
-        sql = "SELECT * FROM (SELECT DISTINCT title, pageid FROM " + self.fetchedtable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT title FROM " + self.fetchedtable + ") AS w2) LIMIT 1;"
+        sql = "SELECT * FROM (SELECT DISTINCT pageid, language FROM " + self.fetchedtable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT pageid FROM " + self.fetchedtable + ") AS w2) LIMIT 1;"
         while True:
             if(self._execute(sql,())):
-                try: 
-                    result = self.crsr.fetchall()[0]
-                except:
-                    pass
-                else:
-                    return result[0], result[1]
+                result = self.crsrsanity()
+                if result:
+                    return result[0][0], result[0][1]
         return None
 
     def gettrajectory(self, revid, domain):
@@ -269,6 +266,16 @@ class Database:
         if(self._execute(sql, (value, revid, domain))):
             return True
         return False
+
+    def getresults(self, pageid, domain):
+        sql = "SELECT revid, maths, citations, filesimages, links, structure, normal, gradient, username, t.distance, time FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid) JOIN " + self.trajectorytable + " AS t ON revid = revid2 AND r.pageid = %s AND r.domain = %s;"
+        data = (pageid, domain)
+        if(self._execute(sql, data)):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
+        
 
     def _execute(self, sql, data, montcarlo=5):
         for _ in xrange(montcarlo):
