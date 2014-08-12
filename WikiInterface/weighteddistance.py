@@ -24,12 +24,12 @@ class WDistanceCalc:
     bquote = re.compile('<blockquote>.*<\/blockquote>')
     cite = re.compile('\{\{cite.*\}\}')
     citeneed = re.compile('\{\{Citation needed.*\}\}')
-    afile = re.compile('\[\[File.*\]\]')
+    afile = re.compile('\[\[File((?!\]\]).)*\]\]')
     score = re.compile('<score>.*</score>')
-    linkint = re.compile('\[\[(?!File).*\]\]')
+    linkint = re.compile('\[\[(?!File)((?!\]\]).)*\]\]')
     linkext = re.compile('\[http.*\]')
     asof = re.compile('{{As of .*}}')
-    table = re.compile('\{\|.*\}', re.S)
+    table = re.compile('\{\|((?!\|\}).)*\|\}', re.S)
     h1 = re.compile('^= .* =$')
     h2 = re.compile('^== .* ==$')
     h3 = re.compile('^=== .* ===$')
@@ -55,7 +55,7 @@ class WDistanceCalc:
                             break
                         match, string1 = extract(m.start(), m.end(), string1)
                         compare['m1'] += match
-                        message = "MATCH calculating for revid " + str(revid) + " \n"
+                        message = "MATCH calculating for revid " + str(revid) + " slice " + str(m.start()) + " to " + str(m.end()) + "\n"
                         message += "text: " + match + "\n"
                         message += "pattern: " + r.pattern + "\n\n"
                         log.write(message)
@@ -65,8 +65,6 @@ class WDistanceCalc:
                             break
                         match, string2 = extract(m.start(), m.end(), string2)
                         compare['m2'] += match
-                        match, string1 = extract(m.start(), m.end(), string1)
-                        compare['m1'] += match
                         message = "MATCH calculating for revid " + str(revid) + " \n"
                         message += "text: " + match + "\n"
                         message += "pattern: " + r.pattern + "\n\n"
