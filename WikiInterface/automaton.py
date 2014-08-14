@@ -195,26 +195,27 @@ def main():
     print "---------------ANALYSE MODE---------------"    
     #analyser = WikiInterface(params, flags)
     while True:
-        
         results = analyser.analyse()
-        form = ['revid',
-                'Maths',
-                'Citations',
-                'Files / Images',
-                'Links',
-                'Structure',
-                'Normal',
-                'Gradient',
-                'user',
-                'trajectory',
-                'timestamp']
-        formresults = []
-        for r in results:
-            res = {}
-            for i, f in enumerate(form):
-                res.update({f:r[i]})
-            formresults.append(res)                 
-        IPlot(formresults)
+        if flags['plotshow']:
+            form = ['revid',
+                    'Maths',
+                    'Citations',
+                    'Files / Images',
+                    'Links',
+                    'Structure',
+                    'Normal',
+                    'Gradient',
+                    'user',
+                    'trajectory',
+                    'timestamp']
+            formresults = []
+            for r in results:
+                res = {}
+                for i, f in enumerate(form):
+                    res.update({f:r[i]})
+                formresults.append(res)                 
+            IPlot(formresults)
+        
         if not (flags['trundle'] and params['page_titles'] == 'random'):
             break
 
