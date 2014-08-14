@@ -276,6 +276,21 @@ class Database:
                 return result
         return None
         
+    def getallrevs(self):
+        sql = "SELECT DISTINCT revid, language FROM " + self.fetchedtable + " JOIN " + self.revisiontable + " USING (pageid);"
+        if(self._execute(sql, ())):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
+
+    def getdatadump(self):
+        sql = "SELECT w.revid, r.domain, maths, citations, filesimages, links, structure, normal, gradient, content, comment FROM " + self.fetchedtable + " AS f JOIN " + self.revisiontable + " AS r ON f.pageid = r.pageid AND f.language = r.domain JOIN " + self.weighttable + " AS w ON r.revid = w.revid AND r.domain = w.domain JOIN " + self.contenttable + " AS c ON w.revid = c.revid AND w.domain = c.domain;"
+        if(self._execute(sql,())):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
 
     def _execute(self, sql, data, montcarlo=5):
         for _ in xrange(montcarlo):
