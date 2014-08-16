@@ -285,7 +285,7 @@ class Database:
         return None
 
     def getdatadump(self):
-        sql = "SELECT w.revid, r.domain, maths, citations, filesimages, links, structure, normal, gradient, content, comment FROM " + self.fetchedtable + " AS f JOIN " + self.revisiontable + " AS r ON f.pageid = r.pageid AND f.language = r.domain JOIN " + self.weighttable + " AS w ON r.revid = w.revid AND r.domain = w.domain JOIN " + self.contenttable + " AS c ON w.revid = c.revid AND w.domain = c.domain;"
+        sql = "SELECT w.revid, r.domain, maths, citations, filesimages, links, structure, normal, gradient, content, comment FROM " + self.fetchedtable + " AS f JOIN " + self.revisiontable + " AS r ON f.pageid = r.pageid AND f.language = r.domain JOIN " + self.weighttable + " AS w ON r.revid = w.revid AND r.domain = w.domain AND w.normal >= 0 JOIN " + self.contenttable + " AS c ON w.revid = c.revid AND w.domain = c.domain;"
         if(self._execute(sql,())):
             result = self.crsrsanity()
             if result:
