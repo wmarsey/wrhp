@@ -1,4 +1,4 @@
-documentclass[a4paper,12pt,twoside]{report}
+\documentclass[a4paper,12pt,twoside]{report}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
 
 \include{thesis.preamble}
@@ -6,20 +6,20 @@ documentclass[a4paper,12pt,twoside]{report}
 
 \begin{document}
 
-\title{\LARGE {\bf Title of my Ph.D. Thesis}\\
+\title{\LARGE {\bf Title}\\
  \vspace*{6mm}
 }
 
-\author{Joe Bloggs}
-\submitdate{October 2008}
+\author{William Marsey}
+\submitdate{September 2014}
 
 \normallinespacing
 \maketitle
 
 \preface
 \input{abstract/abstract}
-\input{acknowledgements/acknowledgements}
-\input{dedication/dedication}
+%% \input{acknowledgements/acknowledgements}
+%% \input{dedication/dedication}
 \input{quotes/quotes}
 
 \body
@@ -35,7 +35,7 @@ documentclass[a4paper,12pt,twoside]{report}
 
 
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{alpha}
-\bibliography{bibliography/bibliography}
+\printbibliography        
+
 
 \end{document}
