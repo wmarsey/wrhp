@@ -1,15 +1,15 @@
 all: litreview
 
-litreview: thesis.tex thesis.bib
+litreview: report.tex report.bib
 	make clean
-	pdflatex thesis 
-	bibtex thesis
-	pdflatex thesis
-	bibtex thesis
-	pdflatex thesis
-	pdflatex thesis
+	pdflatex report 
+	bibtex report 
+	pdflatex report
+	bibtex report
+	pdflatex report
+	pdflatex report
 	make clean
-	evince thesis.pdf
+	evince report.pdf
 	#echo "hey" | mutt wmarsey@gmail.com -s "litreview" -a report.pdf
 
 clean:

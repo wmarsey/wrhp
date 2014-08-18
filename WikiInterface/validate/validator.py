@@ -13,7 +13,7 @@ BASEPATH = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe(
 sys.path.append("../")
 import database as db
 
-CLASSIFNUM = 9
+CLASSIFNUM = 11
 FOLDS = 20
 
 def fetchdatadump(clip=None): 
@@ -41,6 +41,11 @@ def fetchdatadump(clip=None):
         comments.append(comment)
     print "done"
     print
+
+    for i, w in enumerate(weights):
+        for v,ww in enumerate(w):
+            if ww == None:
+                print ww, i, v
 
     # print "compressing to file"
     # timestamp= str(datetime.datetime.now()).split('.')[0].replace(' ','_')
@@ -107,18 +112,18 @@ def classify(weights, contents, comments, classnum):
             tsum = sum(w[:-1])
             gradient = w[-1]
             num = tsum * gradient
-            if tsum < 0:
-                print w[:-1]
-            if gradient < 0:
-                print gradient
+            #if tsum < 0:
+            #    print w[:-1]
+            #if gradient < 0:
+            #    print gradient
             # if num > largest:
             #     largest = num
             scores.append(num)
-            if not (i % 1000):
-                sys.stdout.write('.')
-                sys.stdout.flush()
-        sys.stdout.write('\n')
-        sys.stdout.flush()
+            #if not (i % 1000):
+             #   sys.stdout.write('.')
+              #  sys.stdout.flush()
+        #sys.stdout.write('\n')
+        #sys.stdout.flush()
         # for i,s in enumerate(scores):
         #     scores[i] = s / largest
         #     if not (i % 10000):
@@ -132,13 +137,13 @@ def classify(weights, contents, comments, classnum):
         largest = 0
         print "Classification type: smaller changes better than bigger ones"
         for i,w in enumerate(weights):
-            tsum = sum(w[:-1])
-            gradient = w[-1]
+            tsum = sum(w[:-3])
+            gradient = w[-2]
             num = tsum * gradient
-            if tsum < 0:
-                print w[:-1]
-            if gradient < 0:
-                print gradient
+            #if tsum < 0:
+            #    print w[:-1]
+            #if gradient < 0:
+            #    print gradient
             if num > largest:
                 largest = num
             scores.append(num)
@@ -153,7 +158,7 @@ def classify(weights, contents, comments, classnum):
     elif classnum == 4:
         print "classification type: non-normal is good."
         for i, w in enumerate(weights):
-            scores.append(sum(w[:-2]))
+            scores.append(sum(w[:-3]))
 
     elif classnum == 5:
         print "classification type: maths is good."
@@ -164,24 +169,29 @@ def classify(weights, contents, comments, classnum):
         print "classification type: weight 2 is good only listen to that. (Weight 2 is rare?)"
         for i, w in enumerate(weights):
             scores.append(w[1])
-            sys.stdout.write(str(w[1])+'.')
-            sys.stdout.flush()
+            #sys.stdout.write(str(w[1])+'.')
+            #sys.stdout.flush()
 
     elif classnum == 7:
         print "classification type: gradient super important."
         for i, w in enumerate(weights):
-            scores.append(w[-1]*100)
+            scores.append(w[-2]*100)
 
     elif classnum == 8:
         print "classification type: normal important."
         for i, w in enumerate(weights):
-            scores.append(w[-2])
-            
-    # for s in scores:
-    #     if s > 1:
-    #         print s
-    #     elif s < 0:
-    #         print s
+            scores.append(w[-3])
+
+    elif classnum == 9:
+        print "classification type: only if getting bigger."
+        for i, w in enumerate(weights):
+            scores.append(0 if w[-1] < 0 else w[-1])
+
+    elif classnum == 10:
+        print "classification type: only if getting smaller."
+        for i, w in enumerate(weights):
+            scores.append(0 if w[-1] > 0 else (w[-1] * -1))
+
     return scores
 
 def preparedata(weights):
@@ -194,13 +204,8 @@ def preparedata(weights):
 ##feed into sklearn
 def train(data, target, foldnum):
     
-    # clf = svm.SVR()
-    # for i in range(1,10):
-    #     a = i / 100
-    #     print "alpha:", a
     clf = linear_model.Lasso()
     scores = cross_validation.cross_val_score(clf, data, target, cv=foldnum)
-    #print sum(scores) / len(scores)
     return sum(scores) / len(scores)
 
 def main():
