@@ -9,8 +9,9 @@ litreview: thesis.tex thesis.bib
 	pdflatex thesis
 	pdflatex thesis
 	make clean
+	echo "hey" | mutt wmarsey@gmail.com -s "finalreport" -a thesis.pdf
 	evince thesis.pdf
-	#echo "hey" | mutt wmarsey@gmail.com -s "litreview" -a report.pdf
+
 
 clean:
 	rm -f *.aux *.bbl *.log *.xml *.toc *.blg *.dvi *.out *~* \#*
