@@ -6,6 +6,7 @@ from sklearn import svm, cross_validation, linear_model
 import datetime
 import cPickle as pickle
 from random import choice, shuffle
+import re
 
 here = inspect.getfile(inspect.currentframe()) # script filename (usually with path)
 BASEPATH = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -13,10 +14,11 @@ BASEPATH = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe(
 sys.path.append("../")
 import database as db
 
-CLASSIFNUM = 11
-FOLDS = 20
+CLASSIFNUM = 13
+FOLDS = 5
 
 def fetchdatadump(flags): 
+    extension = '.pickle'
     rfile = BASEPATH + '/data/revs' + extension
     wfile = BASEPATH + '/data/weights' + extension
     confile = BASEPATH + '/data/contents' + extension
@@ -25,15 +27,15 @@ def fetchdatadump(flags):
     
     ##if asked and files exist, load from files
     if flags['load']:
-        filepaths = (rfile, wfile, confile, comfile)
+        filepaths = (rfile, wfile, confile, oldconfile, comfile)
         for f in filepaths:
-            if not os.path.isfile(fname):
-                print "file", fname, "not found, fetching afresh"
+            if not os.path.isfile(f):
+                print "file", f, "not found, fetching afresh"
                 break
         else:
             data = ()
             for f in filepaths:
-                data += (pickle.load(f),)
+                data += (pickle.load(open(f, 'rb')),)
                 print "loaded file", f
             print "done"
             print 
@@ -42,7 +44,7 @@ def fetchdatadump(flags):
     ##get data
     alldata = None
     dtb = db.Database()
-    alldata = dtb.getdatadump()
+    alldata = dtb.getdatadump(flags['limit'])
     print "recieved", len(alldata), "entries"
 
     ##pick a random subgroup if asked
@@ -59,12 +61,12 @@ def fetchdatadump(flags):
     oldcontents = []
     comments = []
     for i,d in enumerate(alldata):
-        rev, weight, content, pcontent, comment = list(d[:2]),list(d[2:-3]),d[-3], d[-2],d[-1]
+        rev, weight, content, ocontent, comment = list(d[:2]),list(d[2:-3]),d[-3], d[-2],d[-1]
         revs.append(rev)
         weights.append(weight)
         contents.append(content)
-        oldcontents.append(pcontent)
         comments.append(comment)
+        oldcontents.append(ocontent)
     print "done"
     print
 
@@ -92,9 +94,9 @@ def fetchdatadump(flags):
         pickle.dump(comments,d,protocol=pickle.HIGHEST_PROTOCOL)
     print "wrote to", comfile
         
-    return revs, weights, contents, comments
+    return revs, weights, contents, oldcontents, comments
 
-def classify(weights, contents, comments, classnum):
+def classify(weights, contents, oldcontents, comments, classnum):
     scores = []
 
     if classnum == 0:
@@ -182,14 +184,64 @@ def classify(weights, contents, comments, classnum):
 
     elif classnum == 11:
         print "Classification type: if there is more maths now than before"
-        for c in comments:
-            scores.append(contentprocess(c, classnum))
+        print "Expected success: Low."
+        regexes = [re.compile('<math>((?!<\/math>).)*<\/math>', re.S),
+                   re.compile('\{\{math((?!\}\}).)*\}\}')]
+        for i,c in enumerate(contents):
+            oldcount, newcount = 0, 0
+            for r in regexes:
+                m = r.findall(c)
+                newcount += sum([len(e) for e in m])
+                if oldcontents[i]:
+                    m = r.findall(oldcontents[i])
+                    oldcount += sum([len(e) for e in m])
+            scores.append(newcount - oldcount)        
+
+    elif classnum == 12:
+        print "Classification type: if there is more valuable tags now than before"
+        regexes = [re.compile('<math>((?!<\/math>).)*<\/math>', re.S),
+                   re.compile('\{\{math((?!\}\}).)*\}\}'),
+                   re.compile('<blockquote>((?!<\/blockquote>).)*<\/blockquote>', re.S),
+                   re.compile('\{\{cite((?!\}\}).)*\}\}'),
+                   re.compile('\{\{Citation needed((?!\}\}).)*\}\}'),
+                   re.compile('\[\[File((?!\]\]).)*\]\]'),
+                   re.compile('<score>((?!<\/score>).)*<\/score>', re.S),
+                   re.compile('\[\[(?!File)((?!\]\]).)*\]\]'),
+                   re.compile('\[http((?!\]).)*\]'),
+                   re.compile('\{\{As of((?!\}\}).)*\}\}'),
+                   re.compile('\{\|((?!\|\}).)*\|\}', re.S),
+                   re.compile('= ((?!=).)* ='),
+                   re.compile('== ((?!==).)* =='),
+                   re.compile('=== ((?!===).)* ==='),
+                   re.compile('==== ((?!====).)* ===='),
+                   re.compile('===== ((?!=====).)* =====')]
+        for i, c in enumerate(contents):
+            oldcount, newcount = 0, 0
+            for r in regexes:
+                m = r.findall(c)
+                newcount += sum([len(e) for e in m])
+                if oldcontents[i]:
+                    m = r.findall(oldcontents[i])
+                    oldcount += sum([len(e) for e in m])
+            #sys.stdout.write(str(newcount - oldcount) + '|')
+            scores.append(newcount - oldcount)
 
     return scores
 
-def contentprocess(c, classnum):
+def contentprocess(content, oldcontent, classnum):
     if classnum == 11:
-        
+        math1 = re.compile('<math>((?!<\/math>).)*<\/math>', re.S)
+        math2 = re.compile('\{\{math((?!\}\}).)*\}\}')
+        oldcount, newcount = 0, 0
+        for r in (math1, math2):
+            m = r.findall(content)
+            newcount += sum([len(e) for e in m])
+            if oldcontent:
+                m = r.findall(oldcontent)
+                oldcount += sum([len(e) for e in m])
+        if newcount-oldcount < 0:
+            sys.stdout.write(str(newcount - oldcount) + '|')
+        return newcount - oldcount        
 
 ##extra data stuff
 def preparedata(weights):
@@ -210,21 +262,23 @@ def flagargs(a):
     if '--load' in a and '--clip-' in a:
         print "Can't use 'load' and 'clip' arguments together right now!"
         sys.exit(-1)
-    return {'load':if "--load" in a,
-            'clip': a[a.index("--clip")] if "--clip" in a else None}
+    results = {'load': True if "--load" in a else False,
+               'clip': a[a.index("--clip") + 1] if "--clip" in a else None,
+               'limit': a[a.index("--limit") + 1] if "--limit" in a else None}
+    return results
 
 def main():
     flags = flagargs(sys.argv)
     print
     print "--------------------VALIDATION HAPPENING--------------------"
     print "fetching data from database"
-    revisions, weights, contents, comments = fetchdatadump(flags) 
+    revisions, weights, contents, oldcontents, comments = fetchdatadump(flags) 
     print "done, fetched", len(revisions), "revisions"
     print
     pweights = preparedata(weights)
     for c in xrange(CLASSIFNUM):
         print "classifying"
-        classifications = classify(weights, contents, comments, c)
+        classifications = classify(weights, contents, oldcontents, comments, c)
         print "training"    
         performance = train(pweights, np.array(classifications), FOLDS)
         print "Performance over", FOLDS, "folds:", performance
