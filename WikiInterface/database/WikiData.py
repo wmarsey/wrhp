@@ -284,8 +284,11 @@ class Database:
                 return result
         return None
 
-    def getdatadump(self):
-        sql = "SELECT w.revid, r.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient, CASE WHEN r.parentid = 0 OR old.size IS NULL THEN r.size ELSE r.size - old.size END, c.content, oldcont.content, r.comment FROM " + self.fetchedtable + " AS f JOIN " + self.revisiontable + " AS r ON f.pageid = r.pageid AND f.language = r.domain JOIN " + self.weighttable + " AS w ON r.revid = w.revid AND r.domain = w.domain AND w.normal >= 0 JOIN " + self.contenttable + " AS c ON w.revid = c.revid AND w.domain = c.domain LEFT OUTER JOIN " + self.revisiontable + " AS old ON r.parentid = old.revid AND r.domain = old.domain LEFT OUTER JOIN " + self.contenttabl + " AS oldcont ON old.revid = oldcont.revid AND old.domain = oldcont.domain;"
+    def getdatadump(self, limit=None):
+        sql = "SELECT w.revid, r.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient, CASE WHEN r.parentid = 0 OR old.size IS NULL THEN r.size ELSE r.size - old.size END, c.content, oldcont.content, r.comment FROM " + self.fetchedtable + " AS f JOIN " + self.revisiontable + " AS r ON f.pageid = r.pageid AND f.language = r.domain JOIN " + self.weighttable + " AS w ON r.revid = w.revid AND r.domain = w.domain AND w.normal >= 0 JOIN " + self.contenttable + " AS c ON w.revid = c.revid AND w.domain = c.domain LEFT OUTER JOIN " + self.revisiontable + " AS old ON r.parentid = old.revid AND r.domain = old.domain LEFT OUTER JOIN " + self.contenttable + " AS oldcont ON r.parentid = oldcont.revid AND r.domain = oldcont.domain"
+        if limit:
+            sql += ' LIMIT ' + str(limit)
+        sql += ';'
         if(self._execute(sql,())):
             result = self.crsrsanity()
             if result:
