@@ -1,4 +1,4 @@
-BwikiScraper/Wikipedia
+wikiScraper/Wikipedia
 *.pdf
 *.pyc
 *.log
@@ -6,3 +6,4 @@ BwikiScraper/Wikipedia
 *.toc
 *#
 *~
+*/build/*
