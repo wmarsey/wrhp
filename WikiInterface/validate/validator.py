@@ -1,4 +1,4 @@
-from __future__ import division
+6~from __future__ import division
 import numpy as np
 import sys, os, inspect
 from sklearn import preprocessing as pr
@@ -227,21 +227,6 @@ def classify(weights, contents, oldcontents, comments, classnum):
             scores.append(newcount - oldcount)
 
     return scores
-
-def contentprocess(content, oldcontent, classnum):
-    if classnum == 11:
-        math1 = re.compile('<math>((?!<\/math>).)*<\/math>', re.S)
-        math2 = re.compile('\{\{math((?!\}\}).)*\}\}')
-        oldcount, newcount = 0, 0
-        for r in (math1, math2):
-            m = r.findall(content)
-            newcount += sum([len(e) for e in m])
-            if oldcontent:
-                m = r.findall(oldcontent)
-                oldcount += sum([len(e) for e in m])
-        if newcount-oldcount < 0:
-            sys.stdout.write(str(newcount - oldcount) + '|')
-        return newcount - oldcount        
 
 ##extra data stuff
 def preparedata(weights):
