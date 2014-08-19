@@ -1,4 +1,6 @@
 \usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.jpg}
+
 \usepackage{verbatim}
 \usepackage{latexsym}
 \usepackage{mathchars}
@@ -6,8 +8,14 @@
 
 \usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
 \usepackage{cleveref} 
+\usepackage{color}               %obv
 \usepackage{appendix}            %obv
+\usepackage{amsmath}             %for math environment
+
 \usepackage{enumitem}            %for modifying lists
+\setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
+\setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
+
 \usepackage{float}              %for forcefully placing diagrams 
 \usepackage[procnames]{listings} %for inserting code
 \usepackage{fancyvrb} % for inserting .txt
@@ -19,11 +27,12 @@
             citereset=section,
             maxcitenames=3,
             maxbibnames=100]{biblatex}
-\bibliography{report}
+\bibliography{thesis}
 \DefineBibliographyStrings{english}{%
     backrefpage  = {see p.}, % for single page number
     backrefpages = {see pp.} % for multiple page numbers
 }
+\setlength\bibitemsep{1em}
 
 \usepackage{titlesec}
 \titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
@@ -157,4 +166,77 @@
  \end{center}
  }
  \end{figure}
+}
+
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,chains,matrix,positioning,scopes,calc}
+\makeatletter
+\tikzset{join/.code=\tikzset{after node path={%
+\ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
+edge[every join]#1(\tikzchaincurrent)\fi}}}
+\makeatother
+\tikzset{>=stealth',every on chain/.append style={join},
+         every join/.style={->}}
+\tikzstyle{labeled}=[execute at begin node=$\scriptstyle,
+   execute at end node=$]
+
+
+
+        \definecolor{redi}{RGB}{255,38,0}
+        \definecolor{yellowi}{RGB}{255,251,0}
+        \definecolor{greeni}{RGB}{166,247,166}
+
+        \tikzset{ 
+          table/.style={
+            matrix of nodes,
+            row sep=-\pgflinewidth,
+            column sep=-\pgflinewidth,
+            nodes={rectangle,draw=black,text width=3ex,align=center},
+            text depth=0.5ex,
+            text height=2ex,
+            nodes in empty cells
+          },
+          texto/.style={font=\large\sffamily},
+          title/.style={font=\large\sffamily}
+        }
+
+
+        \newcommand\CellText[2]{%
+          \node[texto,left=of mat#1,anchor=east]
+          at (mat#1.west)
+          {\large #2};
+        }
+
+        \newcommand\SlText[2]{%
+          \node[texto,left=of mat#1,anchor=west,rotate=50]
+          at ([xshift=1.5ex,yshift=1ex]mat#1.north)
+          {\large #2};
+        }
+
+
+\newcommand{\super}[1]{\textsuperscript{#1}}
+
+%% \renewcommand{\cite}[1]{\footcite{#1}}
+
+\definecolor{keywords}{RGB}{255,0,90}
+\definecolor{comments}{RGB}{0,0,113}
+\definecolor{red}{RGB}{160,0,0}
+\definecolor{green}{RGB}{0,150,0}
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{keywords},
+  commentstyle=\color{comments},
+  stringstyle=\color{red},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  procnamekeys={def,class}
 }
