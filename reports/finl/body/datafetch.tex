@@ -291,8 +291,9 @@
 
 %%%%% Trace trajectory algorithm
 \begin{algorithmic}
+  \caption{Page trajectory calculation}\label{dist-calc}
   \State $revs \gets database.fetchIDsofpage()$\\
-  \State $target \gets database.gettext(revs[-1])$
+  \State $target \gets database.gettext(revs[-1])$ \Comment{Last revision in list is most recent}
   \For {$ i \gets length(revs) to 0$}
   \If{$database.gettrajectory(revs[i]) is Null$}
   \State $str1 \gets database.gettext(revs[i])$
@@ -302,30 +303,36 @@
 \end{algorithmic}
 
 %%%%% Distance calculation procedure
-\begin{algorithmic}
-  \State $regexes \gets $\{\\
-    'math1': '<math>((?!<\/math>).)*<\/math>\S',\\
-    'math2': '\{\{math((?!\}\}).)*\}\}',\\
-    'bquote': '<blockquote>((?!<\/blockquote>).)*<\/blockquote>\S'\\
-    ...\\
-  \}\Comment{Regexes that recognise single Wikimarkup tags}\\
-  \State $reggroups \gets $\{\\
-    'maths':(regexes['math1'], regexes['math2']),\\
-    ...\\
-  \}\Comment{Group of regexes by 'species'}
-  \State $distances \gets {}$
-  \For {$key, reg \in reggroups$}
-  \State $distances[key] \gets 0$
-  \State $comparestr \gets [``", ``"]$
-  \For {$i = 0 to 1$}
-  \State $matches \gets reg.matches(strs[i])$
-  \For {$m \in matches$}
-  \State $match, str1 \gets extractsplit(m.start, m.end, str1)$
-  \State $comparestr[i] \gets comparestr[i] + match$
-  \EndFor
-  \EndFor
-  \If {len(comparestr[0]) or len(comparestr[1])}
-  \State $levenshtein(comparestr[0], comparestr[1])$
-  \EndIf
-  \EndFor
-\end{algorithmic}
+\begin{algorithm}
+  \caption{Revision pair distance calculation}\label{dist-calc}
+  \begin{algorithmic}
+    \State $regexes \gets $\{
+    \Statex  'math1': '<math>((?!<\/math>).)*<\/math>\S',
+    \Statex  'math2': '\{\{math((?!\}\}).)*\}\}',
+    \Statex 'bquote': '<blockquote>((?!<\/blockquote>).)*<\/blockquote>\S'
+    \Statex  ...
+    \Statex\}\Comment{Regexes that recognise single Wikimarkup tags}
+    \State $reggroups \gets $\{
+    \Statex  'maths':(regexes['math1'], regexes['math2']),
+    \Statex  ...
+    \Statex \}\Comment{Group of regexes by 'species'}
+    \State $distances \gets {}$
+    \Function{PairDistance}{$str1,str2$}
+    \State $strs = [str1, str2]$
+    \ForAll {$key, reg \in reggroups$}
+    \State $distances[key] \gets 0$
+    \State $comparestr \gets [``", ``"]$
+    \For {$i = 0 to 1$}
+    \State $matches \gets reg.matches(strs[i])$
+    \ForAll {$m \in matches$}
+    \State $match, strs[i] \gets extractsplit(m.start, m.end, strs[i])$
+    \State $comparestr[i] \gets comparestr[i] + match$
+    \EndFor
+    \EndFor
+    \If {len(comparestr[0]) or len(comparestr[1])}
+    \State $levenshtein(comparestr[0], comparestr[1])$
+    \EndIf
+    \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
