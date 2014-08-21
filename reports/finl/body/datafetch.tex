@@ -1,180 +1,277 @@
 \chapter{Fetching the Data}
 
-% Define block styles
-\tikzstyle{decision} = [rectangle, 
-  draw, 
-  fill=blue!20, 
-  text width=5em, 
-  text badly centered, 
-  node distance=3cm,
-  inner sep=0,
-  outer sep=0,
-  inner sep=0pt, 
-  font=\footnotesize,
-rounded corners,
-execute at begin node=\setlength{\baselineskip}{1em}]
-\tikzstyle{block} = [rectangle, 
-  draw, 
-  fill=green!20, 
-  inner sep=0,
-  outer sep=0,
-  text width=6em, 
-%  text width=5em,
-  text centered,
-  font=\footnotesize,
-  execute at begin node=\setlength{\baselineskip}{1em}] 
-%rounded corners, 
-%minimum height=4em]
-\tikzstyle{line} = [draw, -latex']
-\tikzstyle{cloud} = [draw, 
-  ellipse,
-  fill=red!20,
-  inner sep=0,
-  outer sep=0,
-  node distance=3cm,
-  minimum height=2em,
-  font=\footnotesize,
-  execute at begin node=\setlength{\baselineskip}{1em}]
+%% % Define block styles
+%% \tikzstyle{decision} = [rectangle, 
+%%   fill, 
+%%   fill=yellowi, 
+%%   text width=5em, 
+%%   text badly centered, 
+%%   node distance=3cm,
+%%   inner sep=0.5em,
+%%   outer sep=0,
+%%   inner sep=0pt, 
+%%   font=\footnotesize,
+%% rounded corners,
+%% execute at begin node=\setlength{\baselineskip}{1em}]
+%% \tikzstyle{block} = [rectangle, 
+%%   fill, 
+%%   fill=greeni, 
+%%   inner sep=0.5em,
+%%   outer sep=0,
+%%   text width=6em, 
+%% %  text width=5em,
+%%   text centered,
+%%   font=\footnotesize,
+%%   execute at begin node=\setlength{\baselineskip}{1em}] 
+%% %rounded corners, 
+%% %minimum height=4em]
+%% \tikzstyle{line} = [draw, -latex']
+%% \tikzstyle{cloud} = [fill, 
+%%   ellipse,
+%%   fill=redi,
+%%   inner sep=0.5em,
+%%   outer sep=0,
+%%   node distance=3cm,
+%%   minimum height=2em,
+%%   font=\footnotesize,
+%%   execute at begin node=\setlength{\baselineskip}{1em}]
     
-\begin{figure}
-  \begin{tikzpicture}[node distance = 1cm]
-    % Place nodes
+%% \begin{figure}
+%%   \label{fig:datafetchflow}
+%%   \caption{Flow chart showing the Wikidata fetch algorithm}
+%%   \begin{tikzpicture}[node distance = 1cm]
+%%     % Place nodes
 
-    \node [cloud] (start) {Start.};
+%%     \matrix (m) [row sep=3em,
+%%     column sep=3em]{
+
+%%       &
+      
+%%       \node [block] (init) {Initialise arrays.};
+      
+%%       &
+      
+%%       \node [decision]%% , right of=init, node distance=2cm
+%%       (dompick) {Do we have a domain?};
+      
+%%       &
+
+%%       \\
+
+%%       &
+
+%%       \node [block]%% , below of=dompick
+%%       (domrandom) {Pick a random domain};
+
+%%       &
+
+%%       \node [decision]%% , right of=domrandom, node distance=2cm ]
+%%       (pagepick) {Do we have a pageid?};
+      
+%%       & 
+
+%%       \\
+      
+%%       &
+
+%%       &
+      
+%%       \node [block]%% , below of=pagepick
+%%       (pagerandom) {Fetch random pageid
+%%         from current domain};
+      
+%%       &
+      
+%%       \node [decision]%% , right of=pagerandom, node distance=2cm
+%%       (dbcheck) {Does the current
+%%         ID and domain exist in the database already?};
+
+%%       \\
+
+%%       & 
+
+%%       \node [decision]%% , left of=corruptcheck, node distance=2c
+%%       (corruptcheckb) {Is the parentid intact?};
+      
+%%       &
+
+%%       \node [decision]%% , left of=dbcheck, node distance=2cm 
+%%       (corruptcheck) {Is the fetched data corrupt?};
+      
+%%       &
+
+%%       \node [block]%% , below of=dbcheck 
+%%       (fetchrecent) {Fetch most recent revision ID};
+      
+%%       \\
+      
+%%       &
+      
+%%       \node [block]%% , right of=corruptcheckb, node distance=3cm
+%%       (appendcorrupt) {append to corrupt pages array};
+      
+%%       &
+      
+%%       \node [block]%% , below of=corruptcheckb, node distance=3cm
+%%       (appenddisc) {Append to caches pages array.};
+      
+%%       &
+      
+%%       \node [block]%% , below of=appenddisc
+%%       (idfetch) {Update revid using
+%%         parent ID from held data};
+      
+%%       \\
+      
+%%       \node [decision]%% , below of=parentcheck
+%%       (enoughb) {Do we have over X
+%%         revisions in the visited array?};
+
+%%       &
+
+%%       \node [decision]%% , below of=enough
+%%       (parentcheck) {Is parent 0, or
+%%         does exist in the visited array};
+      
+
+%%       &
+
+%%       \node [block]%% , right of=enough, node distance=3cm
+%%       (store) {Store all pages in the cached pages array.};
+
+
+%%       &
+
+%%       \node [decision]%% , below of=idfetch
+%%       (enough) {Do we have 50 pages
+%%         in the cached pages array?};
+
+%%       \\
+      
+%%       \node [block]%% , below of=parentcheck
+%%       (storeb) {Store all pages in
+%%         the cached pages array.};
+      
+%%       &
+
+%%       \node [decision]%% , below of=storeb
+%%       (corruptdeal) {Do we have any
+%%         pages in the corrupt array?};
+      
+%%       &
+      
+%%       \node [block]%% , right of=corruptdeal, node distance=3cm
+%%       (corruptproc) {Change pointers in database in order to 'skip over'
+%%         corrupt pages.};
+      
+%%       &
+      
+%%       \node [decision]%% , right of=parentcheck
+%%       (discard) {Discard page};
+
+%%       \\
+
+%%       &
+      
+%%       &
+      
+%%       \node [decision]%% , below of=corruptdeal
+%%       (continue) {Continue?};
+      
+%%       &
+      
+%%       \node [cloud]%% , below of=continue
+%%       (end) {End.};
+
+%%       \\
+%%     };
+%%     % Draw edges
+%%     \path [line] (init) -- (dompick);
+
+%%     \path [line] (dompick) -- node [near start] {yes} (pagepick);
+
+%%     \path [line] (dompick) -- node [near start] {no} (domrandom);
+
+%%     \path [line] (domrandom) -- (pagepick);
+
+%%     \path [line] (pagepick) -- node [near start] {yes} (fetchrecent);
+
+%%     \path [line] (pagepick) -- node [near start] {no} (pagerandom);
+
+%%     \path [line] (pagerandom) -- (fetchrecent);
+
+%%     \path [line] (fetchrecent) -- (dbcheck);
+
+%%     \path [line] (dbcheck) -- node [near start] {yes} (idfetch);
+
+%%     \path [line] (dbcheck) -- node [near start] {no} (corruptcheck);
     
-    \node [block, right of=start, node distance=2cm] (init) {Initialise
-      visited pages, cached pages and corrupt pages arrays.};
-    
-    \node [decision, right of=init, node distance=2cm] (dompick) {Do we
-      have a domain?};
+%%     \path [line] (corruptcheck) -- node [near start] {yes} (corruptcheckb);
 
-    \node [block, below of=dompick] (domrandom) {Pick a random domain};
+%%     \path [line] (corruptcheck) -- node [near start] {no} (appenddisc);
 
-    \node [decision, right of=domrandom, node distance=2cm] (pagepick)
-          {Do we have a pageid?};
-          
-          \node [block, below of=pagepick] (pagerandom) {Fetch random pageid
-            from current domain};
-          
-          \node [decision, right of=pagerandom, node distance=2cm] (dbcheck) {Does the current
-            ID and domain exist in the database already?};
+%%     \path [line] (appenddisc) -- (idfetch);
 
-          \node [block, below of=dbcheck] (fetchrecent) {Fetch most recent
-            revision ID};
-          
-          \node [decision, left of=dbcheck, node distance=2cm] (corruptcheck) {Is the fetched
-            data corrupt?};
-          
-          \node [decision, left of=corruptcheck, node distance=2cm]
-          (corruptcheckb) {Is the parentid intact?};
-          
-          \node [block, right of=corruptcheckb, node distance=3cm]
-          (appendcorrupt) {append to corrupt pages array};
-          
-          \node [block, below of=corruptcheckb, node distance=3cm]
-          (appenddisc) {Append to caches pages array.};
-          
-          \node [block, below of=appenddisc] (idfetch) {Update revid using
-            parent ID from held data};
-          
-          \node [decision, below of=idfetch] (enough) {Do we have 50 pages
-            in the cached pages array?};
+%%     \path [line] (corruptcheckb) -- node [near start] {yes} (continue);
 
-          \node [block, right of=enough, node distance=3cm] (store) {Store all pages in the cached pages array.};
-          
-          \node [decision, below of=enough] (parentcheck) {Is parent 0, or
-            does exist in the visited array};
-          
-          \node [decision, below of=parentcheck] (enoughb) {Do we have over X
-            revisions in the visited array?};
-          
-          \node [block, below of=parentcheck] (storeb) {Store all pages in the cached pages array.};
+%%     \path [line] (corruptcheckb) -- node [near start] {no} (appendcorrupt);
 
-          \node [decision, below of=storeb] (corruptdeal) {Do we have any
-            pages in the corrupt array?};
+%%     \path [line] (appendcorrupt) -- (idfetch);
 
-          \node [block, right of=corruptdeal, node distance=3cm] (corruptproc) {Change
-            pointers in database in order to 'skip over' corrupt pages.};
+%%     \path [line] (idfetch) -- (enough);
 
-          \node [decision, right of=parentcheck] (discard) {Discard page};
+%%     \path [line] (enough) -- node [near start] {yes} (store);
 
-          \node [decision, below of=corruptdeal] (continue) {Continue?};
+%%     \path [line] (enough) -- node [near start] {no} (parentcheck);
 
-          \node [cloud, below of=continue] (end) {End.};
+%%     \path [line] (store) -- (parentcheck);
 
-          % Draw edges
-          \path [line] (start) -- (init);
+%%     \path [line] (parentcheck) -- node [near start] {yes} (enoughb);
 
-          \path [line] (init) -- (dompick);
+%%     \path [line] (parentcheck) -- node [near start] {no} (dbcheck);
 
-          \path [line] (dompick) -- node [near start] {yes} (pagepick);
+%%     \path [line] (enoughb) -- node [near start] {yes} (storeb);
 
-          \path [line] (dompick) -- node [near start] {no} (domrandom);
+%%     \path [line] (enoughb) -- node [near start] {no} (discard);
 
-          \path [line] (domrandom) -- (pagepick);
+%%     \path [line] (discard) -- (continue);
 
-          \path [line] (pagepick) -- node [near start] {yes} (fetchrecent);
+%%     \path [line] (storeb) -- (corruptdeal);
 
-          \path [line] (pagepick) -- node [near start] {no} (pagerandom);
+%%     \path [line] (corruptdeal) -- node [near start] {yes} (corruptproc);
 
-          \path [line] (pagerandom) -- (fetchrecent);
+%%     \path [line] (corruptdeal) -- node [near start] {no} (continue);
 
-          \path [line] (fetchrecent) -- (dbcheck);
+%%     \path [line] (corruptproc) -- (continue);
 
-          \path [line] (dbcheck) -- node [near start] {yes} (idfetch);
+%%     \path [line] (continue) -- node [near start] {yes} (init);
 
-          \path [line] (dbcheck) -- node [near start] {no} (corruptcheck);
-          
-          \path [line] (corruptcheck) -- node [near start] {yes} (corruptcheckb);
+%%     \path [line] (continue) -- node [near start] {no} (end);
 
-          \path [line] (corruptcheck) -- node [near start] {no} (appenddisc);
+%%   \end{tikzpicture}
+%% \end{figure}
 
-          \path [line] (appenddisc) -- (idfetch);
-
-          \path [line] (corruptcheckb) -- node [near start] {yes} (continue);
-
-          \path [line] (corruptcheckb) -- node [near start] {no} (appendcorrupt);
-
-          \path [line] (appendcorrupt) -- (idfetch);
-
-          \path [line] (idfetch) -- (enough);
-
-          \path [line] (enough) -- node [near start] {yes} (store);
-
-          \path [line] (enough) -- node [near start] {no} (parentcheck);
-
-          \path [line] (store) -- (parentcheck);
-
-          \path [line] (parentcheck) -- node [near start] {yes} (enoughb);
-
-          \path [line] (parentcheck) -- node [near start] {no} (dbcheck);
-
-          \path [line] (enoughb) -- node [near start] {yes} (storeb);
-
-          \path [line] (enoughb) -- node [near start] {no} (discard);
-
-          \path [line] (discard) -- (continue);
-
-          \path [line] (storeb) -- (corruptdeal);
-
-          \path [line] (corruptdeal) -- node [near start] {yes} (corruptproc);
-
-          \path [line] (corruptdeal) -- node [near start] {no} (continue);
-
-          \path [line] (corruptproc) -- (continue);
-
-          \path [line] (continue) -- node [near start] {yes} (init);
-
-          \path [line] (continue) -- node [near start] {no} (end);
-
-  \end{tikzpicture}
-\end{figure}
-
-
-\end{document}
-
-\section{The Wikipedia API}
-WikiMedia provides well-documented API for sites built using their
-software, detailed at LINK. It provides the 
-
-\section{The WikiRevision package}
+\begin{algorithmic}
+  $corrupt \gets []$\\
+  $visitedpages \gets []$\\
+  $revid \gets 0$\\
+  $parentid \gets -1$
+  \While{parentid != 0 and revid not in visitedpages} 
+      revid = parentid
+      \If{revid \in database}
+          \State $parentid \gets database.getparentid(revid)$
+      \Else
+          \State $pagedata \gets wiki.getpage(revid)$
+      \EndIf
+      \If{pagedata is corrupt}
+          \State $corruptpages \gets corruptpages (revid, parentid, domain)$
+      \Else
+          \State $database \gets page data$
+      \EndIf
+          \State $visitedpages \gets visitedpages + (revid, domain)$
+  \EndWhile
+  \For {$(revision, parent, domain) \in corrupt$}
+      \State $database.changepointers(revision, parent, domain)$\\
+      \Comment{this changed the parentids of entries in order to 'circumnavigate' corrupt entries}
+  \EndFor
+\end{algorithmic}
