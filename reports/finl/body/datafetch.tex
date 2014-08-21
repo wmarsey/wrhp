@@ -279,7 +279,7 @@
 
 %%%%% Pair comparison algorithm
 \begin{algorithmic}
-  $revs \gets database.fetchIDsofpage()$\\
+  \State $revs \gets database.fetchIDsofpage()$\\
   \For {$ i = 0 to length(revs)$}
   \If{$revs[i].dist not in database$}
   \State $str1 \gets ($``"$ if i == 0 else database.gettext(revs[i-1])$
@@ -291,8 +291,8 @@
 
 %%%%% Trace trajectory algorithm
 \begin{algorithmic}
-  $revs \gets database.fetchIDsofpage()$\\
-  $target \gets database.gettext(revs[-1])$
+  \State $revs \gets database.fetchIDsofpage()$\\
+  \State $target \gets database.gettext(revs[-1])$
   \For {$ i \gets length(revs) to 0$}
   \If{$database.gettrajectory(revs[i]) is Null$}
   \State $str1 \gets database.gettext(revs[i])$
@@ -303,25 +303,25 @@
 
 %%%%% Distance calculation procedure
 \begin{algorithmic}
-  $regexes \gets $\{\\
+  \State $regexes \gets $\{\\
     'math1': '<math>((?!<\/math>).)*<\/math>\S',\\
     'math2': '\{\{math((?!\}\}).)*\}\}',\\
     'bquote': '<blockquote>((?!<\/blockquote>).)*<\/blockquote>\S'\\
     ...\\
   \}\Comment{Regexes that recognise single Wikimarkup tags}\\
-  $reggroups \gets $\{\\
+  \State $reggroups \gets $\{\\
     'maths':(regexes['math1'], regexes['math2']),\\
     ...\\
   \}\Comment{Group of regexes by 'species'}
-  $distances \gets {}$
+  \State $distances \gets {}$
   \For {$key, reg \in reggroups$}
-  $distances[key] \gets 0$
-  $comparestr \gets [``", ``"]$
+  \State $distances[key] \gets 0$
+  \State $comparestr \gets [``", ``"]$
   \For {$i = 0 to 1$}
-  $matches \gets reg.matches(strs[i])$
+  \State $matches \gets reg.matches(strs[i])$
   \For {$m \in matches$}
-  match, str1 \gets extractsplit(m.start, m.end, str1)
-  $comparestr[i] \gets comparestr[i] + match$
+  \State $match, str1 \gets extractsplit(m.start, m.end, str1)$
+  \State $comparestr[i] \gets comparestr[i] + match$
   \EndFor
   \EndFor
   \If {len(comparestr[0]) or len(comparestr[1])}
