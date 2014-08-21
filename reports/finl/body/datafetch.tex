@@ -251,88 +251,144 @@
 %%   \end{tikzpicture}
 %% \end{figure}
 
+\newcommand{\tab}[1]{\hspace{.08\textwidth}{#1}}
+%\newcommand{\emptyset}{\varnothing}
+\newcommand{\LineIf}[3]{ {#1}
+  \algorithmicif\ {#2}
+  \algorithmicelse\ {#3} }
+
 %%%% Data fetching algorithm
-\begin{algorithmic}
-  $corrupt \gets []$\\
-  $visitedpages \gets []$\\
-  $revid \gets 0$\\
-  $parentid \gets -1$
-  \While{parentid != 0 and revid not in visitedpages} 
-      revid = parentid
-      \If{revid \in database}
-          \State $parentid \gets database.getparentid(revid)$
-      \Else
-          \State $pagedata \gets wiki.getpage(revid)$
-      \EndIf
-      \If{pagedata is corrupt}
-          \State $corruptpages \gets corruptpages (revid, parentid, domain)$
-      \Else
-          \State $database \gets page data$
-      \EndIf
-          \State $visitedpages \gets visitedpages + (revid, domain)$
-  \EndWhile
-  \For {$(revision, parent, domain) \in corrupt$}
-      \State $database.changepointers(revision, parent, domain)$\\
-      \Comment{this changed the parentids of entries in order to 'circumnavigate' corrupt entries}
-  \EndFor
-\end{algorithmic}
+\begin{algorithm}
+  \caption{Data fetching}
+  \begin{algorithmic}
+    \Procedure{Fetch}{$pageid$}
+    \State $corrupt \gets \emptyset$
+    \State $visitedpages \gets \emptyset$
+    \State $revid \gets 0$
+    \State $parentid \gets wiki.getlatest(pageid)$
+    \While{$revid \ne 0$ AND $revid \notin visitedpages$} 
+    \If{$revid$ is in the database}
+    \State $parentid \gets database.getparentid(revid)$
+    \Else
+    \State $pagedata \gets wiki.getpage(revid)$
+    \EndIf
+    \If{$pagedata$ is corrupt}
+    \State $corruptpages \gets corruptpages + (revid, parentid, domain)$
+    \Else
+    \State $database \gets page data$
+    \EndIf
+    \State $visitedpages \gets visitedpages + (revid, domain)$
+    \State $revid \gets parentid$
+    \EndWhile
+    \ForAll {$(revision, parent, domain) \in corrupt$}
+    \State $CorruptClean(revision, parent, domain)$\Comment{See
+      algorithm~\ref{corrupt-clean}}
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{Corrupt pages}\label{corrupt-clean}
+  \begin{algorithmic}
+    \Procedure{CorruptClean}{corruptrev, parent, domain}
+    \State $childrev \gets database.getchild(corruptrev)$
+    \State $database.setparent(childrev, parent)$ \Comment{Now the
+      corrupt revid is circumnavigated}
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
 
 %%%%% Pair comparison algorithm
-\begin{algorithmic}
-  \State $revs \gets database.fetchIDsofpage()$\\
-  \For {$ i = 0 to length(revs)$}
-  \If{$revs[i].dist not in database$}
-  \State $str1 \gets ($``"$ if i == 0 else database.gettext(revs[i-1])$
-  \State $str2 = database.gettext(str1, str2)$
-  \State $dist \gets DistanceCalculate(str1, str2)$
-  \State $databaseinsert.pairdistanceinsert(dist)$  
-\EndFor
-\end{algorithmic}
+\begin{algorithm}
+\caption{Pair comparison}
+  \begin{algorithmic}
+    \Procedure{PairComparison}{revids}
+    \For {$ i \gets 0, length(revids)$}
+    \If{pair distance not already in database}
+    \State $str1 \gets $\LineIf{``"}{$i=0$}{$database.gettext(revs[i-1])$}
+    \State $str2 \gets database.gettext(revs[i])$
+    \State $dist \gets PairDistance(str1, str2)$\Comment{See algorithm~\ref{dist-calc}}
+    \State $databaseinsert.pairdistanceinsert(dist)$  
+    \EndIf
+    \EndFor
+  \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
 
 %%%%% Trace trajectory algorithm
-\begin{algorithmic}
-  \caption{Page trajectory calculation}\label{dist-calc}
-  \State $revs \gets database.fetchIDsofpage()$\\
-  \State $target \gets database.gettext(revs[-1])$ \Comment{Last revision in list is most recent}
-  \For {$ i \gets length(revs) to 0$}
-  \If{$database.gettrajectory(revs[i]) is Null$}
-  \State $str1 \gets database.gettext(revs[i])$
-  \State $dist \gets DistanceCalculate(str1, target)$
-  \State $databaseinsert.trajectoryinsert(dist)$
-\EndFor
-\end{algorithmic}
+\begin{algorithm}
+\caption{Page trajectory calculation}\label{traj-calc}
+  \begin{algorithmic}
+    \Procedure{TrajectoryCalculation}{$revids$}
+    \State $target \gets database.gettext(revids[-1])$ \Comment{Last revision in list is most recent}
+    \For {$i \gets length(revids), 0$}
+    \If{trajectory distance not already in database}
+    \State $str1 \gets database.gettext(revids[i])$
+    \State $dist \gets LevDist(str1, target)$\Comment{See algorithm~\ref{lev-dist}}
+    \State $databaseinsert.trajectoryinsert(dist)$
+    \EndIf
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
 
 %%%%% Distance calculation procedure
 \begin{algorithm}
   \caption{Revision pair distance calculation}\label{dist-calc}
   \begin{algorithmic}
     \State $regexes \gets $\{
-    \Statex  'math1': '<math>((?!<\/math>).)*<\/math>\S',
-    \Statex  'math2': '\{\{math((?!\}\}).)*\}\}',
-    \Statex 'bquote': '<blockquote>((?!<\/blockquote>).)*<\/blockquote>\S'
-    \Statex  ...
+    \Statex \tab`math1': `$<$math$>$((?!$<${\textbackslash}/math$>$).)*$<${\textbackslash}/math$>${\textbackslash}S',
+    \Statex \tab`math2': `\{\{math((?!\}\}).)*\}\}',
+    \Statex \tab`bquote': `$<$blockquote$>$((?!$<${\textbackslash}/blockquote$>$).)*$<${\textbackslash}/blockquote$>${\textbackslash}S'
+    \Statex  \tab...
     \Statex\}\Comment{Regexes that recognise single Wikimarkup tags}
     \State $reggroups \gets $\{
-    \Statex  'maths':(regexes['math1'], regexes['math2']),
-    \Statex  ...
+    \Statex  \tab`maths':(regexes[`math1'], regexes[`math2']),
+    \Statex  \tab...
     \Statex \}\Comment{Group of regexes by 'species'}
-    \State $distances \gets {}$
+    \State $distances \gets \emptyset$
     \Function{PairDistance}{$str1,str2$}
     \State $strs = [str1, str2]$
     \ForAll {$key, reg \in reggroups$}
-    \State $distances[key] \gets 0$
     \State $comparestr \gets [``", ``"]$
-    \For {$i = 0 to 1$}
+    \For {$i \gets 0,1$}
     \State $matches \gets reg.matches(strs[i])$
     \ForAll {$m \in matches$}
     \State $match, strs[i] \gets extractsplit(m.start, m.end, strs[i])$
     \State $comparestr[i] \gets comparestr[i] + match$
     \EndFor
     \EndFor
-    \If {len(comparestr[0]) or len(comparestr[1])}
-    \State $levenshtein(comparestr[0], comparestr[1])$
+    \If {$length(comparestr[0]) > 0$ OR $length(comparestr[1]) > 0$}
+    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \Comment{See algorithm~\ref{lev-dist}}
+    \Else
+    \State $distances[key] \gets 0$
     \EndIf
     \EndFor
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{Levenshtein distance calculator}\label{lev-dist}
+  \begin{algorithmic}
+    \Function{LevDist}{$str1, str2$}
+    \State $s1len \gets length(str1)$
+    \State $s2len \gets length(str2)$
+    \State $column \gets [0_{1}, 0_{2}, \ldots, 0_{s1len}$
+    \For{$x \gets 1,s2len$}
+    \State $col[x] \gets x$
+    \EndFor
+    \For{$p \gets 1,s1len$}
+    \State $column[0] \gets p$
+    \State $r \gets p-1$
+    \For{$q \gets 1,s2len$}
+    \State $oldnum \gets column[q]$
+    \State $c \gets str1[p-1] != str2[q-1]$
+    \State $column[q] \gets min(col[q]+1, col[q-1] + 1, r + c)$
+    \EndFor
+    \EndFor
+    \State return $col[s1len]$
     \EndFunction
   \end{algorithmic}
 \end{algorithm}

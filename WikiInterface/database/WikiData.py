@@ -61,8 +61,8 @@ class Database:
 
     def bridgerevision(self, revid, parentid, domain):
         alterchild = self.getchild(revid, domain)
-        sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s;"
-        data = (parentid,alterchild)
+        sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s AND domain = %s;"
+        data = (parentid, alterchild, domain) 
         if(self._execute(sql, data)):
             return True
         return False
