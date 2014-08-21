@@ -251,6 +251,7 @@
 %%   \end{tikzpicture}
 %% \end{figure}
 
+%%%% Data fetching algorithm
 \begin{algorithmic}
   $corrupt \gets []$\\
   $visitedpages \gets []$\\
@@ -273,5 +274,58 @@
   \For {$(revision, parent, domain) \in corrupt$}
       \State $database.changepointers(revision, parent, domain)$\\
       \Comment{this changed the parentids of entries in order to 'circumnavigate' corrupt entries}
+  \EndFor
+\end{algorithmic}
+
+%%%%% Pair comparison algorithm
+\begin{algorithmic}
+  $revs \gets database.fetchIDsofpage()$\\
+  \For {$ i = 0 to length(revs)$}
+  \If{$revs[i].dist not in database$}
+  \State $str1 \gets ($``"$ if i == 0 else database.gettext(revs[i-1])$
+  \State $str2 = database.gettext(str1, str2)$
+  \State $dist \gets DistanceCalculate(str1, str2)$
+  \State $databaseinsert.pairdistanceinsert(dist)$  
+\EndFor
+\end{algorithmic}
+
+%%%%% Trace trajectory algorithm
+\begin{algorithmic}
+  $revs \gets database.fetchIDsofpage()$\\
+  $target \gets database.gettext(revs[-1])$
+  \For {$ i \gets length(revs) to 0$}
+  \If{$database.gettrajectory(revs[i]) is Null$}
+  \State $str1 \gets database.gettext(revs[i])$
+  \State $dist \gets DistanceCalculate(str1, target)$
+  \State $databaseinsert.trajectoryinsert(dist)$
+\EndFor
+\end{algorithmic}
+
+%%%%% Distance calculation procedure
+\begin{algorithmic}
+  $regexes \gets $\{\\
+    'math1': '<math>((?!<\/math>).)*<\/math>\S',\\
+    'math2': '\{\{math((?!\}\}).)*\}\}',\\
+    'bquote': '<blockquote>((?!<\/blockquote>).)*<\/blockquote>\S'\\
+    ...\\
+  \}\Comment{Regexes that recognise single Wikimarkup tags}\\
+  $reggroups \gets $\{\\
+    'maths':(regexes['math1'], regexes['math2']),\\
+    ...\\
+  \}\Comment{Group of regexes by 'species'}
+  $distances \gets {}$
+  \For {$key, reg \in reggroups$}
+  $distances[key] \gets 0$
+  $comparestr \gets [``", ``"]$
+  \For {$i = 0 to 1$}
+  $matches \gets reg.matches(strs[i])$
+  \For {$m \in matches$}
+  match, str1 \gets extractsplit(m.start, m.end, str1)
+  $comparestr[i] \gets comparestr[i] + match$
+  \EndFor
+  \EndFor
+  \If {len(comparestr[0]) or len(comparestr[1])}
+  \State $levenshtein(comparestr[0], comparestr[1])$
+  \EndIf
   \EndFor
 \end{algorithmic}
