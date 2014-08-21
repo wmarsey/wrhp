@@ -2,8 +2,7 @@ import database as db
 import Queue,threading,re
 import lshtein as lv
 
-def extract(start, stop, string):
-    
+def extract(start, stop, string):    
     return string[start:stop], string[:start]+string[stop:]
 
 def distancecalc(queue, reg, revid, domain, string1, string2):
@@ -17,8 +16,8 @@ class WDistanceCalc:
     q = Queue.Queue()
     waiting = 0;
 
-    reg1 = re.compile('y')
-    reg2 = re.compile('h')
+    # reg1 = re.compile('y')
+    # reg2 = re.compile('h')
     math1 = re.compile('<math>((?!<\/math>).)*<\/math>', re.S)
     math2 = re.compile('\{\{math((?!\}\}).)*\}\}')
     bquote = re.compile('<blockquote>((?!<\/blockquote>).)*<\/blockquote>', re.S)
@@ -53,7 +52,7 @@ class WDistanceCalc:
                         m = r.search(string1)
                         if not m:
                             break
-                        match, string1 = extract(m.start(), m.end(), string1)
+      x                  match, string1 = extract(m.start(), m.end(), string1)
                         compare['m1'] += match
                         message = "MATCH calculating for revid " + str(revid) + " slice " + str(m.start()) + " to " + str(m.end()) + "\n"
                         message += "text: " + match + "\n"
