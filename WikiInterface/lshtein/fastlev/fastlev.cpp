@@ -14,50 +14,50 @@ using namespace std;
 extern "C" {
 #endif
 
-PyObject* weighteddistance(char *s1, char *s2){
-  unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0, c, pick;// iterations = 0;
-  int yrelease = -1, xrelease = -1;
-  Wint lastnum, oldnum, addw, delw, keepswapw;
-  bool xtagmutex = false, ytagmutex = false;
-  s1len = strlen(s1);
-  s2len = strlen(s2);
-  Wint column[s1len+1];
+// PyObject* weighteddistance(char *s1, char *s2){
+//   unsigned int s1len, s2len, i, j, yupflag = 0, xupflag = 0, c, pick;// iterations = 0;
+//   int yrelease = -1, xrelease = -1;
+//   Wint lastnum, oldnum, addw, delw, keepswapw;
+//   bool xtagmutex = false, ytagmutex = false;
+//   s1len = strlen(s1);
+//   s2len = strlen(s2);
+//   Wint column[s1len+1];
 
-  //prepare Wints
-  //preparewints(lastnum, oldnum, column, s1len+1);
+//   //prepare Wints
+//   //preparewints(lastnum, oldnum, column, s1len+1);
 
-  //initialise first column
-  for (j = 1; j <= s1len; ++j)
-    column[j].norm = column[j].w = j; //NEED TO INSERT TAG LOGIC HERE
+//   //initialise first column
+//   for (j = 1; j <= s1len; ++j)
+//     column[j].norm = column[j].w = j; //NEED TO INSERT TAG LOGIC HERE
 
-  for (i = 1; i <= s2len; ++i) {    
-    flagset(yrelease, ytagmutex, yupflag, s2, j-1);        
+//   for (i = 1; i <= s2len; ++i) {    
+//     flagset(yrelease, ytagmutex, yupflag, s2, j-1);        
 
-    //initialise head of column
-    column[0].norm = column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
+//     //initialise head of column
+//     column[0].norm = column[0].w = i;  //NEED TO INSERT TAG LOGIC HERE?!
     
-    for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
-      oldnum = column[j];
-      flagset(xrelease, xtagmutex, xupflag, s1, i-1);
+//     for (j = 1, lastnum.w = i-1; j <= s1len; ++j){
+//       oldnum = column[j];
+//       flagset(xrelease, xtagmutex, xupflag, s1, i-1);
 
-      c = (s1[j-1] == s2[i-1] ? 0 : 1);
-      addw = column[j] + 1;
-      delw = column[j-1] + 1;
-      keepswapw = lastnum + c;
-      column[j] = MIN3(addw, delw, keepswapw);
-      pick = MINFO(addw, delw, keepswapw);
+//       c = (s1[j-1] == s2[i-1] ? 0 : 1);
+//       addw = column[j] + 1;
+//       delw = column[j-1] + 1;
+//       keepswapw = lastnum + c;
+//       column[j] = MIN3(addw, delw, keepswapw);
+//       pick = MINFO(addw, delw, keepswapw);
       
-      //using flag logic to sum weightings
-      flagsum(column[j], c, pick, ytagmutex, xtagmutex, yupflag, xupflag); 
+//       //using flag logic to sum weightings
+//       flagsum(column[j], c, pick, ytagmutex, xtagmutex, yupflag, xupflag); 
       
-      lastnum = oldnum;
-      // ++iterations;
-    }
-  }
+//       lastnum = oldnum;
+//       // ++iterations;
+//     }
+//   }
 
-  //cout << iterations << endl;
-  return winttopydict(column[s1len]);
-}
+//   //cout << iterations << endl;
+//   return winttopydict(column[s1len]);
+// }
 
 int plaindistance(char *s1, char *s2) {
   unsigned int s1len, s2len, x, y, lastnum, oldnum;// iterations = 0;
