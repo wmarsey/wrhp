@@ -1,0 +1,47 @@
+\chapter{Implementation}
+
+\tikzstyle{db}=[draw, 
+  minimum height=2cm, 
+  minimum width=5cm, 
+  cylinder, 
+  shape border rotate=90, 
+  shape aspect=0.1]
+
+\tikzstyle{bx}=[draw, 
+  minimum height=2cm, 
+  minimum width=5cm, 
+  shape border rotate=90, 
+  shape aspect=0.1]
+
+\tikzstyle{cld}=[cloud, 
+    cloud puffs=15.7, 
+    cloud ignores aspect, 
+    minimum height=2cm, 
+    minimum width=5cm, 
+    align=center, 
+    draw]
+
+%% \tikzstyle{box}[draw,minimum height=5em,minimum width=10em]
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[align=center,node distance=2cm]
+    
+    %database class
+    %wikipedia api
+    %\node (wikiapi)[cld]{WikiMedia API};
+    \node(cloud)[cld]{Wikipedia API};
+    
+    %data fetch
+    \node (wikifetch)[bx, below of=cloud]{class: WikiRevisionScrape};
+
+    %database class
+    \node (wikidata)[bx, below of=wikifetch]{class: WikiData};
+
+    %database
+    \node (database)[db, below of=wikidata]{Database};
+
+  \end{tikzpicture}
+\end{figure}
+
+\section{}

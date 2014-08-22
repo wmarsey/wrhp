@@ -23,17 +23,26 @@
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\newcommand{\tab}[1]{\hspace{.08\textwidth}{#1}} % indent tab for data
+                                                 % structs in algos
+\newcommand{\LineIf}[3]{ {#1}
+  \algorithmicif\ {#2}
+  \algorithmicelse\ {#3} } % inline X if Y else Z
+
+\usepackage{booktabs}
+%\usepackage{subfig}
+\usepackage{subcaption}
 
 \usepackage[backref=true,
-            %style=authoryear,
-            style=numeric-comp,
-            citereset=section,
-            maxcitenames=3,
-            maxbibnames=100]{biblatex}
+  %style=authoryear,
+  style=numeric-comp,
+  citereset=section,
+  maxcitenames=3,
+  maxbibnames=100]{biblatex}
 \bibliography{thesis}
 \DefineBibliographyStrings{english}{%
-    backrefpage  = {see p.}, % for single page number
-    backrefpages = {see pp.} % for multiple page numbers
+  backrefpage  = {see p.}, % for single page number
+  backrefpages = {see pp.} % for multiple page numbers
 }
 \setlength\bibitemsep{1em}
 
@@ -42,13 +51,11 @@
 \titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
 \titlespacing\subsubsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
 
-
 \input{blocked.sty}
 \input{uhead.sty}
 \input{boxit.sty}
 \input{icthesis.sty}
 %\usepackage{algorithm2e}
-
 
 \newcommand{\ipc}{{\sf ipc}}
 
@@ -137,40 +144,40 @@
 
 \def\coop{\mbox{\large $\rhd\!\!\!\lhd$}}
 \newcommand{\sync}[1]{\raisebox{-1.0ex}{$\;\stackrel{\coop}{\scriptscriptstyle
-#1}\,$}}
+      #1}\,$}}
 
 \newtheorem{definition}{Definition}[chapter]
 \newtheorem{theorem}{Theorem}[chapter]
 
 \newcommand{\Figref}[1]{Figure~\ref{#1}}
 \newcommand{\fig}[3]{
- \begin{figure}[!ht]
- \begin{center}
- \scalebox{#3}{\includegraphics{figs/#1.ps}}
- \vspace{-0.1in}
- \caption[ ]{\label{#1} #2}
- \end{center}
- \end{figure}
+  \begin{figure}[!ht]
+    \begin{center}
+      \scalebox{#3}{\includegraphics{figs/#1.ps}}
+      \vspace{-0.1in}
+      \caption[ ]{\label{#1} #2}
+    \end{center}
+  \end{figure}
 }
 
 \newcommand{\figtwo}[8]{
- \begin{figure}
- \parbox[b]{#4 \textwidth}{
- \begin{center}
- \scalebox{#3}{\includegraphics{figs/#1.ps}}
- \vspace{-0.1in}
- \caption{\label{#1}#2}
- \end{center}
- }
- \hfill
- \parbox[b]{#8 \textwidth}{
- \begin{center}
- \scalebox{#7}{\includegraphics{figs/#5.ps}}
- \vspace{-0.1in}
- \caption{\label{#5}#6}
- \end{center}
- }
- \end{figure}
+  \begin{figure}
+    \parbox[b]{#4 \textwidth}{
+      \begin{center}
+        \scalebox{#3}{\includegraphics{figs/#1.ps}}
+        \vspace{-0.1in}
+        \caption{\label{#1}#2}
+      \end{center}
+    }
+    \hfill
+    \parbox[b]{#8 \textwidth}{
+      \begin{center}
+        \scalebox{#7}{\includegraphics{figs/#5.ps}}
+        \vspace{-0.1in}
+        \caption{\label{#5}#6}
+      \end{center}
+    }
+  \end{figure}
 }
 
 
@@ -186,39 +193,36 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 \tikzstyle{labeled}=[execute at begin node=$\scriptstyle,
    execute at end node=$]
 
+\definecolor{redi}{RGB}{255,38,0}
+\definecolor{yellowi}{RGB}{255,251,0}
+\definecolor{greeni}{RGB}{166,247,166}
+
+\tikzset{ 
+  table/.style={
+    matrix of nodes,
+    row sep=-\pgflinewidth,
+    column sep=-\pgflinewidth,
+    nodes={rectangle,draw=black,text width=3ex,align=center},
+    text depth=0.5ex,
+    text height=2ex,
+    nodes in empty cells
+  },
+  texto/.style={font=\large\sffamily},
+  title/.style={font=\large\sffamily}
+}
 
 
-        \definecolor{redi}{RGB}{255,38,0}
-        \definecolor{yellowi}{RGB}{255,251,0}
-        \definecolor{greeni}{RGB}{166,247,166}
+\newcommand\CellText[2]{%
+  \node[texto,left=of mat#1,anchor=east]
+  at (mat#1.west)
+  {\large #2};
+}
 
-        \tikzset{ 
-          table/.style={
-            matrix of nodes,
-            row sep=-\pgflinewidth,
-            column sep=-\pgflinewidth,
-            nodes={rectangle,draw=black,text width=3ex,align=center},
-            text depth=0.5ex,
-            text height=2ex,
-            nodes in empty cells
-          },
-          texto/.style={font=\large\sffamily},
-          title/.style={font=\large\sffamily}
-        }
-
-
-        \newcommand\CellText[2]{%
-          \node[texto,left=of mat#1,anchor=east]
-          at (mat#1.west)
-          {\large #2};
-        }
-
-        \newcommand\SlText[2]{%
-          \node[texto,left=of mat#1,anchor=west,rotate=50]
-          at ([xshift=1.5ex,yshift=1ex]mat#1.north)
-          {\large #2};
-        }
-
+\newcommand\SlText[2]{%
+  \node[texto,left=of mat#1,anchor=west,rotate=50]
+  at ([xshift=1.5ex,yshift=1ex]mat#1.north)
+  {\large #2};
+}
 
 \newcommand{\super}[1]{\textsuperscript{#1}}
 
