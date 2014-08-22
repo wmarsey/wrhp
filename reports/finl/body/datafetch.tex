@@ -1,292 +1,100 @@
-\chapter{Fetching the Data}
+\chapter{Data}
 
-%% % Define block styles
-%% \tikzstyle{decision} = [rectangle, 
-%%   fill, 
-%%   fill=yellowi, 
-%%   text width=5em, 
-%%   text badly centered, 
-%%   node distance=3cm,
-%%   inner sep=0.5em,
-%%   outer sep=0,
-%%   inner sep=0pt, 
-%%   font=\footnotesize,
-%% rounded corners,
-%% execute at begin node=\setlength{\baselineskip}{1em}]
-%% \tikzstyle{block} = [rectangle, 
-%%   fill, 
-%%   fill=greeni, 
-%%   inner sep=0.5em,
-%%   outer sep=0,
-%%   text width=6em, 
-%% %  text width=5em,
-%%   text centered,
-%%   font=\footnotesize,
-%%   execute at begin node=\setlength{\baselineskip}{1em}] 
-%% %rounded corners, 
-%% %minimum height=4em]
-%% \tikzstyle{line} = [draw, -latex']
-%% \tikzstyle{cloud} = [fill, 
-%%   ellipse,
-%%   fill=redi,
-%%   inner sep=0.5em,
-%%   outer sep=0,
-%%   node distance=3cm,
-%%   minimum height=2em,
-%%   font=\footnotesize,
-%%   execute at begin node=\setlength{\baselineskip}{1em}]
-    
-%% \begin{figure}
-%%   \label{fig:datafetchflow}
-%%   \caption{Flow chart showing the Wikidata fetch algorithm}
-%%   \begin{tikzpicture}[node distance = 1cm]
-%%     % Place nodes
+\section{The WikiMedia API}
+WikiMedia's API service provides simple access to a wiki data,
+features and meta-data over HTTP,\cite{wiki-api} and for this project,
+provides the entirety of our data. In this section we explore the
+process of collecting Wikipedia data, the peculiarities of Wikipedia
+as a data source, and the algorithmic caveats necessary to deal with
+them.
 
-%%     \matrix (m) [row sep=3em,
-%%     column sep=3em]{
+Our basic request is simple: we send a HTTP request to a given wiki
+site's `/api.php' file, sending the query parameters a
+`prop=revisions', `rvprop=content', and `titles=X|Y' to get those
+page's most recent revision contents. We can prefetch a title using a
+random request (parameters `list=random\&rnlimit=1'), and in each case
+we can add the `format=json' parameter, and quite easily parse the
+results. 
 
-%%       &
-      
-%%       \node [block] (init) {Initialise arrays.};
-      
-%%       &
-      
-%%       \node [decision]%% , right of=init, node distance=2cm
-%%       (dompick) {Do we have a domain?};
-      
-%%       &
-
-%%       \\
-
-%%       &
-
-%%       \node [block]%% , below of=dompick
-%%       (domrandom) {Pick a random domain};
-
-%%       &
-
-%%       \node [decision]%% , right of=domrandom, node distance=2cm ]
-%%       (pagepick) {Do we have a pageid?};
-      
-%%       & 
-
-%%       \\
-      
-%%       &
-
-%%       &
-      
-%%       \node [block]%% , below of=pagepick
-%%       (pagerandom) {Fetch random pageid
-%%         from current domain};
-      
-%%       &
-      
-%%       \node [decision]%% , right of=pagerandom, node distance=2cm
-%%       (dbcheck) {Does the current
-%%         ID and domain exist in the database already?};
-
-%%       \\
-
-%%       & 
-
-%%       \node [decision]%% , left of=corruptcheck, node distance=2c
-%%       (corruptcheckb) {Is the parentid intact?};
-      
-%%       &
-
-%%       \node [decision]%% , left of=dbcheck, node distance=2cm 
-%%       (corruptcheck) {Is the fetched data corrupt?};
-      
-%%       &
-
-%%       \node [block]%% , below of=dbcheck 
-%%       (fetchrecent) {Fetch most recent revision ID};
-      
-%%       \\
-      
-%%       &
-      
-%%       \node [block]%% , right of=corruptcheckb, node distance=3cm
-%%       (appendcorrupt) {append to corrupt pages array};
-      
-%%       &
-      
-%%       \node [block]%% , below of=corruptcheckb, node distance=3cm
-%%       (appenddisc) {Append to caches pages array.};
-      
-%%       &
-      
-%%       \node [block]%% , below of=appenddisc
-%%       (idfetch) {Update revid using
-%%         parent ID from held data};
-      
-%%       \\
-      
-%%       \node [decision]%% , below of=parentcheck
-%%       (enoughb) {Do we have over X
-%%         revisions in the visited array?};
-
-%%       &
-
-%%       \node [decision]%% , below of=enough
-%%       (parentcheck) {Is parent 0, or
-%%         does exist in the visited array};
-      
-
-%%       &
-
-%%       \node [block]%% , right of=enough, node distance=3cm
-%%       (store) {Store all pages in the cached pages array.};
-
-
-%%       &
-
-%%       \node [decision]%% , below of=idfetch
-%%       (enough) {Do we have 50 pages
-%%         in the cached pages array?};
-
-%%       \\
-      
-%%       \node [block]%% , below of=parentcheck
-%%       (storeb) {Store all pages in
-%%         the cached pages array.};
-      
-%%       &
-
-%%       \node [decision]%% , below of=storeb
-%%       (corruptdeal) {Do we have any
-%%         pages in the corrupt array?};
-      
-%%       &
-      
-%%       \node [block]%% , right of=corruptdeal, node distance=3cm
-%%       (corruptproc) {Change pointers in database in order to 'skip over'
-%%         corrupt pages.};
-      
-%%       &
-      
-%%       \node [decision]%% , right of=parentcheck
-%%       (discard) {Discard page};
-
-%%       \\
-
-%%       &
-      
-%%       &
-      
-%%       \node [decision]%% , below of=corruptdeal
-%%       (continue) {Continue?};
-      
-%%       &
-      
-%%       \node [cloud]%% , below of=continue
-%%       (end) {End.};
-
-%%       \\
-%%     };
-%%     % Draw edges
-%%     \path [line] (init) -- (dompick);
-
-%%     \path [line] (dompick) -- node [near start] {yes} (pagepick);
-
-%%     \path [line] (dompick) -- node [near start] {no} (domrandom);
-
-%%     \path [line] (domrandom) -- (pagepick);
-
-%%     \path [line] (pagepick) -- node [near start] {yes} (fetchrecent);
-
-%%     \path [line] (pagepick) -- node [near start] {no} (pagerandom);
-
-%%     \path [line] (pagerandom) -- (fetchrecent);
-
-%%     \path [line] (fetchrecent) -- (dbcheck);
-
-%%     \path [line] (dbcheck) -- node [near start] {yes} (idfetch);
-
-%%     \path [line] (dbcheck) -- node [near start] {no} (corruptcheck);
-    
-%%     \path [line] (corruptcheck) -- node [near start] {yes} (corruptcheckb);
-
-%%     \path [line] (corruptcheck) -- node [near start] {no} (appenddisc);
-
-%%     \path [line] (appenddisc) -- (idfetch);
-
-%%     \path [line] (corruptcheckb) -- node [near start] {yes} (continue);
-
-%%     \path [line] (corruptcheckb) -- node [near start] {no} (appendcorrupt);
-
-%%     \path [line] (appendcorrupt) -- (idfetch);
-
-%%     \path [line] (idfetch) -- (enough);
-
-%%     \path [line] (enough) -- node [near start] {yes} (store);
-
-%%     \path [line] (enough) -- node [near start] {no} (parentcheck);
-
-%%     \path [line] (store) -- (parentcheck);
-
-%%     \path [line] (parentcheck) -- node [near start] {yes} (enoughb);
-
-%%     \path [line] (parentcheck) -- node [near start] {no} (dbcheck);
-
-%%     \path [line] (enoughb) -- node [near start] {yes} (storeb);
-
-%%     \path [line] (enoughb) -- node [near start] {no} (discard);
-
-%%     \path [line] (discard) -- (continue);
-
-%%     \path [line] (storeb) -- (corruptdeal);
-
-%%     \path [line] (corruptdeal) -- node [near start] {yes} (corruptproc);
-
-%%     \path [line] (corruptdeal) -- node [near start] {no} (continue);
-
-%%     \path [line] (corruptproc) -- (continue);
-
-%%     \path [line] (continue) -- node [near start] {yes} (init);
-
-%%     \path [line] (continue) -- node [near start] {no} (end);
-
-%%   \end{tikzpicture}
-%% \end{figure}
-
-\newcommand{\tab}[1]{\hspace{.08\textwidth}{#1}}
-%\newcommand{\emptyset}{\varnothing}
-\newcommand{\LineIf}[3]{ {#1}
-  \algorithmicif\ {#2}
-  \algorithmicelse\ {#3} }
+To trace the history of a given page, then, we need only augment the
+`rvprop' argument to include `ids' (`rvprop=content|ids') in order to
+discover the parent id and trace the history backwards from there. The
+procedure defined in algorithm~\ref{alg-data} demonstrates this
+clearly, showing the child-parent swap at line~\ref{datal2}. The
+condition on the while loop (line~\ref{datal1}), however, shows the
+first oddity with the Wikipedia histories. Most articles will
+terminate at their origin, showing parentid 0. Some, instead, enter a
+terminal cycle, with the oldest fetched revision giving its parent to
+be a much younger version of the same article. 
 
 %%%% Data fetching algorithm
 \begin{algorithm}
-  \caption{Data fetching}
+  \caption{Data fetching}\label{alg-data}
   \begin{algorithmic}
     \Procedure{Fetch}{$pageid$}
     \State $corrupt \gets \emptyset$
     \State $visitedpages \gets \emptyset$
     \State $revid \gets 0$
     \State $parentid \gets wiki.getlatest(pageid)$
-    \While{$revid \ne 0$ AND $revid \notin visitedpages$} 
+    \While{$revid \ne 0$ AND $revid \notin visitedpages$}\label{datal1} 
     \If{$revid$ is in the database}
     \State $parentid \gets database.getparentid(revid)$
     \Else
     \State $pagedata \gets wiki.getpage(revid)$
     \EndIf
-    \If{$pagedata$ is corrupt}
+    \If{$pagedata$ is corrupt}\label{datal3}
+    \If{corruptness is within recoverability bounds}
     \State $corruptpages \gets corruptpages + (revid, parentid, domain)$
+    \Else
+    \State terminate fetch
+    \EndIf
     \Else
     \State $database \gets page data$
     \EndIf
     \State $visitedpages \gets visitedpages + (revid, domain)$
-    \State $revid \gets parentid$
+    \State $revid \gets parentid$\label{datal2}
     \EndWhile
     \ForAll {$(revision, parent, domain) \in corrupt$}
     \State $CorruptClean(revision, parent, domain)$\Comment{See
       algorithm~\ref{corrupt-clean}}
     \EndFor
+    \State Mark $pageid$ as complete in $database$
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
+
+We must do is keep a track of all the revisions we already know exist
+of that article, so that we may identify these cycles, and terminate
+the fetch loop early. In early tests, we find that these cycles occur
+exclusively amongst older articles (though not all old articles have
+the problem). For the purposes of this study, then, we must
+acknowledge that any `complete' history of an article in our databases
+is in fact only the complete \textit{discoverable}
+history.\footnote{We may note that the Wikipedia site warns that some
+  histories are only part-discoverable. Using our fetch algorithm we
+  have managed to often surpass the boundaries described on Wikipedia,
+  though the cycle problem does occur at a time approximate to that
+  mentioned on the Wikipedia. We may assume that some server
+  corruption occurred at around that point in Wikipedia's history.}
+
+A second notable problem was the regular corrupt values returned by
+Wikipedia. We see that we test for corruption in at line~\ref{datal3},
+storing a list of corrupt pages - often the data is returned with
+missing entries, but was often missing data that was pertinent to
+later study - namely, timestamp and revision content. For ease of
+analysis later, we choose to `circumnavigate' corrupt entries in the
+database, changing pointers between children and parents in situ. We
+may then later trace a history of incorrupt entries using these
+pointers. The procedure for this is detailed in
+algorithm~\ref{corrupt-clean}.
+
+Finally, we define some corruptness of data to constitute a fetching
+failure. With our model, we only do this when the parentid is
+missing. Though this does not happen often, to handle these cases we
+mark a pageid as having a succesful fetch by adding it to a special
+table in the database. This can also be useful for fetches that are
+interrupted in other ways, as with hardware and network problems. This
+table is found in figure~\ref{database-schema} as `wikifetch'. 
 
 \begin{algorithm}
   \caption{Corrupt pages}\label{corrupt-clean}
@@ -299,96 +107,83 @@
   \end{algorithmic}
 \end{algorithm}
 
-%%%%% Pair comparison algorithm
-\begin{algorithm}
-\caption{Pair comparison}
-  \begin{algorithmic}
-    \Procedure{PairComparison}{revids}
-    \For {$ i \gets 0, length(revids)$}
-    \If{pair distance not already in database}
-    \State $str1 \gets $\LineIf{``"}{$i=0$}{$database.gettext(revs[i-1])$}
-    \State $str2 \gets database.gettext(revs[i])$
-    \State $dist \gets PairDistance(str1, str2)$\Comment{See algorithm~\ref{dist-calc}}
-    \State $databaseinsert.pairdistanceinsert(dist)$  
-    \EndIf
-    \EndFor
-  \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
+\section{Multiple languages}
 
-%%%%% Trace trajectory algorithm
-\begin{algorithm}
-\caption{Page trajectory calculation}\label{traj-calc}
-  \begin{algorithmic}
-    \Procedure{TrajectoryCalculation}{$revids$}
-    \State $target \gets database.gettext(revids[-1])$ \Comment{Last revision in list is most recent}
-    \For {$i \gets length(revids), 0$}
-    \If{trajectory distance not already in database}
-    \State $str1 \gets database.gettext(revids[i])$
-    \State $dist \gets LevDist(str1, target)$\Comment{See algorithm~\ref{lev-dist}}
-    \State $databaseinsert.trajectoryinsert(dist)$
-    \EndIf
-    \EndFor
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
+\section{Database}
+The database is implemented in PSQL, and accessed via a python package
+leveraging the psycopg library. The package is used by all the other
+classes used in this project and provides simple inserting, changing,
+fetching and checking of data. The only more complex operation is the
+datadump function. The operation is more specific than the other
+functions, and may have been pieced together using these functions,
+but in implementation it was much quicker to correlate and fetch data
+using the SQL `JOIN' statements, rather than multiple fetches in a
+Python for loop, for example.
 
-%%%%% Distance calculation procedure
-\begin{algorithm}
-  \caption{Revision pair distance calculation}\label{dist-calc}
-  \begin{algorithmic}
-    \State $regexes \gets $\{
-    \Statex \tab`math1': `$<$math$>$((?!$<${\textbackslash}/math$>$).)*$<${\textbackslash}/math$>${\textbackslash}S',
-    \Statex \tab`math2': `\{\{math((?!\}\}).)*\}\}',
-    \Statex \tab`bquote': `$<$blockquote$>$((?!$<${\textbackslash}/blockquote$>$).)*$<${\textbackslash}/blockquote$>${\textbackslash}S'
-    \Statex  \tab...
-    \Statex\}\Comment{Regexes that recognise single Wikimarkup tags}
-    \State $reggroups \gets $\{
-    \Statex  \tab`maths':(regexes[`math1'], regexes[`math2']),
-    \Statex  \tab...
-    \Statex \}\Comment{Group of regexes by 'species'}
-    \State $distances \gets \emptyset$
-    \Function{PairDistance}{$str1,str2$}
-    \State $strs = [str1, str2]$
-    \ForAll {$key, reg \in reggroups$}
-    \State $comparestr \gets [``", ``"]$
-    \For {$i \gets 0,1$}
-    \State $matches \gets reg.matches(strs[i])$
-    \ForAll {$m \in matches$}
-    \State $match, strs[i] \gets extractsplit(m.start, m.end, strs[i])$
-    \State $comparestr[i] \gets comparestr[i] + match$
-    \EndFor
-    \EndFor
-    \If {$length(comparestr[0]) > 0$ OR $length(comparestr[1]) > 0$}
-    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \Comment{See algorithm~\ref{lev-dist}}
-    \Else
-    \State $distances[key] \gets 0$
-    \EndIf
-    \EndFor
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
+The database relies upon the uniqueness of revision ID and domain-name
+pairs to function. The database schemata can be found in
+figure~\ref{database-schema}. These databases are referenced at all
+points of this project.
 
-\begin{algorithm}
-  \caption{Levenshtein distance calculator}\label{lev-dist}
-  \begin{algorithmic}
-    \Function{LevDist}{$str1, str2$}
-    \State $s1len \gets length(str1)$
-    \State $s2len \gets length(str2)$
-    \State $column \gets [0_{1}, 0_{2}, \ldots, 0_{s1len}$
-    \For{$x \gets 1,s2len$}
-    \State $col[x] \gets x$
-    \EndFor
-    \For{$p \gets 1,s1len$}
-    \State $column[0] \gets p$
-    \State $r \gets p-1$
-    \For{$q \gets 1,s2len$}
-    \State $oldnum \gets column[q]$
-    \State $c \gets str1[p-1] != str2[q-1]$
-    \State $column[q] \gets min(col[q]+1, col[q-1] + 1, r + c)$
-    \EndFor
-    \EndFor
-    \State return $col[s1len]$
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
+\begin{figure}
+  \label{database-schema}
+  \centering
+  \begin{subfigure}[b!]{0.3\linewidth}
+    \centering
+    \caption{Table: wikicontent}
+    \begin{tabular}{ccc}
+      \toprule
+      revid & domain & content\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$\\
+    \end{tabular}
+  \end{subfigure}
+  \begin{subfigure}[b!]{0.3\linewidth}
+    \centering
+    \caption{Table: wikifetched}
+    \begin{tabular}{cc}
+      \toprule
+      pageid & domain \\
+      \midrule
+      $\vdots$ & $\vdots$\\
+    \end{tabular}
+  \end{subfigure}
+  \begin{subfigure}[b!]{0.3\linewidth}
+    \centering
+    \caption{Table: wikitrajectory}
+    \begin{tabular}{ccc}
+      \toprule
+      revid1 & revid2 & distance\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+  \end{subfigure}\\
+  \vspace{10 mm}
+  \begin{subfigure}[b!]{\linewidth}
+    \centering
+    \caption{Table: wikirevisions}
+    \begin{tabular}{cccccccc}
+      \toprule
+      revid & domain & pageid & username & userid & time & size &
+      comment \\ 
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
+      & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+  \end{subfigure}\\
+
+  \begin{subfigure}[b!]{\linewidth}
+    \centering
+    \caption{Table: wikiweights} 
+    \subref{weightstable}
+    \begin{tabular}{ccccccccc}
+      \toprule
+      revid & domain & maths & citations & filesimages & links &
+      structure & normal & gradient\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
+      $\vdots$ & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+  \end{subfigure}
+  \caption{Schemata for the database used to store wikipedia data}
+\end{figure}
