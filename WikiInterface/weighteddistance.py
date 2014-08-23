@@ -52,7 +52,7 @@ class WDistanceCalc:
                         m = r.search(string1)
                         if not m:
                             break
-      x                  match, string1 = extract(m.start(), m.end(), string1)
+                        match, string1 = extract(m.start(), m.end(), string1)
                         compare['m1'] += match
                         message = "MATCH calculating for revid " + str(revid) + " slice " + str(m.start()) + " to " + str(m.end()) + "\n"
                         message += "text: " + match + "\n"

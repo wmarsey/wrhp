@@ -90,11 +90,13 @@ class Database:
                 return [e[0] for e in result]
         return None
 
-    def getyoungestrev(self, pageid):
-        sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE pageid = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE pageid = %s AND b.time > a.time);"
-        data = (pageid,pageid)
+    def getyoungestrev(self, pageid, domain):
+        sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE a.pageid = %s AND a.domain = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE b.pageid = %s AND b.domain = %s AND b.time > a.time);"
+        data = (pageid,domain,pageid,domain)
         if(self._execute(sql,data)):
-            return self.crsr.fetchall()
+            result = self.crsrsanity()
+            if result:
+                return result[0][0]
         return None
 
     def getrevcontent(self, revid, domain):
@@ -111,6 +113,15 @@ class Database:
         data = (revid,domain)
         if(self._execute(sql, data)):
             return self.crsr.fetchall()
+        return None
+
+    def gettitle(self, pageid, domain):
+        sql = "SELECT title FROM " + self.fetchedtable + " WHERE pageid = %s AND language = %s;"
+        data = (pageid,domain)
+        if(self._execute(sql, data)):
+            result = self.crsrsanity()
+            if result:
+                return result[0][0]
         return None
 
     # def getrevfull(self, titles="random", revids=None, userids=None):
@@ -162,23 +173,22 @@ class Database:
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
-    def getgrowth(self, revid):
-        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid WHERE revid1 = %s ORDER BY time;"
-        data = (revid,)
+    def getgrowth(self, revid, domain):
+        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid WHERE revid1 = %s AND domain = %s ORDER BY time;"
+        data = (revid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 
     def getuserchange(self, pageid, domain):
-        print pageid, domain
-        sql = "SELECT username, sum(distance), sum(maths), sum(headings), sum(quotes), sum(filesimages), sum(links), sum(citations), sum(normal) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s AND domain = %s GROUP BY username;"
+        sql = "SELECT username, sum(maths), sum(citations), sum(filesimages), sum(links), sum(structure), sum(normal) FROM " + self.weighttable + " AS a JOIN " + self.revisiontable + " AS b USING(revid, domain) WHERE b.pageid = %s AND domain = %s GROUP BY username;"
         data = (pageid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None
     
-    def getusereditcounts(self, revx, domain):
-        sql = "SELECT username, count(distance) FROM " + self.distancetable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND b.pageid = %s AND domain = %s GROUP BY username;"
-        data = (revx,domain)
+    def getusereditcounts(self, pageid, domain):
+        sql = "SELECT username, count(revid) AS rcount FROM " + self.revisiontable + " AS a JOIN " + self.fetchedtable + " AS b USING (pageid) WHERE pageid = %s AND language = %s GROUP BY username ORDER BY rcount;"
+        data = (pageid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None  
@@ -190,9 +200,9 @@ class Database:
             return self.crsrsanity()
         return None 
     
-    def existencequery(self, sql, data):
-        self.crsr._execute(sql, data)
-        return cursor.fetchall()
+    # def existencequery(self, sql, data):
+    #     self.crsr._execute(sql, data)
+    #     return cursor.fetchall()
 
     def getfetched(self, pageid):
         sql = "SELECT language FROM " + self.fetchedtable + " WHERE pageid = %s";
@@ -207,6 +217,14 @@ class Database:
             return False
         sql = "INSERT INTO " + self.fetchedtable + " VALUES (%s, %s, %s);"
         return self._execute(sql, param)
+
+    def getallfetched(self):
+        sql = "SELECT pageid, language FROM " + self.wikifetched;
+        if(self._execute(sql, (pageid,))):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
 
     def getdiff(self, params):
         sql = "SELECT * FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND line = %s AND action = %s;";
@@ -277,7 +295,31 @@ class Database:
         return None
         
     def getallrevs(self):
-        sql = "SELECT DISTINCT revid, language FROM " + self.fetchedtable + " JOIN " + self.revisiontable + " USING (pageid);"
+        sql = "SELECT DISTINCT revid, language FROM " + self.fetchedtable + " JOIN " + self.revisiontable + " USING (pageid) WHERE language = domain;"
+        if(self._execute(sql, ())):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
+
+    def getallfetched(self):
+        sql = "SELECT pageid, language FROM " + self.fetchedtable + ";"
+        if(self._execute(sql, ())):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
+
+    def getaveragerevisioncounts(self):
+        sql = "SELECT domain, COUNT(revid) / COUNT(DISTINCT pageid) AS count FROM " + self.revisiontable + " GROUP BY domain ORDER BY count;"
+        if(self._execute(sql, ())):
+            result = self.crsrsanity()
+            if result:
+                return result
+        return None
+
+    def getaveragepagelengths(self):
+        sql = "SELECT domain, sum(size) / count(size) AS av_length FROM " + self.revisiontable + " AS a WHERE NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE b.pageid = a.pageid AND b.domain = a.domain AND b.time > a.time) GROUP BY domain ORDER BY av_length;"
         if(self._execute(sql, ())):
             result = self.crsrsanity()
             if result:

@@ -43,7 +43,7 @@ class DHandler:
     def gettrajdata(self, revx, domain):
         dbtraj = self.dtb.gettrajectory(revx, domain)
         traj = [e[1] for e in dbtraj]
-        dbgrowth = self.dtb.getgrowth(revx)
+        dbgrowth = self.dtb.getgrowth(revx, domain)
         growth = [e[1] for e in dbgrowth]
         creation = dbtraj[0][0]
         times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]

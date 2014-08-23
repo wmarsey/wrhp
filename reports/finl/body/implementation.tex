@@ -1,47 +1,106 @@
 \chapter{Implementation}
 
-\tikzstyle{db}=[draw, 
-  minimum height=2cm, 
-  minimum width=5cm, 
-  cylinder, 
-  shape border rotate=90, 
-  shape aspect=0.1]
+\def \mheight {1cm}
+\def \mwidth {2cm}
+\definecolor{col2}{HTML}{C7BA9B}
+\definecolor{col1}{HTML}{8B7C6D}
+\definecolor{col3}{HTML}{F0EAB3}
+\definecolor{col4}{HTML}{626072}
+\definecolor{col5}{HTML}{40415B}
 
-\tikzstyle{bx}=[draw, 
-  minimum height=2cm, 
-  minimum width=5cm, 
-  shape border rotate=90, 
-  shape aspect=0.1]
 
-\tikzstyle{cld}=[cloud, 
-    cloud puffs=15.7, 
-    cloud ignores aspect, 
-    minimum height=2cm, 
-    minimum width=5cm, 
-    align=center, 
-    draw]
+\tikzstyle{bx}=[
+  fill, 
+  minimum height=\mheight, 
+  minimum width=\mwidth, 
+  shape border rotate=90, 
+  shape aspect=0.1,
+  rounded corners=2mm
+]
+
+\tikzstyle{cld}=[
+  cloud, 
+  cloud puffs=15.7, 
+  cloud ignores aspect, 
+  minimum height=\mheight,
+  minimum width=\mwidth, 
+  align=center
+]
+
+\tikzstyle{dtb}=[
+  fill,
+  chamfered rectangle,
+  chamfered rectangle xsep=2cm,
+  minimum height=\mheight, 
+  minimum width=\mwidth,
+  rounded corners=1mm
+]
 
 %% \tikzstyle{box}[draw,minimum height=5em,minimum width=10em]
 
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[align=center,node distance=2cm]
-    
-    %database class
-    %wikipedia api
-    %\node (wikiapi)[cld]{WikiMedia API};
-    \node(cloud)[cld]{Wikipedia API};
-    
-    %data fetch
-    \node (wikifetch)[bx, below of=cloud]{class: WikiRevisionScrape};
 
-    %database class
-    \node (wikidata)[bx, below of=wikifetch]{class: WikiData};
+    \node (database)[dtb, fill=col1]{Database};
 
-    %database
-    \node (database)[db, below of=wikidata]{Database};
+    \node (wikidata)[bx, fill=col2, above=of database]{WikiDatabase};
+
+    \node (analysis)[bx, fill=col2, above=of wikidata]{WikiAnalysis};
+
+    \node (wikifetch)[bx, fill=col2, left=0.5\mwidth of analysis]{WikiRevisionScrape};
+
+    \node (datahandle)[bx, fill=col2, right=0.5\mwidth of analysis]{WikiDataHandle};
+    
+    \node (intplot)[bx, fill=col2, above of=datahandle]{WikiInteractivePlot};
+    
+    \node (datplot)[bx, fill=col2,  right=0.5\mwidth of intplot]{WikiDataPlot};
+
+    \node (wikicli)[bx, fill=col5, above= 3cm of analysis]{WikiCLI}; 
+    
+    \node (wikipedia)[cld, fill=col4, left=of wikicli]{\textit{Wikipedia
+        API}};
+
+    \draw [-] (database) -- (wikidata); 
+
+    \draw [-] (wikidata) -- (analysis); 
+
+    \draw [-] (wikidata) -- (wikifetch); 
+
+    \draw [-] (wikidata) -- (datahandle); 
+
+    \draw [-] (wikifetch) -- (wikipedia); 
+
+    \draw [-] (datahandle) -- (intplot); 
+
+    \draw [-] (datahandle) -- (datplot);
+
+    \draw [-] (intplot) -- (wikicli); 
+
+    \draw [-] (datplot.north) -- (wikicli); 
+
+    \draw [-] (wikifetch) -- (wikicli); 
+
+    \draw [-] (wikicli) -- (analysis); 
+
+    \node (blob) [
+      draw=col5, 
+      fit= (wikidata) (datplot) (wikifetch), 
+      inner sep=0.4cm,
+      thick,
+      rounded corners=8mm
+    ] {};
+
+    \node [
+      col5, 
+      anchor=south east, 
+      xshift=-4mm,
+      yshift=4mm
+    ] at (blob.south east) {\textbf{the WikiRevision package}};
 
   \end{tikzpicture}
+
+  \caption{Diagram showing the connections between entities in python implementation}
 \end{figure}
 
 \section{}
