@@ -4,6 +4,11 @@ wikiScraper/Wikipedia
 *.log
 *.aux
 *.toc
+*.lof
+*.loa
+*.lot
+*.sty
+*-blx.bib
 *#
 *~
 */build/*
