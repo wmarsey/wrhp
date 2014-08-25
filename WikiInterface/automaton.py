@@ -1,14 +1,15 @@
 from __future__ import division ##for float-returning divisor
-import errno
+import sys#, errno
 import re
-import sys
-import math as m
-from wikipedia import search
+#import sys
+#import math as m
+#from wikipedia import search
 from dataplotter import Plotter
-from interface import WikiInterface
+#from interface import WikiAnalyser
 from interactiveplotter import IPlot 
 from consts import *
 import datetime
+from copy import copy
 
 def print_help():
     with open("../README", "r") as helpfile:
@@ -33,126 +34,151 @@ def intstring(s):
 
 ##HANDLES COMMAND-LINE ARGUMENTS
 def _arg_sanity(params):
-    a = sys.argv
+    a = copy(sys.argv[1:])
+    foptions = [('--domain','domain'),
+                ('--pageid','pageid'),
+                ('--newrevid','newrevid'),
+                ('--oldrevid','oldrevid'),
+                ('--title','title'),
+                ('--scrapemin', 'scrapemin'),
+                ('--username', 'user')]
     if "--help" in a:
         print_help()
-        sys.exit(0)
+        return None
     if "--version" in a:
         print "Version:", VERSION_NUMBER
-        sys.exit(0)
-    if "--scrape_limit" in a:
-        slim = a[a.index("--scrape_limit") + 1]
-        if intstring(slim) and int(slim) > 0:
-            params["scrape_limit"] = int(slim)
-        else:
-            print "Scrape limit must be an integer above 0. Default is unlimited."
-            return errno.EINVAL
-    if "--depth_limit" in a:
-        dlim = a[a.index("--depth_limit") + 1]
-        if intstring(dlim) and int(dlim) > 0:
-            params["depth_limit"] = int(dlim)
-            if int(dlim) < 500:
-                print "Warning: depth limit set to below 500."
-        else:
-            print "Depth limit must be an integer above 0. Default is unlimited."
-            return errno.EINVAL
-    if "--titles" in a:
-        titles = a[a.index("--titles") + 1]
-        if " |" in titles or "| " in titles:
-            print "Warning: removing trailing spaces from compound titles parameter"
-            titles = title.replace(" |","|")
-            titles = title.replace("| ","|")
-        params["page_titles"] = titles
-        print titles.count('|')+1, "page(s) chosen:", ", ".join(titles.split('|'))
-    if "--domain" in a:
-        params["domain"] = a[a.index("--domain") + 1] 
+        return None
+    for o in foptions:
+        if o[0] in a:
+            params[o[1]] = a[a.index(o[0]) + 1]
+            a.pop(a.index(o[0]) + 1)
+            a.pop(a.index(o[0]))
+    if len(a):
+        print "do not recognise arguments:" + ",".join(a)
+        return None
+    
     return params
 
 def _flag_sanity(flags):
+    foptions = [('s','scrape'),
+                ('p', 'plot'),
+                ('i', 'iplot'),
+                ('v', 'launch')]
+
     for arg in sys.argv:
         if re.search("^-[A-Za-z]*$", arg):
             for ch in arg[1:]:
-                if ch == 's':
-                    flags['scrape'] = True
-                    continue
-                if ch == 'f':
-                    flags['fetch'] = True
-                    continue
-                if ch == 'X':
-                    flags['plotshow'] = True
-        if arg == "--offline":
-            flags['offline'] = True
-        if arg == "--no-weights":
-            flags['noweight'] = True
-            print "flagged"
+                for o in foptions:
+                    if ch == o[0]:
+                        flags[o[1]] = True
         if arg == "--trundle":
             flags['trundle'] = True
     return flags
 
-def main():
-    params = {'scrape_limit': -1,
-              'depth_limit': -1,
-              'page_titles': 'random',
-              'revids': 0,
-              'userids': 0,
-              'domain':None,
-              'weights':{'maths':0,
-                        'headings':0,
-                        'quotes':0,
-                        'files/images':0,
-                        'links':0,
-                        'citations':0,
-                        'normal':0},
-              'user':None}
-    flags = {'scrape': False,
-             'offline': False,
-             'weightsdefault' : True,
-             'plotshow': False,
-             'noweight':False,
-             'trundle':False,
-             'view':False}
-
+def _config_check(params, flags):
+    if (params['title'] or params['pageid'] or params['user'] \
+            or params['revid'] or params['oldrevid']) \
+            and not params['domain']:
+        print "With these arguments you must supply a domain."
+        return False
     
-    params = _arg_sanity(params) ##ARGUMENT HANDLING
-    flags = _flag_sanity(flags) ##FLAG SANITY 
-    
-    analyser = WikiInterface(params, flags)
-
-    if flags['scrape']:
-        print "---------------SCRAPE MODE---------------"
-        if analyser.scrape():
-            sys.exit(0)
-        else:
-            print "error"
-            sys.exit(-1)
-    
-    print "---------------ANALYSE MODE---------------"    
-    while True:
-        results = analyser.analyse()
-        if flags['plotshow']:
-            form = ['revid',
-                    'Maths',
-                    'Citations',
-                    'Files / Images',
-                    'Links',
-                    'Structure',
-                    'Normal',
-                    'Gradient',
-                    'user',
-                    'trajectory',
-                    'timestamp']
-            formresults = []
-            for r in results:
-                res = {}
-                for i, f in enumerate(form):
-                    res.update({f:r[i]})
-                formresults.append(res)                 
-            IPlot(formresults)
+    if (params['title'] or params['pageid'] or flags['launch']) and flags['trundle']:
+        print "-t argument is incompatible here."
+        return False
         
-        if not (flags['trundle'] and params['page_titles'] == 'random'):
-            break
+    if (params['revid'] or params['oldrevid'] or params['user']) and not flags['view']:
+        print "--revid, --oldrevid or --username params only used with -v option."
+        return False
+    
+    return True
+ 
+def main():
+    params = {'title': None,
+              'revid': 0,
+              'userid': 0,
+              'domain':None,
+              'weights':None, ##need a better solution for this
+              'user':None,
+              'oldrevid':None,
+              'pageid':None,
+              'revid':None,
+              'scrapelim':50}
+    flags = {'scrape': False,
+             'trundle':False,
+             'view':False,
+             'plot':False,
+             'iplot':False,
+             'launch':False}
 
+    params = _arg_sanity(params) ##ARGUMENT HANDLING
+    if not params:
+        sys.exit(-1)
+    flags = _flag_sanity(flags) ##FLAG SANITY
+    if not _config_check(params, flags):
+        sys.exit(-1)
+    
+    if flags['launch']:
+       import launch
+       wl = launch.WikiLaunch()
+       #print "---------------VIEW MODE---------------"
+       if params['revid']:
+           if params['oldrevid']:
+               wl.showdiff(params['oldrevid'], 
+                           params['revid'], 
+                           params['domain'])
+           else:
+               wl.shorev(params['revid'], 
+                         params['domain'])
+       elif params['pageid']:
+           wl.showpage(params['pageid'], 
+                       params['domain'])
+       else:
+           wl.showuser(params['user'],
+                       params['domain'])
+       sys.exit()
+
+    import wikiScraper as wk
+    from interface import WikiAnalyser
+    while True:
+        #print "---------------SCRAPE MODE---------------"
+        scraper = wk.WikiRevisionScrape(title=params['title'],
+                                        domain=params['domain'],
+                                        scrapelim=params['scrapelim'])
+        title, pageid, domain = scraper.scrape()
+        sys.exit(0)
+    
+        analyser = WikiAnalyser(title,
+                                pageid, 
+                                domain)
+
+        #print "---------------ANALYSE MODE---------------"    
+        #results = analyser.analyse()
+        # if flags['plotshow']:
+        #     form = ['revid',
+        #             'Maths',
+        #             'Citations',
+        #             'Files / Images168',
+        #             'Links',
+        #             'Structure',
+        #             'Normal',
+        #             'Gradient',
+        #             'user',
+        #             'trajectory',
+        #             'timestamp']
+        #     formresults = []
+        #     for r in results:
+        #         res = {}
+        #         for i, f in enumerate(form):
+        #             res.update({f:r[i]})
+        #         formresults.append(res)                 
+        #     IPlot(formresults)
+        
+        results = self.dtb.getresults(pageid, domain)
+
+        if not flags['trundle']:
+            break
     sys.exit(0)
+
 if __name__ == "__main__":
     try:
         main()

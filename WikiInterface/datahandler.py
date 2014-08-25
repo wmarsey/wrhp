@@ -1,6 +1,6 @@
-from weighteddistance import WDistanceCalc
+#from weighteddistance import WDistanceCalc
 import database as db
-import lshtein as lv
+#import lshtein as lv
 import math as m
 
 class DHandler:
@@ -49,43 +49,43 @@ class DHandler:
         times = [(e[0]-creation).total_seconds()/3600 for e in dbtraj]
         return (times, traj, growth)
 
-    def processweights(self, parentid, revid, domain):
-        contentx = ""
-        if parentid:
-            contentx = self.dtb.getrevcontent(parentid, domain)
-        contenty = self.dtb.getrevcontent(revid, domain)
+    # def processweights(self, parentid, revid, domain):
+    #     contentx = ""
+    #     if parentid:
+    #         contentx = self.dtb.getrevcontent(parentid, domain)
+    #     contenty = self.dtb.getrevcontent(revid, domain)
 
-        dist = WDistanceCalc()
-        dist.processdistance(revid, domain, contentx, contenty)
+    #     dist = WDistanceCalc()
+    #     dist.processdistance(revid, domain, contentx, contenty)
 
-        gradconst = 1
-        if parentid:
-            x = (self.dtb.gettime((revid,domain)) - \
-                     self.dtb.gettime((parentid,domain))).total_seconds()/3600
-            y = self.dtb.gettrajheight((revid,domain)) - self.dtb.gettrajheight((parentid,domain))
-            if x < 0:
-                print "Error: Time travel"
-            elif x != 0:
-                gradconst = 0.5 - m.atan(y/x)/m.pi
+    #     gradconst = 1
+    #     if parentid:
+    #         x = (self.dtb.gettime((revid,domain)) - \
+    #                  self.dtb.gettime((parentid,domain))).total_seconds()/3600
+    #         y = self.dtb.gettrajheight((revid,domain)) - self.dtb.gettrajheight((parentid,domain))
+    #         if x < 0:
+    #             print "Error: Time travel"
+    #         elif x != 0:
+    #             gradconst = 0.5 - m.atan(y/x)/m.pi
 
-        self.dtb.updateweight('gradient',gradconst,revid,domain)
-        self.dtb.updateweight('complete',True,revid,domain)
+    #     self.dtb.updateweight('gradient',gradconst,revid,domain)
+    #     self.dtb.updateweight('complete',True,revid,domain)
         
-    def gettraj(self, contentx, revx, oldrev, domain):
-        dist = self.dtb.gettraj([revx, 
-                                 oldrev])
-        #print dist
-        if dist < 0:
-            contenty = self.dtb.getrevcontent(oldrev, domain) 
-            lev = 0
-            if revx == oldrev:
-                lev = 0
-            else:
-                lev = lv.fastlev.plaindist(contentx, 
-                                           contenty)
-            self.dtb.trajinsert((revx, 
-                                 oldrev, 
-                                 lev))
+    # def gettraj(self, contentx, revx, oldrev, domain):
+    #     dist = self.dtb.gettraj([revx, 
+    #                              oldrev])
+    #     #print dist
+    #     if dist < 0:
+    #         contenty = self.dtb.getrevcontent(oldrev, domain) 
+    #         lev = 0
+    #         if revx == oldrev:
+    #             lev = 0
+    #         else:
+    #             lev = lv.fastlev.plaindist(contentx, 
+    #                                        contenty)
+    #         self.dtb.trajinsert((revx, 
+    #                              oldrev, 
+    #                              lev))
 
     def getweights(self, pageid, domain):
         wdata = []
