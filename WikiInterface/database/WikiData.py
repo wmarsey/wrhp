@@ -11,72 +11,59 @@ class Database:
     password = ''
     contenttable = "wikicontent"
     revisiontable = "wikirevisions"
-    distancetable = "wikidistance"
     trajectorytable = "wikitrajectory"
     fetchedtable = "wikifetched"
-    difftable = "wikidiff"
     weighttable = "wikiweights"
     cn = None
     crsr = None
 
-    def __init__(self):
-        with open('/homes/wm613/individual-project/WikiInterface/dbpas','r') as pasfil:
-            self.password = pasfil.read().strip()
-        self.cn = db.connect(host = self.host,
-                             user = self.user,
-                             password = self.password,
-                             dbname = self.database)
-        self.crsr = self.cn.cursor()
-
-    def crsrsanity(self):
-        cr = self.crsr.fetchall()
-        return cr if (len(cr) > 0) else None 
+    #####
+    ### EXISTENCE TEXT FUNCTIONS
+    #####
 
     def revexist(self, revid, parentid, domain):
         sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s AND domain = %s;"
         data = (revid, parentid, domain)
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return True
         return False
+
+    #####
+    ### SPECIFIC FETCH FUNCTIONS
+    #####
 
     def getparent(self, revid, domain):
         sql = "SELECT parentid FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
         data = (revid,domain)
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result[0][0]
         return -1
+
+    def gettime(self, data):
+        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
+        if(self._execute(sql, data)):
+            result = self._crsrsanity()
+            if result:
+                return result[0][0]
+        return None
 
     def getchild(self, parentid, domain):
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE parentid = %s AND domain = %s;"
         data = (parentid,domain)
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result[0][0]
         return -1
-
-    def bridgerevision(self, revid, parentid, domain):
-        alterchild = self.getchild(revid, domain)
-        sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s AND domain = %s;"
-        data = (parentid, alterchild, domain) 
-        if(self._execute(sql, data)):
-            return True
-        return False
-
-    def gettime(self, data):
-        sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
-        if(self._execute(sql, data)):
-            return self.crsrsanity()[0][0]
-        return None
     
     def gettrajheight(self, data):
         sql = "SELECT distance FROM " + self.trajectorytable + " JOIN " + self.revisiontable + " ON revid = revid1 WHERE revid2 = %s AND domain = %s;"
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result[0][0]
         return None
@@ -85,7 +72,7 @@ class Database:
         sql = "SELECT revid FROM " + self.revisiontable + " WHERE pageid = %s AND domain = %s ORDER BY time DESC;"
         data = (pageid,domain)
         if(self._execute(sql,data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return [e[0] for e in result]
         return None
@@ -94,7 +81,7 @@ class Database:
         sql = "SELECT revid FROM " + self.revisiontable + " AS a WHERE a.pageid = %s AND a.domain = %s AND NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE b.pageid = %s AND b.domain = %s AND b.time > a.time);"
         data = (pageid,domain,pageid,domain)
         if(self._execute(sql,data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result[0][0]
         return None
@@ -103,7 +90,7 @@ class Database:
         sql = "SELECT content FROM " + self.contenttable + " WHERE revid = %s AND domain = %s;"
         data = (revid,domain)
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result[0][0]
         return None
@@ -112,31 +99,26 @@ class Database:
         sql = "select revid from " + self.revisiontable + " where revid = %s AND domain = %s;"
         data = (revid,domain)
         if(self._execute(sql, data)):
-            return self.crsr.fetchall()
+            result = self._crsrsanity()
+            if result:
+                return result
         return None
 
     def gettitle(self, pageid, domain):
         sql = "SELECT title FROM " + self.fetchedtable + " WHERE pageid = %s AND language = %s;"
         data = (pageid,domain)
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result[0][0]
         return None
-
-    # def getrevfull(self, titles="random", revids=None, userids=None):
-    #     sql = "SELECT * from " + self.contenttable + " AS a JOIN " + self.revisiontable + " AS b ON a.revid = b.revid AND a.revid = %s;"
-    #     data = (revid,)
-    #     if(self._execute(sql, data)):
-    #         return self.crsr.fetchall()
-    #     return None
 
     def getdist(self, revid):
         sql = "SELECT distance from " + self.distancetable + " WHERE revid = %s;"
         data = (revid,)
         if(self._execute(sql, data)):
             try:
-                result = self.crsrsanity()
+                result = self._crsrsanity()
                 if result:
                     return result[0][0]
             except:
@@ -145,12 +127,11 @@ class Database:
         return -1
     
     def gettraj(self, param):
-        #print "looking for", param[0], param[1]
         sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s;"
         data = (param[0],param[1])
         if(self._execute(sql, data)):
             try:
-                result = self.crsrsanity()
+                result = self._crsrsanity()
                 if result:
                     return result[0][0]
             except:
@@ -162,7 +143,7 @@ class Database:
         sql = "SELECT * FROM (SELECT DISTINCT pageid, language FROM " + self.fetchedtable + ") AS w OFFSET random()*(SELECT count(*) FROM (SELECT DISTINCT pageid FROM " + self.fetchedtable + ") AS w2) LIMIT 1;"
         while True:
             if(self._execute(sql,())):
-                result = self.crsrsanity()
+                result = self._crsrsanity()
                 if result:
                     return result[0][0], result[0][1]
         return None
@@ -170,8 +151,11 @@ class Database:
     def gettrajectory(self, revid, domain):
         sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s AND domain = %s ORDER BY time;"
         data = (revid,domain)
-        if(self._execute(sql,data)):
-            return self.crsr.fetchall()
+        if(self._execute(sql, data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
 
     def getgrowth(self, revid, domain):
         sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid WHERE revid1 = %s AND domain = %s ORDER BY time;"
@@ -189,60 +173,48 @@ class Database:
     def getusereditcounts(self, pageid, domain):
         sql = "SELECT username, count(revid) AS rcount FROM " + self.revisiontable + " AS a JOIN " + self.fetchedtable + " AS b USING (pageid) WHERE pageid = %s AND language = %s GROUP BY username ORDER BY rcount;"
         data = (pageid,domain)
-        if(self._execute(sql,data)):
-            return self.crsr.fetchall()
-        return None  
+        if(self._execute(sql, data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None 
 
     def getuserinfo(self, revx, domain):
         sql = "SELECT DISTINCT c.username, c.userid FROM " + self.trajectorytable + " AS b JOIN " + self.revisiontable + " as c ON b.revid1 = %s AND b.revid2 = c.revid AND domain = %s";
         data = (revx,domain)
-        if(self._execute(sql,data)):
-            return self.crsrsanity()
-        return None 
-    
-    # def existencequery(self, sql, data):
-    #     self.crsr._execute(sql, data)
-    #     return cursor.fetchall()
-
-    def getfetched(self, pageid):
-        sql = "SELECT language FROM " + self.fetchedtable + " WHERE pageid = %s";
-        if(self._execute(sql, (pageid,))):
-            result = self.crsrsanity()
-            if result:
-                return result[0][0]
-        return None
-
-    def fetchedinsert(self, param):
-        if self.getfetched(param[0]):
-            return False
-        sql = "INSERT INTO " + self.fetchedtable + " VALUES (%s, %s, %s);"
-        return self._execute(sql, param)
-
-    def getallfetched(self):
-        sql = "SELECT pageid, language FROM " + self.wikifetched;
-        if(self._execute(sql, (pageid,))):
-            result = self.crsrsanity()
+        if(self._execute(sql, data)):
+            result = self._crsrsanity()
             if result:
                 return result
         return None
 
-    def getdiff(self, params):
-        sql = "SELECT * FROM " + self.difftable + " WHERE fromrev = %s AND torev = %s AND line = %s AND action = %s;";
-        if(self._execute(sql, params)):
-            result = self.crsrsanity()
+    # def getfetched(self, pageid):
+    #     sql = "SELECT language FROM " + self.fetchedtable + " WHERE pageid = %s";
+    #     if(self._execute(sql, (pageid,))):
+    #         result = self._crsrsanity()
+    #         if result:
+    #             return result[0][0]
+    #     return None
+    
+    def getweight(self, revid, domain):
+        sql = "select * from " + self.weighttable + " where revid = %s AND domain = %s;"
+        if(self._execute(sql, (revid, domain))):
+            result = self._crsrsanity()
             if result:
-                return True
-        return False
+                return result[0]
+        return None
+
+    #####
+    ### INSERTION FUNCTIONS
+    #####
 
     def contentinsert(self, param):
-        #print "inserting content", param[0],param[-1]
         if self.getrevcontent(param[0],param[-1]):
             return False
         sql = "INSERT INTO " + self.contenttable + " VALUES (%s, %s, %s, %s);"
         return self._execute(sql, param)
 
     def indexinsert(self, param):
-        #print "inserting index", param[0],param[-1]
         if self.getrevinfo(param[0], param[-1]):
             return False
         sql = "INSERT INTO " + self.revisiontable + \
@@ -259,13 +231,29 @@ class Database:
         sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
         return self._execute(sql,data)
 
-    def getweight(self, revid, domain):
-        sql = "select * from " + self.weighttable + " where revid = %s AND domain = %s;"
-        if(self._execute(sql, (revid, domain))):
-            result = self.crsrsanity()
-            if result:
-                return result[0]
-        return None
+    def fetchedinsert(self, param):
+        if self.getfetched(param[0]):
+            return False
+        sql = "INSERT INTO " + self.fetchedtable + " VALUES (%s, %s, %s);"
+        return self._execute(sql, param)
+
+    #####
+    ### UPDATE FUNCTIONS
+    #####
+
+    def updateweight(self, column, value, revid, domain):        
+        sql = "UPDATE " + self.weighttable + " SET " + column + " = %s WHERE revid = %s AND domain = %s"
+        if(self._execute(sql, (value, revid, domain))):
+            return True
+        return False
+    
+    def bridgerevision(self, revid, parentid, domain):
+        alterchild = self.getchild(revid, domain)
+        sql = "UPDATE " + self.revisiontable + " SET parentid = %s WHERE revid = %s AND domain = %s;"
+        data = (parentid, alterchild, domain) 
+        if(self._execute(sql, data)):
+            return True
+        return False
 
     def completeweight(self, revid, domain):
         if not self.getweight(revid, domain):
@@ -277,27 +265,25 @@ class Database:
             sql = "SELECT * FROM " + self.weighttable + " WHERE revid = %s and domain = %s and complete = %s"
             data = (revid, domain, True)
             self._execute(sql, data)
-            return True if self.crsrsanity() else False 
-
-    def updateweight(self, column, value, revid, domain):        
-        sql = "UPDATE " + self.weighttable + " SET " + column + " = %s WHERE revid = %s AND domain = %s"
-        if(self._execute(sql, (value, revid, domain))):
-            return True
-        return False
+            return True if self._crsrsanity() else False 
 
     def getresults(self, pageid, domain):
         sql = "SELECT revid, maths, citations, filesimages, links, structure, normal, gradient, username, t.distance, time FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid) JOIN " + self.trajectorytable + " AS t ON revid = revid2 AND r.pageid = %s AND r.domain = %s;"
         data = (pageid, domain)
         if(self._execute(sql, data)):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result
         return None
+
+    #####
+    ### DUMP / PLOT SPECIFIC FUNCTIONS
+    #####
         
     def getallrevs(self):
         sql = "SELECT DISTINCT revid, language FROM " + self.fetchedtable + " JOIN " + self.revisiontable + " USING (pageid) WHERE language = domain;"
         if(self._execute(sql, ())):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result
         return None
@@ -305,15 +291,15 @@ class Database:
     def getallfetched(self):
         sql = "SELECT pageid, language FROM " + self.fetchedtable + ";"
         if(self._execute(sql, ())):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result
         return None
-
+    
     def getaveragerevisioncounts(self):
         sql = "SELECT domain, COUNT(revid) / COUNT(DISTINCT pageid) AS count FROM " + self.revisiontable + " GROUP BY domain ORDER BY count;"
         if(self._execute(sql, ())):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result
         return None
@@ -321,7 +307,7 @@ class Database:
     def getaveragepagelengths(self):
         sql = "SELECT domain, sum(size) / count(size) AS av_length FROM " + self.revisiontable + " AS a WHERE NOT EXISTS (SELECT * FROM " + self.revisiontable + " AS b WHERE b.pageid = a.pageid AND b.domain = a.domain AND b.time > a.time) GROUP BY domain ORDER BY av_length;"
         if(self._execute(sql, ())):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result
         return None
@@ -332,10 +318,14 @@ class Database:
             sql += ' LIMIT ' + str(limit)
         sql += ';'
         if(self._execute(sql,())):
-            result = self.crsrsanity()
+            result = self._crsrsanity()
             if result:
                 return result
         return None
+
+    #####
+    ### INTERNAL FUNCTIONS
+    #####
 
     def _execute(self, sql, data, montcarlo=5):
         for _ in xrange(montcarlo):
@@ -349,6 +339,19 @@ class Database:
                 return True
         print "sql execution failed"
         return False
+
+    def _crsrsanity(self):
+        cr = self.crsr.fetchall()
+        return cr if (len(cr) > 0) else None 
+
+    def __init__(self):
+        with open('/homes/wm613/individual-project/WikiInterface/dbpas','r') as pasfil:
+            self.password = pasfil.read().strip()
+        self.cn = db.connect(host = self.host,
+                             user = self.user,
+                             password = self.password,
+                             dbname = self.database)
+        self.crsr = self.cn.cursor()
 
     def __del__(self):
         self.cn.close()

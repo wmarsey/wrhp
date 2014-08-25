@@ -6,7 +6,6 @@
 \usepackage{mathchars}
 \usepackage{setspace}
 
-\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
 \usepackage{cleveref} 
 \usepackage{color}               %obv
 \usepackage{appendix}            %obv
@@ -16,11 +15,12 @@
 \setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 \setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
 
-\usepackage{float}              %for forcefully placing diagrams 
 \usepackage[procnames]{listings} %for inserting code
 \usepackage{fancyvrb} % for inserting .txt
 \usepackage{parskip}             %for modifying spacing
 
+\usepackage{float}              %for forcefully placing diagrams 
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \newcommand{\tab}[1]{\hspace{.08\textwidth}{#1}} % indent tab for data
@@ -182,14 +182,23 @@
 
 
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows,chains,matrix,positioning,fit,scopes,calc}
+\usetikzlibrary{shapes,
+  arrows,
+  chains,
+  matrix,
+  positioning,
+  fit,
+  scopes,
+  calc,
+  decorations.pathmorphing}
 \makeatletter
 \tikzset{join/.code=\tikzset{after node path={%
 \ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
 edge[every join]#1(\tikzchaincurrent)\fi}}}
 \makeatother
 \tikzset{>=stealth',every on chain/.append style={join},
-         every join/.style={->}}
+         every join/.style={->},
+         snake it/.style={decorate, decoration=snake}}
 \tikzstyle{labeled}=[execute at begin node=$\scriptstyle,
    execute at end node=$]
 

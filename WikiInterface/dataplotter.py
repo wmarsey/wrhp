@@ -75,7 +75,7 @@ class Plotter:
         ##PAGE-WISE PLOTS
         pages = dtb.getallfetched()
         shuffle(pages)
-        for r in pages[:10]:
+        for r in pages[:200]:
             pageid = r[0]
             domain = r[1]
             title = dtb.gettitle(pageid, domain).decode('utf-8')
