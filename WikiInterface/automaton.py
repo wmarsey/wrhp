@@ -34,7 +34,7 @@ def intstring(s):
 
 ##HANDLES COMMAND-LINE ARGUMENTS
 def _arg_sanity(params):
-    a = copy(sys.argv[1:])
+    a = sys.argv[1:]
     foptions = [('--domain','domain'),
                 ('--pageid','pageid'),
                 ('--newrevid','newrevid'),
@@ -53,10 +53,7 @@ def _arg_sanity(params):
             params[o[1]] = a[a.index(o[0]) + 1]
             a.pop(a.index(o[0]) + 1)
             a.pop(a.index(o[0]))
-    if len(a):
-        print "do not recognise arguments:" + ",".join(a)
-        return None
-    
+        
     return params
 
 def _flag_sanity(flags):
@@ -140,16 +137,28 @@ def main():
     import wikiScraper as wk
     from interface import WikiAnalyser
     while True:
-        #print "---------------SCRAPE MODE---------------"
+        print "---------FETCHING WIKIPEDIA PAGES-----------"
         scraper = wk.WikiRevisionScrape(title=params['title'],
                                         domain=params['domain'],
                                         scrapelim=params['scrapelim'])
         title, pageid, domain = scraper.scrape()
-        sys.exit(0)
     
+        print
+        print "-----------------ANALYSING------------------"    
         analyser = WikiAnalyser(title,
                                 pageid, 
                                 domain)
+        results = analyser.analyse()
+        if not results:
+            sys.exit(-1)
+        print results
+
+        if flags['plot']:
+            print
+            print "--------------------PLOT--------------------"
+            import dataplotter as dpl
+            plotter = dpl.Plotter()
+            plotter.plot(pageid, domain)
 
         #print "---------------ANALYSE MODE---------------"    
         #results = analyser.analyse()
@@ -173,7 +182,7 @@ def main():
         #         formresults.append(res)                 
         #     IPlot(formresults)
         
-        results = self.dtb.getresults(pageid, domain)
+        # results = dtb.getresults(pageid, domain)
 
         if not flags['trundle']:
             break

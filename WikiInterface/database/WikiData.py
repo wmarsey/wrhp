@@ -43,8 +43,9 @@ class Database:
                 return result[0][0]
         return -1
 
-    def gettime(self, data):
+    def gettime(self, revid, domain):
         sql = "SELECT time FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
+        data = (revid, domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
             if result:
@@ -60,8 +61,9 @@ class Database:
                 return result[0][0]
         return -1
     
-    def gettrajheight(self, data):
-        sql = "SELECT distance FROM " + self.trajectorytable + " JOIN " + self.revisiontable + " ON revid = revid1 WHERE revid2 = %s AND domain = %s;"
+    def gettrajheight(self, revid, domain):
+        sql = "SELECT distance FROM " + self.trajectorytable + " AS t JOIN " + self.revisiontable + " AS r ON revid = revid1 AND r.domain = t.domain WHERE revid2 = %s AND r.domain = %s;"
+        data = (revid,domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
             if result:
@@ -126,9 +128,9 @@ class Database:
                 pass
         return -1
     
-    def gettraj(self, param):
-        sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s;"
-        data = (param[0],param[1])
+    def gettraj(self, rev1, rev2, domain):
+        sql = "SELECT distance from " + self.trajectorytable + " WHERE revid1 = %s AND revid2 = %s AND domain = %s;"
+        data = (rev1, rev2, domain)
         if(self._execute(sql, data)):
             try:
                 result = self._crsrsanity()
@@ -149,7 +151,7 @@ class Database:
         return None
 
     def gettrajectory(self, revid, domain):
-        sql = "SELECT time, distance FROM " + self.revisiontable + " JOIN " + self.trajectorytable + " ON revid2 = revid WHERE revid1 = %s AND domain = %s ORDER BY time;"
+        sql = "SELECT time, distance FROM " + self.revisiontable + " AS r JOIN " + self.trajectorytable + " AS t ON revid2 = revid AND r.domain = t.domain WHERE revid1 = %s AND t.domain = %s ORDER BY time;"
         data = (revid,domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
@@ -158,7 +160,7 @@ class Database:
         return None
 
     def getgrowth(self, revid, domain):
-        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid WHERE revid1 = %s AND domain = %s ORDER BY time;"
+        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid AND a.domain = b.domain WHERE revid1 = %s AND b.domain = %s ORDER BY time;"
         data = (revid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
@@ -180,7 +182,7 @@ class Database:
         return None 
 
     def getuserinfo(self, revx, domain):
-        sql = "SELECT DISTINCT c.username, c.userid FROM " + self.trajectorytable + " AS b JOIN " + self.revisiontable + " as c ON b.revid1 = %s AND b.revid2 = c.revid AND domain = %s";
+        sql = "SELECT DISTINCT c.username, c.userid FROM " + self.trajectorytable + " AS b JOIN " + self.revisiontable + " as c ON b.revid1 = %s AND b.revid2 = c.revid AND a.domain = b.domain WHERE b.domain = %s";
         data = (revx,domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
@@ -188,13 +190,14 @@ class Database:
                 return result
         return None
 
-    # def getfetched(self, pageid):
-    #     sql = "SELECT language FROM " + self.fetchedtable + " WHERE pageid = %s";
-    #     if(self._execute(sql, (pageid,))):
-    #         result = self._crsrsanity()
-    #         if result:
-    #             return result[0][0]
-    #     return None
+    def getfetched(self, pageid, domain):
+        sql = "SELECT language FROM " + self.fetchedtable + " WHERE pageid = %s AND language = %s";
+        data = (pageid,domain)
+        if(self._execute(sql, data)):
+            result = self._crsrsanity()
+            if result:
+                return result[0][0]
+        return None
     
     def getweight(self, revid, domain):
         sql = "select * from " + self.weighttable + " where revid = %s AND domain = %s;"
@@ -227,12 +230,13 @@ class Database:
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
         return self._execute(sql,param)
 
-    def trajinsert(self, data):
-        sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s);"
+    def trajinsert(self, rev1, rev2, distance, domain):
+        sql = "INSERT INTO " + self.trajectorytable + " VALUES (%s, %s, %s, %s);"
+        data = (rev1, rev2, distance, domain)
         return self._execute(sql,data)
 
     def fetchedinsert(self, param):
-        if self.getfetched(param[0]):
+        if self.getfetched(param[0], param[-1]):
             return False
         sql = "INSERT INTO " + self.fetchedtable + " VALUES (%s, %s, %s);"
         return self._execute(sql, param)
@@ -322,6 +326,63 @@ class Database:
             if result:
                 return result
         return None
+
+    def getusersbyeditcount(self, domain):
+        sql = "SELECT r.count, count(r.username) FROM (SELECT count(revid) AS count, username FROM " + self.revisiontable + " WHERE domain = %s GROUP BY username ORDER BY count DESC) AS r ORDER BY count DESC;"
+        data = (domain,)
+        if(self._execute(sql,())):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    def geteditdistribution(self, domain=None):
+        sql = "SELECT r.count AS edit_count, count(r.username) AS frequency FROM (SELECT count(rev.revid) AS count, rev.username FROM wikirevisions AS rev "
+        if domain:
+            sql += "WHERE domain = %s "
+        sql += "GROUP BY username) AS r GROUP BY r.count ORDER BY r.count;"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    def getregeditdistribution(self, domain=None):
+        sql = "SELECT r.count AS edit_count, count(r.username) AS frequency FROM (SELECT count(rev.revid) AS count, rev.username FROM wikirevisions AS rev WHERE "
+        if domain:
+            sql += "domain = %s AND "
+        sql += "userid > 0 GROUP BY username) AS r GROUP BY r.count ORDER BY r.count;"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    def gettexttypedistribution(self, domain=None):
+        sql = "SELECT sum(maths), sum(citations), sum(filesimages), sum(links), sum(structure), sum(normal) FROM " + self.weighttable + " AS wik "
+        if domain:
+            sql += "WHERE domain = %s "
+        sql += ";"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    # def geteditdistributionintervals(self, domain=None):
+    #     sql = "SELECT sum(CASE WHEN r.count > 600 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 500 AND r.count <= 600 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 400 AND r.count <= 500 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 300 AND r.count <= 400 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 200 AND r.count <= 300 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 100 AND r.count <= 200 THEN 1 ELSE 0 END), sum(CASE WHEN r.count <= 100 THEN 1 ELSE 0 END) FROM (SELECT count(rev.revid) AS count, rev.username FROM " + self.revisiontable + " AS rev "
+    #     if domain:
+    #         sql += "WHERE domain = %s "
+    #     sql += "GROUP BY username ORDER BY count DESC) AS r;"
+    #     data = (domain,) if domain else ()
+    #     if(self._execute(sql,data)):
+    #         result = self._crsrsanity()
+    #         if result:
+    #             return result[0]
+    #     return None
 
     #####
     ### INTERNAL FUNCTIONS

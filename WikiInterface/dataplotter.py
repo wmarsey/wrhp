@@ -1,19 +1,67 @@
 from __future__ import division
 from consts import *
 import matplotlib
+import sys
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import database as db
 from random import shuffle
+from numpy import polyfit, poly1d, linspace, convolve, exp, ones, asarray
+
+def movingaverage(x, n, type='exponential'):
+    x = asarray(x)
+    if type=='simple':
+        weights = ones(n)
+    else:
+        weights = exp(linspace(-1., 0., n))
+    weights /= weights.sum()
+
+    a =  convolve(x, weights, mode='full')[:len(x)]
+    a[:n] = a[n]
+    return a
 
 class Plotter:
-    def barchart(self, revid, barheights, barlabels, pageid, domain, title, ident, xaxisname, yaxisname, show=False, width=13, height=8): 
+    def trajectorydata(pageid, domain):
+        dtb = db.Database()
+
+        tdata = dtb.gettrajectory(xrev, domain)
+        gdata = dtb.getgrowth(xrev, domain)
+        creation = trajdata[0][0]
+        
+        tpoints = [e[1] for e in trajdata]
+        gpoints = [e[1] for e in growthdata]
+        xpoints = [(e[0]-creation).total_seconds()/3600 for e in trajdata]
+        
+        return xpoints, tpoints, gpoints
+
+    def plot(self,
+             title
+             pageid,
+             domain,
+             trajectory=True,
+             editcount=True,
+             share=True):
+        
+        xpoints, tpoints, gpoints = self.trajectorydata
+        
+        print trajectory2(self, 
+                          xpoints, 
+                          tpoints, 
+                          gpoints,
+                          "Hours since creation",
+                          "Edit distance from final",
+                          "Article size",
+                          "Trajectory of " + title + ", " + domain + str(pageid),
+                          domain + str(pageid) + "traj",
+                          width=13,
+                          height=8)
+
+    def barchart(self, revid, barheights, barlabels, pageid, domain, 
+                 title, ident, xaxisname, yaxisname, width=13, height=8): 
         filename = domain + str(pageid) + ident
         imagefile = BASEPATH + "plot/images/" + filename + ".png"
-        if (show):
-            tfigsize, tdpi = None, None
-        else:
-            tfigsize, tdpi = (width,height), 600
+        
+        tfigsize, tdpi = (width,height), 600
         fig = plt.figure(figsize=tfigsize, dpi=tdpi, tight_layout=True)
         ax = fig.add_subplot(111)
         h = ax.bar(xrange(len(barheights)), 
@@ -30,12 +78,84 @@ class Plotter:
                    rotation=90, 
                    ha='center')
         plt.xlim([0,len(barlabels)])
-        if(show):
-            plt.show()
+
+ 
         plt.savefig(imagefile)
         return imagefile
 
-    def trajectory(self, revid, times, trajectory, growth, pageid, domain, _title, show=False):
+    def linechart(self, xpoints, ypoints, xaxisname, yaxisname, title, 
+                  filename, width=13, height=6, xlog=False, ylog=False):
+        imagefile = BASEPATH +"plot/images/" + filename + ".png"
+        
+        fig = plt.figure(figsize=(width, height), dpi=600, tight_layout=True)
+
+        ax1 = fig.add_subplot(111)
+
+        ax1.plot(xpoints,ypoints, 'rx')
+
+        ax1.set_xlabel(xaxisname)
+        ax1.set_ylabel(yaxisname, color='b')
+
+        if ylog:
+            ax1.set_yscale('log')
+        if xlog:
+            ax1.set_xscale('log')
+        
+        plt.title(title)
+
+        plt.savefig(imagefile)
+        return imagefile
+
+    def histogram(self, xpoints, ypoints, xaxisname, yaxisname, 
+                  title, filename, width=13, height=6):
+        imagefile = BASEPATH +"plot/images/" + filename + ".png"
+        
+        fig = plt.figure(figsize=(width, height), dpi=600, tight_layout=True)
+
+        ax1 = fig.add_subplot(111)
+
+        n, bins, patches = ax1.hist(ypoints, bins=(len(xpoints)//2))
+
+        ax1.set_xlabel(xaxisname)
+        ax1.set_ylabel(yaxisname, color='b')
+
+        
+        plt.title(title)
+
+        plt.savefig(imagefile)
+        return imagefile
+
+    def trajectory2(self, xpoints, tpoints, gpoints, xaxisname, taxisname,
+                    gaxisname, title, filename, width=13, height=8):
+        
+        #filename = domain + str(pageid) + 'traj'
+        imagefile = BASEPATH + "plot/images/" + filename + ".png"
+        
+        ##prepare matplotlib
+        tfigsize, tdpi = (width,height), 600
+        fig = plt.figure(figsize=tfigsize, 
+                         dpi=tdpi, 
+                         tight_layout=None)
+
+        ax1 = fig.add_subplot(111)
+        ax1.plot(xpoints, tpoints, 'bo-', label='Edit distance from final')
+
+        ax1.set_xlabel(xpoints)
+        ax1.set_ylabel(taxisname, color='b')
+        ax1.get_yaxis().get_major_formatter().set_scientific(False)
+        
+        ax2 = ax1.twinx()
+        ax2.plot(xpoints, gpoints, 'ko-', label='Article length')
+        ax2.set_ylabel(gaxisname, color='k')
+        ax2.get_yaxis().get_major_formatter().set_scientific(False)
+        for tl in ax1.get_yticklabels():
+            tl.set_color('b')
+        plt.title(title)
+ 
+        plt.savefig(imagefile)
+        return imagefile
+    
+    def trajectory(self, revid, times, trajectory, growth, pageid, domain, _title):
         ##prepare text
         filename = domain + str(pageid) + 'traj'
         imagefile = BASEPATH + "plot/images/" + filename + ".png"
@@ -45,10 +165,7 @@ class Plotter:
         title = _title
 
         ##prepare matplotlib
-        if (show):
-            tfigsize, tdpi = None, None
-        else:
-            tfigsize, tdpi = (13,8), 600
+        tfigsize, tdpi = (13,8), 600
         fig = plt.figure(figsize=tfigsize, 
                          dpi=tdpi, 
                          tight_layout=None)
@@ -64,18 +181,17 @@ class Plotter:
         for tl in ax1.get_yticklabels():
             tl.set_color('b')
         plt.title(title)
-        if(show):
-            plt.show()
+ 
         plt.savefig(imagefile)
         return imagefile
 
-    def dumpplot(self):
+    def dumpplot(self, clip=200):
         dtb = db.Database()
         
         ##PAGE-WISE PLOTS
         pages = dtb.getallfetched()
         shuffle(pages)
-        for r in pages[:200]:
+        for r in pages[:clip]:
             pageid = r[0]
             domain = r[1]
             title = dtb.gettitle(pageid, domain).decode('utf-8')
@@ -110,34 +226,184 @@ class Plotter:
             yaxis = 'edit count'
             print self.barchart(xrev, shares, unames, pageid, domain, title, 'users', xaxis, yaxis)
 
-        
+    def metricplots(self):
+        dtb = db.Database()
+
+        y = dtb.gettexttypedistribution('en')[0]
+        xlabels = ['maths', 'citations', 'filesimages', 'links', 'structure', 'normal']
+        print self.barchart(0, 
+                            y, 
+                            xlabels, 
+                            000, 
+                            'en', 
+                            "English Wikipedia, Text type change frequency", 
+                            'users', 
+                            "Text types", 
+                            "Change count",
+                            width=8,
+                            height=5)
+        y = dtb.gettexttypedistribution('en')[0]
+        xlabels = ['maths', 'citations', 'filesimages', 'links', 'structure', 'normal']
+        print self.barchart(0, 
+                            y, 
+                            xlabels, 
+                            000, 
+                            'en', 
+                            "All Wikipedias, Text type change frequency", 
+                            'users', 
+                            "Text types", 
+                            "Change count",
+                            width=8,
+                            height=5)
+
+
+        ##### RARENESS
+        ### GET ALL CONTENT
+        ### REGEX SUMS
+
+        x, y = zip(*dtb.geteditdistribution('en'))
+        print self.histogram(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "English Wikipedia: User edit counts, random sample", 
+                             "0editdistributionhisto")
+
+        x, y = zip(*dtb.getregeditdistribution('en'))
+        print self.histogram(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "English Wikipedia: Registered users edit counts, random sample", 
+                             "0regeditdistributionhisto")
+
+        x, y = zip(*dtb.geteditdistribution())
+        print self.histogram(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "All Wikipediaa: User edit counts, random sample", 
+                             "0editdistributionallhisto")
+
+        x, y = zip(*dtb.getregeditdistribution())
+        print self.histogram(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "All Wikipediaa: Registered users edit counts, random sample", 
+                             "0regeditdistributionallhisto")
+
+
+        x, y = zip(*dtb.geteditdistribution('en'))
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "English Wikipedia: User edit counts, random sample", 
+                             "0editdistribution")
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "English Wikipedia: User edit counts, random sample", 
+                             "0editdistributionlog", ylog=True)
+
+        x, y = zip(*dtb.getregeditdistribution('en'))
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "English Wikipedia: Registered users edit counts, random sample", 
+                             "0regeditdistribution")
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "English Wikipedia: Registered users edit counts, random sample", 
+                             "0regeditdistributionlog", ylog=True)
+
+        x, y = zip(*dtb.geteditdistribution())
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "All Wikipediaa: User edit counts, random sample", 
+                             "0editdistributionall")
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "All Wikipedias: User edit counts, random sample", 
+                             "0editdistributionalllog", ylog=True)
+
+        x, y = zip(*dtb.getregeditdistribution())
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "All Wikipediaa: Registered users edit counts, random sample", 
+                             "0regeditdistributionall")
+        print self.linechart(x, 
+                             y, 
+                             "Edit count", 
+                             "Frequency", 
+                             "All Wikipediaa: Registered users edit counts, random sample", 
+                             "0regeditdistributionalllog", ylog=True)
+
         ##AVERAGE HISTORY LENGTH BY DOMAIN
         historylengths = dtb.getaveragerevisioncounts()
         domains, lengths = zip(*historylengths)
         xaxis = 'Domain'
         yaxis = 'Average article history lengths'
-        print self.barchart(000, lengths, domains, 0, '', '', 'avpageactivity', xaxis, yaxis, width=30, height=10)
+        print self.barchart(000, 
+                            lengths, 
+                            domains, 
+                            0, 
+                            '', 
+                            '', 
+                            'avpageactivity', 
+                            xaxis, 
+                            yaxis, 
+                            width=30, 
+                            height=10)
 
         ##AVERAGE ARTICLE LENGTH BY DOMAIN
         pagelengths = dtb.getaveragepagelengths()
         domains, lengths = zip(*pagelengths)
         xaxis = 'Domain'
         yaxis = 'Average article length'
-        print self.barchart(000, lengths, domains, 0, '', '', 'avpagelen', xaxis, yaxis, width=30, height=10)
+        print self.barchart(000, 
+                            lengths, 
+                            domains, 
+                            0, 
+                            '', 
+                            '', 
+                            'avpagelen', 
+                            xaxis, 
+                            yaxis, 
+                            width=30, 
+                            height=10)
 
-    def fetch():
-        contentparams = {}
-        contentparams.update({'titles':self.params['titles']})
-        if self.params['page_titles'] != "random" and self.params['revids']:
-            contentparams.update({'revids':self.params['revids']})
-        if self.params['userids']:
-            contentparams.update({'userids':self.params['userids']})
-        print "Fetching from database"
-        return db.getrevfull(**contentparams)
+    # def fetch():
+    #     contentparams = {}
+    #     contentparams.update({'titles':self.params['titles']})
+    #     if self.params['page_titles'] != "random" and self.params['revids']:
+    #         contentparams.update({'revids':self.params['revids']})
+    #     if self.params['userids']:
+    #         contentparams.update({'userids':self.params['userids']})
+    #     print "Fetching from database"
+    #     return db.getrevfull(**contentparams)
 
 def main():
     p = Plotter()
-    p.dumpplot()
+    if "--dump" in sys.argv:
+        if "--clip" in sys.argv:
+            p.dumpplot(sys.argv[sys.argv.index("--index") + 1])
+        else: 
+            p.dumpplot()
+    if "--metrics" in sys.argv:
+        p.metricplots()
+        
 
 if __name__ == "__main__":
     main()
