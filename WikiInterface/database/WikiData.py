@@ -150,18 +150,18 @@ class Database:
                     return result[0][0], result[0][1]
         return None
 
-    def gettrajectory(self, revid, domain):
-        sql = "SELECT time, distance FROM " + self.revisiontable + " AS r JOIN " + self.trajectorytable + " AS t ON revid2 = revid AND r.domain = t.domain WHERE revid1 = %s AND t.domain = %s ORDER BY time;"
-        data = (revid,domain)
+    def gettrajectory(self, pageid, domain):
+        sql = "SELECT time, distance FROM " + self.revisiontable + " AS r JOIN " + self.trajectorytable + " AS t ON revid2 = revid AND r.domain = t.domain WHERE pageid = %s AND t.domain = %s ORDER BY time;"
+        data = (pageid,domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
             if result:
                 return result
         return None
 
-    def getgrowth(self, revid, domain):
-        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid AND a.domain = b.domain WHERE revid1 = %s AND b.domain = %s ORDER BY time;"
-        data = (revid,domain)
+    def getgrowth(self, pageid, domain):
+        sql = "SELECT time, size FROM " + self.revisiontable + " AS a JOIN " + self.trajectorytable + " AS b ON b.revid2 = a.revid AND a.domain = b.domain WHERE pageid = %s AND b.domain = %s ORDER BY time;"
+        data = (pageid,domain)
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
 

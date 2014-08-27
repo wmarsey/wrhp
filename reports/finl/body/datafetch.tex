@@ -130,60 +130,60 @@ points of this project.
   \centering
   \begin{subfigure}[b!]{0.3\linewidth}
     \centering
-    \caption{Table: wikicontent}
     \begin{tabular}{ccc}
       \toprule
-      revid & domain & content\\
+      \underline{revid} & \underline{domain} & content\\
       \midrule
       $\vdots$ & $\vdots$ & $\vdots$\\
     \end{tabular}
+    \caption{Table: wikicontent}
   \end{subfigure}
   \begin{subfigure}[b!]{0.3\linewidth}
     \centering
-    \caption{Table: wikifetched}
     \begin{tabular}{cc}
       \toprule
-      pageid & domain \\
+      \underline{pageid} & \underline{domain} \\
       \midrule
       $\vdots$ & $\vdots$\\
     \end{tabular}
+    \caption{Table: wikifetched}
   \end{subfigure}
   \begin{subfigure}[b!]{0.3\linewidth}
     \centering
-    \caption{Table: wikitrajectory}
-    \begin{tabular}{ccc}
+    \begin{tabular}{cccc}
       \toprule
-      revid1 & revid2 & distance\\
+      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
       \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ \\
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
     \end{tabular}
+    \caption{Table: wikitrajectory}
   \end{subfigure}\\
   \vspace{10 mm}
   \begin{subfigure}[b!]{\linewidth}
     \centering
-    \caption{Table: wikirevisions}
-    \begin{tabular}{cccccccc}
+    \begin{tabular}{ccccccccc}
       \toprule
-      revid & domain & pageid & username & userid & time & size &
+      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
       comment \\ 
       \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
       & $\vdots$ & $\vdots$ \\
     \end{tabular}
-  \end{subfigure}\\
+    \caption{Table: wikirevisions}
+  \end{subfigure}
 
   \begin{subfigure}[b!]{\linewidth}
     \centering
-    \caption{Table: wikiweights} 
-    \subref{weightstable}
     \begin{tabular}{ccccccccc}
       \toprule
-      revid & domain & maths & citations & filesimages & links &
+      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
       structure & normal & gradient\\
       \midrule
       $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
       $\vdots$ & $\vdots$ & $\vdots$ \\
     \end{tabular}
+    \caption{Table: wikiweights} 
+    \subref{weightstable}
   \end{subfigure}
   \caption{Schemata for the database used to store wikipedia data}
 \end{figure}
