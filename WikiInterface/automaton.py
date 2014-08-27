@@ -35,13 +35,13 @@ def intstring(s):
 ##HANDLES COMMAND-LINE ARGUMENTS
 def _arg_sanity(params):
     a = sys.argv[1:]
-    foptions = [('--domain','domain'),
-                ('--pageid','pageid'),
-                ('--newrevid','newrevid'),
-                ('--oldrevid','oldrevid'),
-                ('--title','title'),
-                ('--scrapemin', 'scrapemin'),
-                ('--username', 'user')]
+    foptions = [('--domain','domain',False),
+                ('--pageid','pageid',True),
+                ('--newrevid','newrevid',True),
+                ('--oldrevid','oldrevid',True),
+                ('--title','title',False),
+                ('--scrapemin', 'scrapemin',True),
+                ('--username', 'user',False)]
     if "--help" in a:
         print_help()
         return None
@@ -50,7 +50,11 @@ def _arg_sanity(params):
         return None
     for o in foptions:
         if o[0] in a:
-            params[o[1]] = a[a.index(o[0]) + 1]
+            val = a[a.index(o[0]) + 1]
+            if o[2]:
+                val = int(val)
+            print "setting parameter", o[1], "=", val
+            params[o[1]] = val
             a.pop(a.index(o[0]) + 1)
             a.pop(a.index(o[0]))
         
@@ -67,6 +71,7 @@ def _flag_sanity(flags):
             for ch in arg[1:]:
                 for o in foptions:
                     if ch == o[0]:
+                        print "setting flag", o[1]
                         flags[o[1]] = True
         if arg == "--trundle":
             flags['trundle'] = True
@@ -99,7 +104,7 @@ def main():
               'oldrevid':None,
               'pageid':None,
               'revid':None,
-              'scrapelim':50}
+              'scrapemin':50}
     flags = {'scrape': False,
              'trundle':False,
              'view':False,
@@ -137,52 +142,32 @@ def main():
     import wikiScraper as wk
     from interface import WikiAnalyser
     while True:
-        print "---------FETCHING WIKIPEDIA PAGES-----------"
-        scraper = wk.WikiRevisionScrape(title=params['title'],
-                                        domain=params['domain'],
-                                        scrapelim=params['scrapelim'])
-        title, pageid, domain = scraper.scrape()
+        while True:
+            print "---------FETCHING WIKIPEDIA PAGE------------"
+            scraper = wk.WikiRevisionScrape(title=params['title'],
+                                            domain=params['domain'],
+                                            scrapemin=params['scrapemin'])
+            title, pageid, domain = scraper.scrape()
+            
+            if title and pageid and domain:
+                break
+            elif (params['title'] or params['pageid']):
+                sys.exit(-1) ##if you asked but didnt get. terminate
+                             ##instead of trying again
     
         print
         print "-----------------ANALYSING------------------"    
-        analyser = WikiAnalyser(title,
-                                pageid, 
-                                domain)
+        analyser = WikiAnalyser(title,pageid,domain)
         results = analyser.analyse()
         if not results:
             sys.exit(-1)
-        print results
-
+        
         if flags['plot']:
             print
             print "--------------------PLOT--------------------"
             import dataplotter as dpl
             plotter = dpl.Plotter()
-            plotter.plot(pageid, domain)
-
-        #print "---------------ANALYSE MODE---------------"    
-        #results = analyser.analyse()
-        # if flags['plotshow']:
-        #     form = ['revid',
-        #             'Maths',
-        #             'Citations',
-        #             'Files / Images168',
-        #             'Links',
-        #             'Structure',
-        #             'Normal',
-        #             'Gradient',
-        #             'user',
-        #             'trajectory',
-        #             'timestamp']
-        #     formresults = []
-        #     for r in results:
-        #         res = {}
-        #         for i, f in enumerate(form):
-        #             res.update({f:r[i]})
-        #         formresults.append(res)                 
-        #     IPlot(formresults)
-        
-        # results = dtb.getresults(pageid, domain)
+            print plotter.plot(title, pageid, domain)
 
         if not flags['trundle']:
             break

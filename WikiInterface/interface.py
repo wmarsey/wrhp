@@ -112,8 +112,9 @@ class WikiAnalyser:
             i = v
             v = v + 1
 
-        data = self.dtb.getresults(self.pageid, self.domain)
-        return data  
+        return True
+        # data = self.dtb.getresults(self.pageid, self.domain)
+        # return data  
 
     def gettraj(self, contentx, revx, oldrev):
         dist = self.dtb.gettraj(revx, oldrev, self.domain)

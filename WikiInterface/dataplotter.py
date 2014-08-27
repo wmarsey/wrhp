@@ -21,40 +21,127 @@ def movingaverage(x, n, type='exponential'):
     return a
 
 class Plotter:
-    def trajectorydata(pageid, domain):
+    def trajectorydata(self, pageid, domain):
         dtb = db.Database()
 
-        tdata = dtb.gettrajectory(xrev, domain)
-        gdata = dtb.getgrowth(xrev, domain)
-        creation = trajdata[0][0]
+        tdata = dtb.gettrajectory(pageid, domain)
+        gdata = dtb.getgrowth(pageid, domain)
+        creation = tdata[0][0]
         
-        tpoints = [e[1] for e in trajdata]
-        gpoints = [e[1] for e in growthdata]
-        xpoints = [(e[0]-creation).total_seconds()/3600 for e in trajdata]
+        tpoints = [e[1] for e in tdata]
+        gpoints = [e[1] for e in gdata]
+        xpoints = [(e[0]-creation).total_seconds()/3600 for e in tdata]
         
         return xpoints, tpoints, gpoints
 
+    def editcountdata(self, pageid, domain):
+        dtb = db.Database()
+
+        dbdata = dtb.getusereditcounts(pageid, domain)
+        sdata = sorted(dbdata, key = lambda x: x[1])
+
+        xlabels, ypoints = zip(*sdata)
+        xlabels = [e.decode('utf-8').strip() for e in xlabels]
+
+        return xlabels, ypoints
+
+    def editsharedata(self, pageid, domain, weights=None):
+        dtb = db.Database()
+
+        dbdata = dtb.getuserchange(pageid, domain)
+        
+        # Is this too python?
+        # wdata = [(d[0], sum([e*(1+weights[WEIGHTLABELS[i]] if weights else 1)\
+        #                   for i,e in enumerate(d[2:])])) for d in dbdata]
+
+        wdata = []
+        for u in dbdata:
+            sdist = 0
+            for i,d in enumerate(u[2:]):
+                w = weights[WEIGHTLABELS[i]] if weights else 0
+                sdist = sdist + (d * (1+w))
+            wdata.append((u[0],sdist))
+
+        total = sum([e[1] for e in wdata])
+        for w in wdata:
+            w[1] /= total
+        
+        wdata = sorted(wdata, key = lambda x: x[1])
+
+        xlabels, ypoints = zip(*sdata)
+        xlabels = [e.decode('utf-8').strip() for e in xlabels]
+            
+        return xlabels, ypoints
+
     def plot(self,
-             title
+             title,
              pageid,
              domain,
              trajectory=True,
              editcount=True,
-             share=True):
+             share=True,
+             weights=None):
         
-        xpoints, tpoints, gpoints = self.trajectorydata
+        filenames = []
+
+        if trajectory:
+            xpoints, tpoints, gpoints = self.trajectorydata(pageid, domain)
+            filenames.append(self.trajectory2(xpoints, 
+                                              tpoints, 
+                                              gpoints,
+                                              "Hours since creation",
+                                              "Edit distance from final",
+                                              "Article size",
+                                              "Trajectory of " + title + ", " + domain + str(pageid),
+                                              domain + str(pageid) + "traj",
+                                              width=13,
+                                              height=8))
+
+        if share:
+            xlabels, ypoints = self.editcountdata(pageid, domain)
+            filenames.append(self.barchart2(xlabels, ypoints,
+                                       "Username", "Edit count",
+                                       "Editors of " + title + ", " +
+                                       domain + str(pageid) + ", by edit count", 
+                                       domain + str(pageid) + "editc"))
+
+        if editcount:
+            xlabels, ypoints = self.editsharedata(pageid, domain)
+            filenames.append(self.barchart2(xlabels, 
+                                       ypoints, 
+                                       "Username", 
+                                       "Edit share", 
+                                       "Editors of " + title + ", " + domain + str(pageid) + ", by share", 
+                                       domain + str(pageid) + "share"))
+
+            
+
+    def barchart2(self, xlabels, ypoints, xaxisname, yaxisname, title, 
+                  filename, width=13, height=8):
+        imagefile = BASEPATH + "plot/images/" + filename + ".png"
         
-        print trajectory2(self, 
-                          xpoints, 
-                          tpoints, 
-                          gpoints,
-                          "Hours since creation",
-                          "Edit distance from final",
-                          "Article size",
-                          "Trajectory of " + title + ", " + domain + str(pageid),
-                          domain + str(pageid) + "traj",
-                          width=13,
-                          height=8)
+        fig = plt.figure(figsize=(width,height), dpi=600, tight_layout=True)
+
+        ax = fig.add_subplot(111)
+        h = ax.bar(xrange(len(ypoints)), 
+                   ypoints, 
+                   label=xlabels, 
+                   width=0.8)
+        xticks_pos = [0.5*p.get_width() + p.get_xy()[0] for p in h]
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+
+        plt.xlabel(xaxisname)
+        plt.ylabel(yaxisname)
+
+        plt.title(title)
+        plt.xticks(xticks_pos, 
+                   xlabels, 
+                   rotation=90, 
+                   ha='center')
+        plt.xlim([0,len(xlabels)])
+ 
+        plt.savefig(imagefile)
+        return imagefile
 
     def barchart(self, revid, barheights, barlabels, pageid, domain, 
                  title, ident, xaxisname, yaxisname, width=13, height=8): 

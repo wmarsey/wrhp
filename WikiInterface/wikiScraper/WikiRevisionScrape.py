@@ -27,13 +27,13 @@ class WikiRevisionScrape:
         }
     rand = False
     #rl, rl_minwait, rl_lastcall = False, None, None
-    pageid, parentid, childid = 0, 0, 0
+    scrapemin, pageid, parentid, childid = 0, 0, 0, 0
     db = None
     dotcount = 1
     title, api_url, api_lang, api_domain = "", "", "", ""
     domainset, domains = False, []
-
-    def __init__(self,title=None,pageid=None,domain=None,scrapelim=50):
+    
+    def __init__(self,title=None,pageid=None,domain=None,scrapemin=50):
 
         self.title=title
         if not title or title=='random':
@@ -42,9 +42,8 @@ class WikiRevisionScrape:
         if domain:
             self.api_domain = domain
             self.domainset = True
-            
-        if scrapelim:
-            self.scrapelim = scrapelim
+              
+        self.scrapemin = scrapemin
         
         self.db = database.Database()
         self.domains = self.langsreader()
@@ -79,26 +78,26 @@ class WikiRevisionScrape:
 
     def scrape(self):
         ## prepare params for choosing article
-        while True:
-            self.api_url, self.api_lang = self.picklang(self.domainset)
-            if 'rvprop' in self.par:
-                del self.par['rvprop']
-            if 'revids' in self.par:
-                del self.par['revids']
+        self.api_url, self.api_lang = self.picklang(self.domainset)
+        if 'rvprop' in self.par:
+            del self.par['rvprop']
+        if 'revids' in self.par:
+            del self.par['revids']
 
-            ## choose article
-            if self.rand:
-                self.title = self._getrandom()
-            ##fetch versions
-            self._getlatest()
+        ## choose article
+        if self.rand:
+            self.title = self._getrandom()
+        ##fetch versions
+        self._getlatest()
 
-            print "Fetching page", self.title, ",", self.pageid
+        print "Fetching page", self.title, ",", self.pageid
 
-            if self._tracehist():
-                self.db.fetchedinsert((self.pageid,
-                                       self.title,
-                                       self.api_domain))
-                return self.title, self.pageid, self.api_domain
+        if self._tracehist():
+            self.db.fetchedinsert((self.pageid,
+                                   self.title,
+                                   self.api_domain))
+            return self.title, self.pageid, self.api_domain
+        return None, None, None
 
     def _getrandom(self, pages=1):
         query_params = {
@@ -180,7 +179,7 @@ class WikiRevisionScrape:
                 b = True
 
             if b or ((len(pages)%50) == 0 and len(pages)):
-                if len(visited) >= self.scrapelim:
+                if len(visited) >= self.scrapemin:
                     for p in pages:
                         user, size, timestamp, comment, content = "", "", "", "", ""
                         try:
