@@ -67,7 +67,7 @@ def _flag_sanity(flags):
                 ('v', 'launch')]
 
     for arg in sys.argv:
-        if re.search("^-[A-Za-z]*$", arg):
+        if re.search("^-[A-Za-z]$", arg):
             for ch in arg[1:]:
                 for o in foptions:
                     if ch == o[0]:
@@ -75,6 +75,7 @@ def _flag_sanity(flags):
                         flags[o[1]] = True
         if arg == "--trundle":
             flags['trundle'] = True
+
     return flags
 
 def _config_check(params, flags):
@@ -167,7 +168,8 @@ def main():
             print "--------------------PLOT--------------------"
             import dataplotter as dpl
             plotter = dpl.Plotter()
-            print plotter.plot(title, pageid, domain)
+            plotted = plotter.plot(title, pageid, domain)
+            print len(plotted), "plotted"
 
         if not flags['trundle']:
             break
