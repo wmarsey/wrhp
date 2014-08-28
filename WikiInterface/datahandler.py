@@ -10,7 +10,6 @@ class DHandler:
     def __init__(self):
         self.dtb = db.Database()
 
-
     def trajectorydata(self, pageid, domain):
         tdata = self.dtb.gettrajectory(pageid, domain)
         gdata = self.dtb.getgrowth(pageid, domain)

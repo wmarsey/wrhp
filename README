@@ -1,17 +1,54 @@
-Individual Project
+This project grabs wikipedia article histories, analyses each change,
+characterises it, uses related information to give context. Began as a
+project to qulitatively analyse a Wikipedia revision. Ended as a
+general analysis of what makes a revision survive in the Wikipedia
+environment. 
 
-Help text for CLI:
+CLI runs from WikiInterface/automaton.py. Options:
 
-Mutually modes:
--s	 	   scrape mode
--f   	 	   fetch mode, can be used with analyse
--a   	       	   analyse mode, can be used with fetch
+The CLI can be accessed using the shortcut wrhp (Wiki Revision History
+Portal...). The arguments are as follows:
 
---help	     	   this help text
---version	   show version
+Default	    	 Default behaviour is -s.
 
---depth_limit	   how far back to fetch/analyse article history
---titles	   page titles. multiple titles can be specified,
-		   split with the '|' character, ie:
-		   --titles "philosophy|music"
---scrape_limit	   
+-s 		 Scrape and analyse. Attempts to fetch a new page to
+    		 the database, and process it. If used with -p or -i,
+    		 means to attempt to collect a new page from the site
+    		 before plotting, rather than taking one from the
+    		 database.
+
+-p 	         Plot data. Saves png files to location given by the
+    		 --plotpath argument.
+
+-i		 Open the interactive plot window for a given (or
+    		 random) article once analysed.
+
+-v 		 View a Wikipedia page online. Must be used with
+  		 --domain. Can be used to view a diff (using --revid
+  		 and --oldrevid), a specific revision (using only
+  		 --revid), or the latest version of a page (using
+  		 --pageid).
+
+-t 	     	 `Trundle' mode. Repeats the given operation until
+    		 interrupted. Useful for building up a database. Cannot
+    		 be used with the --titles argument.
+
+--title str 	 Specify the pages to be scraped. Must be used with
+ 		 --domain Case (and spelling...)  sensitive.
+
+--domain str 	 Specify the domain to connect to. May be used without
+    	 	 --titles, limiting the random page pick to one
+    	 	 --domain. Must be the short version (`en', `de',
+    	 	 --etc.).
+
+--scrapemin int  Specify the minimum amount of pages to be scraped for
+    	    	 one page. Default = 50.
+
+--plotpath path  Specify location for plots to be stored.
+
+--revid    	 Specify the revision ID to be viewed. Used with -v.
+
+--oldrevid 	 Specify the old revision ID when viewing a diff. Used
+    		 with -v/
+
+--pageid 	 Specify a target pageid. Can be used in -v and -s.

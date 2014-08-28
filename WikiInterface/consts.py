@@ -1,6 +1,6 @@
-import sys
+import sys, os
 VERSION_NUMBER = "0.0.0.0.00.0.000.1"
-BASEPATH = "/homes/wm613/individual-project/WikiInterface/"
+BASEPATH = os.path.dirname(os.path.realpath(__file__)) #"/homes/wm613/individual-project/WikiInterface/"
 WEIGHTLABELS = ["maths",
                 "headings",
                 "quotes", 

@@ -1,5 +1,5 @@
 from __future__ import division ##for float-returning divisor
-import sys#, errno
+import sys,os#, errno
 import re
 #import sys
 #import math as m
@@ -41,7 +41,8 @@ def _arg_sanity(params):
                 ('--oldrevid','oldrevid',True),
                 ('--title','title',False),
                 ('--scrapemin', 'scrapemin',True),
-                ('--username', 'user',False)]
+                ('--username', 'user',False),
+                ('--plotpath', 'plotpath',False)]
     if "--help" in a:
         print_help()
         return None
@@ -105,7 +106,8 @@ def main():
               'oldrevid':None,
               'pageid':None,
               'revid':None,
-              'scrapemin':50}
+              'scrapemin':50,
+              'plotpath':None}
     flags = {'scrape': False,
              'trundle':False,
              'view':False,
@@ -167,7 +169,7 @@ def main():
             print
             print "--------------------PLOT--------------------"
             import dataplotter as dpl
-            plotter = dpl.Plotter()
+            plotter = dpl.Plotter(os.path.abspath(params['plotpath']) if params['plotpath'] else None)
             plotted = plotter.plot(title, pageid, domain)
             print len(plotted), "plotted"
 
