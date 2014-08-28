@@ -293,7 +293,7 @@ class Database:
         return None
 
     def getallfetched(self):
-        sql = "SELECT pageid, language FROM " + self.fetchedtable + ";"
+        sql = "SELECT title, pageid, language FROM " + self.fetchedtable + ";"
         if(self._execute(sql, ())):
             result = self._crsrsanity()
             if result:

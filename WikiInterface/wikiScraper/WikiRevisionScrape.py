@@ -2,15 +2,12 @@ from requests import get
 import json
 from random import choice
 from sys import stdout, path
+import sys
 import csv
 import re
-#from time import sleep
-#from datetime import datetime, timedelta
  
 path.append("/homes/wm613/individual-project/WikiInterface/")
 import database
-#import csv
-#from bs4 import BeautifulSoup
 
 WIKI_API_URL = 'http://en.wikipedia.org/w/api.php'
 WIKI_API_TEMPLATE = 'http://|.wikipedia.org/w/api.php'
@@ -131,10 +128,10 @@ class WikiRevisionScrape:
     def _remove_corruption(self, corrupt):
         while True:
             for c1 in corrupt:
-                for c2 in corrupt:
+                for i, c2 in enumerate(corrupt):
                     if c1['parentid'] == c2['revid']:
                         c1['parentid'] = c2['parentid']
-                        corrupt.pop(c2)
+                        corrupt.pop(i)
                         continue
             break
         for c in corrupt:
@@ -167,12 +164,13 @@ class WikiRevisionScrape:
                 try:
                     page = r['query']['pages'][self.pageid]['revisions'][0]
                 except:
-                    print r
-                if not self.db.revexist(page['revid'],page['parentid'],self.api_domain):
-                    pages.append(page)
-                self.childid =  page['revid']
-                self.parentid = page['parentid']
-                title = r['query']['pages'][self.pageid]['title']
+                    b = True 
+                else:
+                    if not self.db.revexist(page['revid'],page['parentid'],self.api_domain):
+                        pages.append(page)
+                    self.childid =  page['revid']
+                    self.parentid = page['parentid']
+                    title = r['query']['pages'][self.pageid]['title']
                 
             ##CHECK FOR END OF HISTORY
             if self.parentid == 0 or self.parentid in visited:
