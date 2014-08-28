@@ -22,6 +22,12 @@ def movingaverage(x, n, type='exponential'):
     return a
 
 class Plotter:
+    def __init__(self, fileloc=None):
+        if fileloc:
+            self.plotdir = fileloc + "/"
+        else:
+            self.plotdir = BASEPATH + "/plot/images/"
+
     def plot(self, title, pageid, domain, trajectory=True,
              editcount=True, share=True, weights=None):   
         filenames = []
@@ -32,41 +38,39 @@ class Plotter:
         
         if trajectory:
             xpoints, tpoints, gpoints = dat.trajectorydata(pageid, domain)
-            filenames.append(self.trajectory2(xpoints, tpoints,
-                                              gpoints,
-                                              "Hours since creation",
-                                              "Edit distance from final",
-                                              "Article size",
-                                              "Trajectory of " + title + ", " + domain + str(pageid),
-                                              domain + str(pageid) + "traj",
-                                              width=13, height=8))
+            filenames.append(self.trajectory(xpoints, tpoints,
+                                             gpoints,
+                                             "Hours since creation",
+                                             "Edit distance from final",
+                                             "Article size",
+                                             "Trajectory of " + title + ", " + domain + str(pageid),
+                                             domain + str(pageid) + "traj",
+                                             width=13, height=8))
             print "plotted", filenames[-1]
 
         if share:
             xlabels, ypoints = dat.editcountdata(pageid, domain)
-            filenames.append(self.barchart2(xlabels, ypoints,
-                                       "Username", "Edit count",
-                                       "Editors of " + title + ", " +
-                                       domain + str(pageid) + ", by edit count", 
-                                       domain + str(pageid) + "editc"))
+            filenames.append(self.barchart(xlabels, ypoints,
+                                           "Username", "Edit count",
+                                           "Editors of " + title + ", " +
+                                           domain + str(pageid) + ", by edit count", 
+                                           domain + str(pageid) + "editc"))
             print "plotted", filenames[-1]
 
         if editcount:
             xlabels, ypoints = dat.editsharedata(pageid, domain)
-            filenames.append(self.barchart2(xlabels, 
-                                       ypoints, 
-                                       "Username", 
-                                       "Edit share", 
-                                       "Editors of " + title + ", " + domain + str(pageid) + ", by share", 
-                                       domain + str(pageid) + "share"))
+            filenames.append(self.barchart(xlabels, ypoints,
+                                           "Username", "Edit share", 
+                                           "Editors of " + title + ", " + domain + str(pageid) + ", by share", 
+                                           domain + str(pageid) + "share"))
             print "plotted", filenames[-1]
 
         return filenames
             
 
-    def barchart2(self, xlabels, ypoints, xaxisname, yaxisname, title, 
+    def barchart(self, xlabels, ypoints, xaxisname, yaxisname, title, 
                   filename, width=13, height=8):
-        imagefile = BASEPATH + "plot/images/" + filename +  " " + title + ".png"
+        imagefile = self.plotdir + filename +  " " + title + ".png"
         
         fig = plt.figure(figsize=(width,height), dpi=600, tight_layout=True)
 
@@ -93,7 +97,7 @@ class Plotter:
 
     def linechart(self, xpoints, ypoints, xaxisname, yaxisname, title, 
                   filename, width=13, height=6, xlog=False, ylog=False):
-        imagefile = BASEPATH +"plot/images/" + filename + ".png"
+        imagefile = self.plotdir + filename + ".png"
         
         fig = plt.figure(figsize=(width, height), dpi=600, tight_layout=True)
 
@@ -116,7 +120,7 @@ class Plotter:
 
     def histogram(self, xpoints, ypoints, xaxisname, yaxisname, 
                   title, filename, width=13, height=6):
-        imagefile = BASEPATH +"plot/images/" + filename + ".png"
+        imagefile = self.plotdir + filename + ".png"
         
         fig = plt.figure(figsize=(width, height), dpi=600, tight_layout=True)
 
@@ -133,11 +137,11 @@ class Plotter:
         plt.savefig(imagefile)
         return imagefile
 
-    def trajectory2(self, xpoints, tpoints, gpoints, xaxisname, taxisname,
+    def trajectory(self, xpoints, tpoints, gpoints, xaxisname, taxisname,
                     gaxisname, title, filename, width=13, height=8):
         
         #filename = domain + str(pageid) + 'traj'
-        imagefile = BASEPATH + "plot/images/" + filename + " " + title + ".png"
+        imagefile = self.plotdir + filename + " " + title + ".png"
         
         ##prepare matplotlib
         fig = plt.figure(figsize=(width,height), 

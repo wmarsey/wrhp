@@ -60,7 +60,16 @@ class Database:
             if result:
                 return result[0][0]
         return -1
-    
+  
+    def gettrajpoint(self, revid, domain):
+        sql = "SELECT time, distance FROM " + self.trajectorytable + " AS t JOIN " + self.revisiontable + " AS r ON revid = revid1 AND r.domain = t.domain WHERE revid2 = %s AND r.domain = %s;"
+        data = (revid,domain)
+        if(self._execute(sql, data)):
+            result = self._crsrsanity()
+            if result:
+                return result[0]
+        return None
+
     def gettrajheight(self, revid, domain):
         sql = "SELECT distance FROM " + self.trajectorytable + " AS t JOIN " + self.revisiontable + " AS r ON revid = revid1 AND r.domain = t.domain WHERE revid2 = %s AND r.domain = %s;"
         data = (revid,domain)
@@ -211,6 +220,12 @@ class Database:
     ### INSERTION FUNCTIONS
     #####
 
+    def insertweight(self, revid, domain, dists, gradient):        
+        sql = "INSERT INTO " + self.weighttable + " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        data = (revid, domain, dists[0], dists[1], dists[2], dists[3],
+        dists[4], dists[5], gradient, True)
+        return self._execute(sql, data)
+
     def contentinsert(self, param):
         if self.getrevcontent(param[0],param[-1]):
             return False
@@ -266,7 +281,7 @@ class Database:
             self._execute(sql, data)
             return False
         else:
-            sql = "SELECT * FROM " + self.weighttable + " WHERE revid = %s and domain = %s and complete = %s"
+            sql = "SELECT complete FROM " + self.weighttable + " WHERE revid = %s and domain = %s and complete = %s"
             data = (revid, domain, True)
             self._execute(sql, data)
             return True if self._crsrsanity() else False 
