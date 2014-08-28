@@ -1,4 +1,7 @@
-all:
+clean:
+	find . -name "*.pyc" -exec rm {} \;
+
+fetch:
 	wget https://gitlab.doc.ic.ac.uk/wm613/inidividual-project/repository/archive.tar
 	tar -xvf archive.tar
 	rm -f archive.tar
