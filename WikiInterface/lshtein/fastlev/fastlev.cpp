@@ -14,6 +14,14 @@ int plaindistance(char *s1, char *s2) {
   unsigned int s1len, s2len, x, y, lastnum, oldnum;
   s1len = strlen(s1);
   s2len = strlen(s2);
+  
+  if (!s1len){ //terminate early if possible
+    return s2len;
+  }
+  if (!s2len){
+    return s1len;
+  }
+
   unsigned int column[s1len+1];
   for (y = 1; y <= s1len; y++)
     column[y] = y;

@@ -225,7 +225,33 @@ links always have the same form), but we may not as easily distinguish
 language-bar links from inline ones -- those that may link to related
 articles, rather than mirror articles, widening knowledge rather than
 offering what may merely be a translation of the original
-article.
+article. We discuss this later.
+
+We may consider other ways of looking at the data we have
+computed. The gradient factor that we calculate describes how much a
+given revision changes in terms of the final state -- it is a real
+number from 0 to 1, 0 being a `perfect' move away from the final
+version, 1 being a `perfect' move towards. On the trajectory graphs
+discussed these two values are represented by a vertical line between
+two points, going upwards and downwards, respectively. 
+
+We consider that we could perhaps use it to characterise a 'perfect
+edit' -- one that approaches the final edit most efficiently; in a
+linear fashion. An optimum revision history may be considered as a
+straight path from origin to destination. No edit inserted text that
+was later removed, and the approach to the final version was as
+efficient as possible over time. We may characterise such an optimum
+gradient as follows:
+
+
+\[
+  gfactor_{optimum} = gfactor(ed(rev_{0_{content}},
+  rev_{n_{content}}), rev_{n_{tstamp}} - v_{0_{tstamp}})
+\]
+
+
+GRAPH OF
+GRADIENT SUM VS
 
 IS THERE MORE EXAMPLE OF WEIRD WIKI STUFF MESSING UP RESULTS?
 

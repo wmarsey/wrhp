@@ -127,6 +127,49 @@ processing in order to improve efficiency of computation.
   \end{algorithmic}
 \end{algorithm}
 
+Our most important algorithm, however, is the trajectory calculation
+algorithm. With this algorithm we allow ourselves to automatically
+identify some of the context of the revision history, using the same
+tools with which we analyse pair distance.
+
+We consider that, although Wikipedia articles have no endpoint as a
+rule -- we refer to page~\ref{quote-page} -- we must take the most
+recent page in our history sample as a kind of `goal'. We measure
+every revision's levenshtein distance from the final version, giving
+us an idea of how close to `finished' it is, at least in terms of this
+history. We then, taking that levenshtein distance as $\Delta y$,
+and the time difference between the two as $\Delta x$, we calculate
+the following:
+
+\[gfactor(\Delta x,\Delta y) = \left\{ 
+\begin{array}{l l l}
+  1 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y < 0$ }\\
+  0 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y >= 0$ }\\
+  \frac{arctan({\Delta}y/{\Delta}x)}{\pi}\text{if ${\Delta}x > 0$}
+\end{array} \right.\]
+
+This function maps every point on a given arc to a real number in the
+range 0 to 1 as shown in 
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[x=1.25cm,y=1.25cm]
+
+    \draw[thick,dashed] (4,0) -- (4,8);
+    \draw[thick,dashed] (4,4) -- (8,4);
+    \draw (4,4) circle (3cm);
+    \node[fill,circle] at (4,4) (o) {};
+    
+    \node[fill=white,left=1.5cm of o] at (2,4) {\textit{undefined region}};
+    
+    \draw [thick, ->] (o) -- (7,4) node[sloped, midway, above]{$0.5$};
+    \draw [thick, ->] (o) -- (6,2) node[sloped, midway, above]{$0.75$};
+    \draw [thick, ->] (o) -- (6,6) node[sloped, midway, below]{$0.25$};
+    \draw [thick, ->] (o) -- (4,1) node[midway, right]{$1$};
+    \draw [thick, ->] (o) -- (4,7) node[midway, right]{$0$};
+  \end{tikzpicture}
+\end{figure}
+
 %%%%% Trace trajectory algorithm
 \begin{algorithm}
 \caption{Page trajectory calculation}\label{traj-calc}
@@ -153,7 +196,7 @@ processing in order to improve efficiency of computation.
     \If{${\Delta}x \neq 0$}
     \State $gradient = \frac{arctan({\Delta}y/{\Delta}x)}{\pi}$ 
     \Else 
-    \State $gradient = 1$
+    \State $gradient = $\LineIf{1}{$y < 0$}{0}
     \EndIf
     \State database.insertgradient($revid[i],domain,gradient$)
     \EndFor
