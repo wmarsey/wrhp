@@ -25,6 +25,17 @@ def safefilename(string):
     string = string.replace('/','')
     return string
 
+
+##########
+##########
+##
+## Class Plotter takes title, page ID, and domain for a page in the
+## database, and gives facilities for plotting various graphs on that
+## page. You can run this file as a script to get plot dumps, see the
+## main function below.
+##
+##########
+##########
 class Plotter:
     def __init__(self, fileloc=None):
         if fileloc:
@@ -32,6 +43,9 @@ class Plotter:
         else:
             self.plotdir = BASEPATH + "/plot/images/"
 
+    ##########
+    ## The main function for plotting 
+    ##########
     def plot(self, title, pageid, domain, trajectory=True,
              editcount=True, share=True, weights=None):   
         filenames = []

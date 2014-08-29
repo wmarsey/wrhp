@@ -3,6 +3,14 @@ import sys
 import re
 import random
 
+##########
+##########
+## Database class allows controlled access to database. Written for
+## PSQL. Assumes schema set up as in schemacreate.sql. Most functions
+## self explanatory
+##########
+##########
+
 class Database:
     host = 'db-new.doc.ic.ac.uk'
     port = '5432'
@@ -17,9 +25,9 @@ class Database:
     cn = None
     crsr = None
 
-    #####
-    ### EXISTENCE TEXT FUNCTIONS
-    #####
+    ##########
+    ## EXISTENCE TEXT FUNCTIONS
+    ##########
 
     def revexist(self, revid, parentid, domain):
         sql = "SELECT revid, parentid FROM " + self.revisiontable + " WHERE revid = %s AND parentid = %s AND domain = %s;"
@@ -30,9 +38,9 @@ class Database:
                 return True
         return False
 
-    #####
-    ### SPECIFIC FETCH FUNCTIONS
-    #####
+    ##########
+    ## SPECIFIC FETCH FUNCTIONS
+    ##########
 
     def getparent(self, revid, domain):
         sql = "SELECT parentid FROM " + self.revisiontable + " WHERE revid = %s AND domain = %s;"
@@ -62,7 +70,7 @@ class Database:
         return -1
   
     def gettrajpoint(self, revid, domain):
-        sql = "SELECT time, distance FROM " + self.trajectorytable + " AS t JOIN " + self.revisiontable + " AS r ON revid = revid1 AND r.domain = t.domain WHERE revid2 = %s AND r.domain = %s;"
+        sql = "SELECT time, distance FROM " + self.trajectorytable + " AS t JOIN " + self.revisiontable + " AS r ON revid = revid2 AND r.domain = t.domain WHERE revid = %s AND r.domain = %s;"
         data = (revid,domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
@@ -71,7 +79,7 @@ class Database:
         return None
 
     def gettrajheight(self, revid, domain):
-        sql = "SELECT distance FROM " + self.trajectorytable + " AS t JOIN " + self.revisiontable + " AS r ON revid = revid1 AND r.domain = t.domain WHERE revid2 = %s AND r.domain = %s;"
+        sql = "SELECT distance FROM " + self.trajectorytable + " WHERE revid2 = %s AND r.domain = %s;"
         data = (revid,domain)
         if(self._execute(sql, data)):
             result = self._crsrsanity()
@@ -256,9 +264,9 @@ class Database:
         sql = "INSERT INTO " + self.fetchedtable + " VALUES (%s, %s, %s);"
         return self._execute(sql, param)
 
-    #####
-    ### UPDATE FUNCTIONS
-    #####
+    ##########
+    ## UPDATE FUNCTIONS
+    ##########
 
     def updateweight(self, column, value, revid, domain):        
         sql = "UPDATE " + self.weighttable + " SET " + column + " = %s WHERE revid = %s AND domain = %s"
@@ -295,9 +303,9 @@ class Database:
                 return result
         return None
 
-    #####
-    ### DUMP / PLOT SPECIFIC FUNCTIONS
-    #####
+    ##########
+    ## DUMP / PLOT SPECIFIC FUNCTIONS
+    ##########
         
     def getallrevs(self):
         sql = "SELECT DISTINCT revid, language FROM " + self.fetchedtable + " JOIN " + self.revisiontable + " USING (pageid) WHERE language = domain;"
@@ -307,8 +315,16 @@ class Database:
                 return result
         return None
 
+    def getallscraped(self):
+        sql = "SELECT DISTINCT pageid, domain FROM " + self.revisiontable + " ORDER BY pageid;"
+        if(self._execute(sql, ())):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
     def getallfetched(self):
-        sql = "SELECT title, pageid, language FROM " + self.fetchedtable + ";"
+        sql = "SELECT title, pageid, language FROM " + self.fetchedtable + " ORDER BY title;"
         if(self._execute(sql, ())):
             result = self._crsrsanity()
             if result:
@@ -387,9 +403,9 @@ class Database:
                 return result
         return None
 
-    #####
-    ### INTERNAL FUNCTIONS
-    #####
+    ##########
+    ## INTERNAL FUNCTIONS
+    ##########
 
     def _execute(self, sql, data, montcarlo=5):
         try:

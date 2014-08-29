@@ -13,8 +13,17 @@ from consts import *
 
 WIKI_API_URL = 'http://en.wikipedia.org/w/api.php'
 WIKI_API_TEMPLATE = 'http://|.wikipedia.org/w/api.php'
-WIKI_USER_AGENT = 'wikipedia (https://github.com/goldsmith/Wikipedia/)'
+WIKI_USER_AGENT = 'wm613@ic.ac.uk wmarsey wikipedia project, imperial college london'
 
+##########
+##########
+##
+## WikiRevisionScrape automates the downloading of Wikipedia history
+## via the Wikipedia API. Can automatically vary language, and skip
+## corrupt entries. Created once per eventually fetched page.
+##
+##########
+##########
 class WikiRevisionScrape:
     par = {
         'format': 'json',
@@ -25,19 +34,21 @@ class WikiRevisionScrape:
         'User-Agent': WIKI_USER_AGENT
         }
     rand = False
-    #rl, rl_minwait, rl_lastcall = False, None, None
     scrapemin, pageid, parentid, childid = 0, 0, 0, 0
     db = None
     dotcount = 1
     title, api_url, api_lang, api_domain = "", "", "", ""
     domainset, domains = False, []
     
-    def __init__(self,title=None,pageid=None,domain=None,scrapemin=50):
+    def __init__(self,title="",pageid=None,domain=None,scrapemin=50):
 
-        self.title=title
-        if not title or title=='random':
+        if not (title or pageid) or title=='random':
             self.rand = True
-            
+ 
+        self.title=title
+        if pageid:
+            self.pageid = pageid
+
         if domain:
             self.api_domain = domain
             self.domainset = True
@@ -46,7 +57,10 @@ class WikiRevisionScrape:
         
         self.db = database.Database()
         self.domains = self.langsreader()
-        
+    
+    ##########
+    ## Fetches possible wikipedia languages from csv file
+    ##########
     def langsreader(self):
         langs = []
         try:
@@ -60,6 +74,29 @@ class WikiRevisionScrape:
             langs = [('en', 'English')]
         return langs
 
+    def search(self, results=8):     
+        params = {
+            'list': 'search',
+            'srprop': '',
+            'srlimit': results,
+            'srsearch': self.title,
+            'action': 'query',
+            'format': 'json',
+            }
+
+        raw_results = get(self.api_url, params=params, headers=self.head).json()
+        
+        try:
+            search_results = (d['title'] for d in raw_results['query']['search'])
+        except:
+            return []
+
+        return list(search_results)
+
+    ##########
+    ## Decides whether to pick a random language, prepares the API
+    ## base url accordingly
+    ##########
     def picklang(self, domainset=False):
         s = WIKI_API_TEMPLATE
         if domainset:
@@ -79,6 +116,9 @@ class WikiRevisionScrape:
             logDebug("url chosen: " + url)
         return url, d[1]
 
+    ##########
+    ## Automates the scraping process, fetches if necessary
+    ##########
     def scrape(self):
         ## prepare params for choosing article
         self.api_url, self.api_lang = self.picklang(self.domainset)
@@ -91,16 +131,28 @@ class WikiRevisionScrape:
         if self.rand:
             self.title = self._getrandom()
         ##fetch versions
-        self._getlatest()
+        if not self._getlatest():
+            print "Malformed title or pageid."
+            if len(self.title):
+                sug = self.search()
+                if len(sug):
+                    print "Wikipedia suggestions: ", ", ".join(sug)
+                else:
+                    print "Wikipedia has no suggestions."
+            return None, None, None
 
         print "Fetching page", self.title, ",", self.pageid
 
+        ## sanity check
         if self._tracehist():
             self.db.fetchedinsert((self.pageid, self.title,
                                    self.api_domain))
             return self.title, self.pageid, self.api_domain
         return None, None, None
 
+    ##########
+    ## Uses the Wikipedia API random article chooser
+    ##########
     def _getrandom(self, pages=1):
         query_params = {
             'action': 'query',
@@ -117,19 +169,49 @@ class WikiRevisionScrape:
         
         return titles
 
+    ##########
+    ## Using title or page ID, gets latest revision ID
+    ##########
     def _getlatest(self):
-        self.par.update({'titles':self.title})
+        ## prepare arguments
+        if self.title:
+            self.par.update({'titles':self.title})
+        elif self.pageid:
+            self.par.update({'pageids':self.pageid})
+        
+        ## get it
         r = get(self.api_url, params=self.par, headers=self.head).json()
-        del self.par['titles']
+        
+        ## clean up after yourself
+        if self.title:
+            del self.par['titles']
+        elif self.pageid:
+            del self.par['pageids']
+
+        ## see if you got anything good
         try:
             p = r['query']['pages']
         except:
-            print r
+            return False
+
+        ##get pageid
         for key, value in r['query']['pages'].iteritems():
             self.pageid = key
-        self.parentid = self.childid = r['query']['pages'][self.pageid]['revisions'][0]['revid']
-        return self.childid
+        
+        ##get the revision ID
+        try:
+            self.parentid = self.childid = p[self.pageid]['revisions'][0]['revid']
+            if not self.title:
+                self.title = p[self.pageid]['title']
+        except:
+            return False
+        return True
     
+    ##########
+    ## Cleaning corrupt entries. If two corrupt entries one after
+    ## other, remove one of them, then send to database one by one for
+    ## pointer rearranging
+    ##########
     def _remove_corruption(self, corrupt):
         while True:
             for c1 in corrupt:
@@ -139,9 +221,14 @@ class WikiRevisionScrape:
                         corrupt.pop(i)
                         continue
             break
+        
         for c in corrupt:
             self.db.bridgerevision(c['revid'], c['parentid'], self.api_domain)
 
+    ###########
+    ## Does grunt work of requesting, checking for consistency /
+    ## inconsistency
+    ##########
     def _tracehist(self):
         visited = []
         j = 0
@@ -155,17 +242,23 @@ class WikiRevisionScrape:
             
             visited.append(self.childid)
             
-            ##fetch only if not already in database
+            ## check database
             parent = -1
             if self.childid == self.parentid:
                 parent = self.db.getparent(self.childid, self.api_domain)
             elif self.db.revexist(self.childid, self.parentid, self.api_domain):
                 parent = self.db.getparent(self.parentid, self.api_domain)
-            if parent > -1:
+            
+            ## fetch if necessary
+            if parent >= 0:
                 self.childid = self.parentid
                 self.parentid = parent
             else:
+                ## request to api
                 r = get(self.api_url, params=self.par, headers=self.head).json()
+ 
+                ## if fully corrupt, prepare to terminate early.
+                ## this includes all random api failures
                 try:
                     page = r['query']['pages'][self.pageid]['revisions'][0]
                 except:
@@ -173,14 +266,18 @@ class WikiRevisionScrape:
                 else:
                     if not self.db.revexist(page['revid'],page['parentid'],self.api_domain):
                         pages.append(page)
-                    self.childid =  page['revid']
+                    self.childid = page['revid']
                     self.parentid = page['parentid']
                     title = r['query']['pages'][self.pageid]['title']
                 
-            ##CHECK FOR END OF HISTORY
+            ## check if we are at the oldest discoverable revision
             if self.parentid == 0 or self.parentid in visited:
                 b = True
 
+            ## check whether it's time to batch insert into database
+            ## (this happens either every 50 fetches, or just every
+            ## time we are about to break from fetching a page with a
+            ## long enough history)
             if b or ((len(pages)%50) == 0 and len(pages)):
                 if len(visited) >= self.scrapemin or not self.rand:
                     for p in pages:
@@ -193,21 +290,30 @@ class WikiRevisionScrape:
                             comment = p['comment']
                         except:
                             pass
+
+                        ## register as corrupt if missing what we need most
                         try:
-                            self.childid =  p['revid']
-                            self.parentid = p['parentid']
+                            childid =  p['revid']
+                            parentid = p['parentid']
                             user = p['user']
                             timestamp = p['timestamp']
-                            content = p['*']
                         except:
                             failed.append(p)  
                             continue
+
+                        ## empty pages is a thing 
+                        try:
+                            content = p['*']
+                        except:
+                            content = ""
+
+                        ## we don't want to trust Wikipedia native
+                        ## size / are unsure what its measuring
                         size = len(content)
-                        if not size:
-                            failed.append(p)
-                            continue
-                        self.db.indexinsert([int(self.childid),
-                                             int(self.parentid),
+
+                        ## send to database
+                        self.db.indexinsert([int(childid),
+                                             int(parentid),
                                              int(self.pageid),
                                              user.encode("UTF-8"), 
                                              int(userid), 
@@ -215,8 +321,8 @@ class WikiRevisionScrape:
                                              size, 
                                              comment.encode("UTF-8"),
                                              self.api_domain])
-                        self.db.contentinsert([int(self.childid), 
-                                               int(self.pageid),
+                        self.db.contentinsert([int(childid), 
+                                               int(pageid),
                                                content.encode("UTF-8"),
                                                self.api_domain])
                     pages = []                        
@@ -224,8 +330,11 @@ class WikiRevisionScrape:
                     print "\nToo few revisions, article discarded"
                     print
                     return False
-            self.dot(reset=(not j),final=b)
+            dot(reset=(not j),final=b)
+            
+            ## break if ready
             if b:
+                ##deal with corruption before break
                 if len(failed):
                     print len(failed), "corrupt pages fetched, revids:"
                     for f in failed:
@@ -238,25 +347,3 @@ class WikiRevisionScrape:
                 break
             j = j + 1
         return True
-
-    # def _pace(self):
-    #     if self.rl and self.rl_last_call \
-    #             and self.rl_lastcall + self.rl_minwait > datetime.now():
-    #         wait_time = (self.rl_lastcall + self.rl_minwait) - datetime.now()
-    #         time.sleep(int(wait_time.total_seconds()))
-
-    # def _rate(self):
-    #     if self.rl:
-    #         self.rl_lastcall = datetime.now()
-
-    def dot(self, reset=False, final=False):
-        if reset:
-            self.dotcount = 1
-        if not (self.dotcount%50) and self.dotcount:
-            stdout.write('|')
-        else:
-            stdout.write('.')
-        if final or (not (self.dotcount%50) and self.dotcount):
-            stdout.write('\n')
-        self.dotcount = self.dotcount + 1
-        stdout.flush()

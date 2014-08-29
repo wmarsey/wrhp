@@ -65,7 +65,8 @@ def _flag_sanity(flags):
     foptions = [('s','scrape'),
                 ('p', 'plot'),
                 ('i', 'iplot'),
-                ('v', 'launch')]
+                ('v', 'launch'),
+                ('r', 'dbrepair')]
 
     for arg in sys.argv:
         if re.search("^-[A-Za-z]$", arg):
@@ -113,7 +114,8 @@ def main():
              'view':False,
              'plot':False,
              'iplot':False,
-             'launch':False}
+             'launch':False,
+             'dbrepair':False}
 
     params = _arg_sanity(params) ##ARGUMENT HANDLING
     if not params:
@@ -144,6 +146,10 @@ def main():
 
     import wikiScraper as wk
     from interface import WikiAnalyser
+    if flags['dbrepair']:
+        dbrepair()
+        sys.exit(0)
+
     while True:
         while True:
             print "---------FETCHING WIKIPEDIA PAGE------------"
@@ -176,6 +182,32 @@ def main():
         if not flags['trundle']:
             break
     sys.exit(0)
+
+def dbrepair():
+    import database as db
+    import wikiScraper as wk
+    from interface import WikiAnalyser
+    dtb = db.Database()
+    fetch = dtb.getallfetched()
+    
+    piddoms = dtb.getallscraped()
+
+    print "Checking", len(piddoms), "pageids for complete details"
+
+    for t in piddoms:
+        scraper = wk.WikiRevisionScrape(pageid=t[0],
+                                        domain=t[1],
+                                        scrapemin=0)
+        title, pageid, domain = scraper.scrape()
+
+    print "Checking", len(fetch), "fetched entries for analyses"
+
+    for f in fetch:
+        analyser = WikiAnalyser(*f)
+        results = analyser.analyse()
+        if not results:
+            sys.exit(-1)
+        
 
 if __name__ == "__main__":
     try:
