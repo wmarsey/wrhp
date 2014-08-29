@@ -8,6 +8,8 @@ import re
  
 path.append("/homes/wm613/individual-project/WikiInterface/")
 import database
+from logger import *
+from consts import *
 
 WIKI_API_URL = 'http://en.wikipedia.org/w/api.php'
 WIKI_API_TEMPLATE = 'http://|.wikipedia.org/w/api.php'
@@ -48,12 +50,13 @@ class WikiRevisionScrape:
     def langsreader(self):
         langs = []
         try:
-            with open('/homes/wm613/individual-project/WikiInterface/wikiScraper/langs.csv', 'r') as langfile:
+            with open(BASEPATH + '/wikiScraper/langs.csv', 'r') as langfile:
                 lread = csv.reader(langfile, delimiter='\t', quotechar='"')
                 for row in lread:
                     langs.append(tuple(row))
         except:
-            print "langs.csv missing. Using only English wikipedia"
+            if __debug__:
+                logDebug("langs.csv not found, picking english wiki")
             langs = [('en', 'English')]
         return langs
 
@@ -71,7 +74,10 @@ class WikiRevisionScrape:
             d = choice(self.domains)
             print d[1], "Wikipedia", "(" + d[0] + ")"
             self.api_domain = d[0]
-        return s.replace("|", d[0]), d[1]
+        url = s.replace("|", d[0])
+        if __debug__:
+            logDebug("url chosen: " + url)
+        return url, d[1]
 
     def scrape(self):
         ## prepare params for choosing article
@@ -90,8 +96,7 @@ class WikiRevisionScrape:
         print "Fetching page", self.title, ",", self.pageid
 
         if self._tracehist():
-            self.db.fetchedinsert((self.pageid,
-                                   self.title,
+            self.db.fetchedinsert((self.pageid, self.title,
                                    self.api_domain))
             return self.title, self.pageid, self.api_domain
         return None, None, None
@@ -177,7 +182,7 @@ class WikiRevisionScrape:
                 b = True
 
             if b or ((len(pages)%50) == 0 and len(pages)):
-                if len(visited) >= self.scrapemin:
+                if len(visited) >= self.scrapemin or not self.rand:
                     for p in pages:
                         user, size, timestamp, comment, content = "", "", "", "", ""
                         try:

@@ -2,24 +2,50 @@
 
 \begin{abstract}
 
-This project explores the measurement of a Wikipedia revision, and by
-extension, mesaurement of Wikipedia. Using a textbook Levenshtein
-distance algorithm as its basis, the algorithm outlined here allows us
-to describe an edit in terms of various appropriate metrics. The end
-product is a model which allows us to examine each edit in terms of
-the species of the text that was edited, and in terms of its relation
-to the rest of the edits in that Wikipedia articles history. We can
-use the same model to examine the nature of editing in that article,
-whether it was edited frequently, whether the article's responds well
-to new editors, etc. 
+This project analyses Wikipedia revision histories, taking automatic
+string analysis as a basis for discussing the value of each edit, and
+each contribution in an article's history. We analyse the edit
+distance between texts in various ways, and, in particular, try to
+characterise the each step of an article's path as connected to,
+completely contextualised by, every other in that history.
 
-While creating this model we discover a few interesting things about
-the nature of Wikipedia, the editor community that control it, and
-their regard to content quality, as well as various things to
-understand about using Wikipedia as a data source for study. We find,
-very interestingly, that an edit's acceptance into the article may not
-necessarily be determined by the content of the edit, and that perhaps
-consideration of an edit may not need to concern the text content at
-all.
+It strikes us that, as a Wikipedia article is something that evolves
+organically out of the actions of many competing agents, then we may
+measure the success of a contribution -- the smallest unit of which is
+a character -- to be it's survival rate. Other studies have remarked
+upon this also. However, previous studies that endeavour to
+characterise or measure this survival rate concentrate on identifying
+binary do/undo interaction between edits, which -- as we'll see -- is
+a common occurence, but we feel is inadequate in terms of really
+understanding the constant, nuanced to-and-fro of mass online
+collaboration.
 
+As well as analysing each edit in the context of every other, we spend
+time exploring value in the fact of the edit itself -- may we evaluate
+an edit according to it's actual content? We consider the text as
+composed of numerous different species of text, dividing it using
+Wikipedia's native markup convention, `wikimarkup', and look to find
+correlations between text species and survival rate. Indeed this
+project follows one that did only this, and most of the time spent on
+this project was automating and exploring this approach.
+
+We find that, on Wikipedia in particular, that qualitative analysis of
+text, at least characterised by species in this way, does not
+correlate well to survival, and thus to any kind of Wikipedia-mediated
+quality. In the chaos of online interaction that characterises
+Wikipedia, one of the most popular websites in the world, we find that
+other factors are more correlated with survival -- factors incident to
+to the nature of the Wikipedia `community', and a user's place within
+that community, rather than the fact of the edit itself. We also
+discuss complicating external factors.
+
+Though this observation may render a fair amount of the text-analysis
+work obsolete in the case of analysing Wikipedia in particular, the
+produced software is robust and malleable, and the techniques used and
+implemented here would lend themselves well to analysing the
+network-driven and interaction-driven analystical paradigm formerly
+aforementioned. And, as it stands, this work would adapt well to
+analysis of more stable forms of online contribution, such as source
+control models. We end by discussing and demonstrating the prospects
+these possible extensions.
 \end{abstract}

@@ -21,6 +21,10 @@ def movingaverage(x, n, type='exponential'):
     a[:n] = a[n]
     return a
 
+def safefilename(string):
+    string = string.replace('/','')
+    return string
+
 class Plotter:
     def __init__(self, fileloc=None):
         if fileloc:
@@ -43,7 +47,7 @@ class Plotter:
                                              "Hours since creation",
                                              "Edit distance from final",
                                              "Article size",
-                                             "Trajectory of " + title + ", " + domain + str(pageid),
+                                             "Trajectory of " + safefilename(title) + ", " + domain + str(pageid),
                                              domain + str(pageid) + "traj",
                                              width=13, height=8))
             print "plotted", filenames[-1]
@@ -52,17 +56,19 @@ class Plotter:
             xlabels, ypoints = dat.editcountdata(pageid, domain)
             filenames.append(self.barchart(xlabels, ypoints,
                                            "Username", "Edit count",
-                                           "Editors of " + title + ", " +
+                                           "Editors of " + safefilename(title) + ", " +
                                            domain + str(pageid) + ", by edit count", 
-                                           domain + str(pageid) + "editc"))
+                                           domain + str(pageid) + "editc",
+                                           width = 13, height = 8))
             print "plotted", filenames[-1]
 
         if editcount:
             xlabels, ypoints = dat.editsharedata(pageid, domain)
             filenames.append(self.barchart(xlabels, ypoints,
                                            "Username", "Edit share", 
-                                           "Editors of " + title + ", " + domain + str(pageid) + ", by share", 
-                                           domain + str(pageid) + "share"))
+                                           "Editors of " + safefilename(title) + ", " + domain + str(pageid) + ", by share", 
+                                           domain + str(pageid) + "share",
+                                           width = 13, height = 8))
             print "plotted", filenames[-1]
 
         return filenames

@@ -387,33 +387,19 @@ class Database:
                 return result
         return None
 
-    # def geteditdistributionintervals(self, domain=None):
-    #     sql = "SELECT sum(CASE WHEN r.count > 600 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 500 AND r.count <= 600 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 400 AND r.count <= 500 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 300 AND r.count <= 400 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 200 AND r.count <= 300 THEN 1 ELSE 0 END), sum(CASE WHEN r.count > 100 AND r.count <= 200 THEN 1 ELSE 0 END), sum(CASE WHEN r.count <= 100 THEN 1 ELSE 0 END) FROM (SELECT count(rev.revid) AS count, rev.username FROM " + self.revisiontable + " AS rev "
-    #     if domain:
-    #         sql += "WHERE domain = %s "
-    #     sql += "GROUP BY username ORDER BY count DESC) AS r;"
-    #     data = (domain,) if domain else ()
-    #     if(self._execute(sql,data)):
-    #         result = self._crsrsanity()
-    #         if result:
-    #             return result[0]
-    #     return None
-
     #####
     ### INTERNAL FUNCTIONS
     #####
 
     def _execute(self, sql, data, montcarlo=5):
-        for _ in xrange(montcarlo):
-            try:
-                self.crsr.execute(sql, data)
-            except:
-                print "Unexpected error:", sys.exc_info()
-                self.cn.rollback()
-            else:
-                self.cn.commit()
-                return True
-        print "sql execution failed"
+        try:
+            self.crsr.execute(sql, data)
+        except:
+            print "Unexpected error:", sys.exc_info()
+            self.cn.rollback()
+        else:
+            self.cn.commit()
+            return True
         return False
 
     def _crsrsanity(self):

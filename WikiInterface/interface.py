@@ -2,14 +2,13 @@ import database as db
 import math as m
 from consts import *
 from sys import stdout
-#import Queue,threading,
-import multiprocessing
+import multiprocessing as mltp
 import re
 import lshtein as lv
+from logger import *
 
-def extract(start, stop, string):    
-    return string[start:stop], string[:start]+string[stop:]
-
+##regexes for splitting wikimarkup string. mostly in form (start
+##tag)-(many characters but not end tag)-(end tag)
 math1 = re.compile('<math>((?!<\/math>).)*<\/math>', re.S)
 math2 = re.compile('\{\{math((?!\}\}).)*\}\}')
 bquote = re.compile('<blockquote>((?!<\/blockquote>).)*<\/blockquote>', re.S)
@@ -26,90 +25,158 @@ h2 = re.compile('== ((?!==).)* ==')
 h3 = re.compile('=== ((?!===).)* ===')
 h4 = re.compile('==== ((?!====).)* ====')
 h5 = re.compile('===== ((?!=====).)* =====')
-regexdict = {'maths':(math1,math2),
-             'citations': (bquote, cite, citeneed, asof),
-             'filesimages':(afile,score),
-             'links':(linkint, linkext),
-             'structure':(h1, h2, h3, h4, h5, table, asof)}
+##regexes, grouped
+regexlist = [(math1,math2),#maths
+             (bquote, cite, citeneed, asof),#citations
+             (afile,score),#filesimages
+             (linkint, linkext),#links
+             (h1, h2, h3, h4, h5, table, asof)]#structure
 
+## extracts a slice mid-string
+def extract(start, stop, string):    
+    return string[start:stop], string[:start]+string[stop:]
+
+## process spawned by calcdist below, passes back levenshtein dist
+def calcdistworker(string1, string2, identity, results):
+    if __debug__:
+        logDebug("worker process " + str(identity) + " string1 length: " +\
+                     str(len(string1)) + " string2 length: " + str(len(string2)))
+    dist = lv.fastlev.plaindist(string1, string2)
+    results.put((identity, dist))
+    if __debug__:
+        logDebug("process " + str(identity) + " returning " + str(dist))
+
+##########
+##########
+## WikiAnalyser class checks for and calculates trajectory and weights
+##########
+##########
 class WikiAnalyser:
     dotcount = 1
     dtb = None
     title, pageid, domain = None, None, None
 
-    def __init__(self, 
-                 title,
-                 pageid,
-                 domain):
+    def __init__(self, title, pageid, domain):
         self.title = title
         self.pageid = pageid
         self.domain = domain
         self.dtb = db.Database()
-
+    
+    ##########
+    ## should be only externally used function.  grabs all revisions
+    ## in database, checks whether they've been provessed before,
+    ## sends them to helper functions in sequence if not.
+    ##########
     def analyse(self):
         print "Analysing", self.title, self.pageid, self.domain
         revs = self.dtb.getextantrevs(self.pageid, self.domain)
         revx = revs[0]
+        if __debug__:
+            logDebug("most revent rev", revs[0])
         contentx = self.dtb.getrevcontent(revx, self.domain)   
         print "Tracing trajectory", len(revs), "revisions"
         for rev in revs:
-            if not self.gettraj(contentx, revx, rev):
+            if not self.maketrajectory(contentx, revx, rev):
                 return None
             dot()
         print "\nCalculating pairs"
         i, v = 0, 1
         while not v > len(revs):
-            parentid = 0
-            if v < len(revs):
-                parentid = revs[v]
+            parentid = revs[v] if v < len(revs) else 0
             childid = revs[i]
-            if not self.dtb.getweight(childid, self.domain):
-                if not self.makeweight(parentid, childid):
-                    return None
+            if __debug__:
+                logDebug("getting weights, pair parentid:", parentid, "childid:", childid)
+            if not self.makeweight(parentid, childid):
+                return None
+            elif __debug__:
+                logDebug("in database")
             dot((not i), (v == len(revs)))
             i = v
             v = v + 1
         return True
 
-    def gettraj(self, contentx, revx, oldrev):
-        dist = self.dtb.gettraj(revx, oldrev, self.domain)
-        if dist < 0:
-            contenty = self.dtb.getrevcontent(oldrev, self.domain) 
-            lev = 0
-            if revx == oldrev:
-                lev = 0
-            else:
-                lev = lv.fastlev.plaindist(contentx,contenty)
-            return self.dtb.trajinsert(revx,oldrev,lev,self.domain)
+    ##########
+    ## takes a revision ID pair, sends for computation 
+    ##########
+    def makeweight(self, parentid, revid):
+        if not self.dtb.getweight(childid, self.domain): ##if not in database
+            dists = self.calcdists(revid, parentid)
+            gradconst = self.calcgradient(revid, parentid)
+            if __debug__:
+                logDebug("calculated gradient as " + str(gradconst))
+            return self.dtb.insertweight(revid, self.domain, dists, gradconst)
         return True
 
+    ##########
+    ## takes revision ID pair, performs 
+    ##########
+    def maketrajectory(self, contentx, revx, oldrev):
+        if __debug__:
+            logDebug("getting trajectory between revisions " + str(revx) + " and " + str(oldrev))
+        
+        dist = self.dtb.gettraj(revx, oldrev, self.domain)
+        
+        if dist < 0: ## if not in database
+            
+            contenty = self.dtb.getrevcontent(oldrev, self.domain) 
+            if not contenty:
+                contenty = "" ## caveat for blank page entries
+            
+            lev = lv.fastlev.plaindist(contentx,contenty) if revx != oldrev else 0
+            
+            if __debug__:
+                logDebug("calculated as " + str(lev))
+            
+            return self.dtb.trajinsert(revx,oldrev,lev,self.domain)
+        
+        elif __debug__:
+            logDebug("in database as " + str(dist))
+        
+        return True
+        
     def calcdists(self, revid, parentid):
         string1 = self.dtb.getrevcontent(parentid, self.domain) if parentid else ""
-        string2 = self.dtb.getrevcontent(revid, self.domain)
+        string2 = self.dtb.getrevcontent(revid, self.domain)  
+        strings = [string1, string2]
 
-        dists = []
-        for regs in regexdict.itervalues():
-            compare = {'m1':'',
-                       'm2':''}
-            for r in regs:
-                while True:
-                    m = r.search(string1)
-                    if not m:
-                        break
-                    match, string1 = extract(m.start(), m.end(), string1)
-                    compare['m1'] += match
-                while True:
-                    m = r.search(string2)
-                    if not m:
-                        break
-                    match, string2 = extract(m.start(), m.end(), string2)
-                    compare['m2'] += match
+        processes = []
+        results = mltp.Queue(maxsize=len(regexlist))
+        dists = [0 for _ in range(len(regexlist) + 1)]
 
-            if len(compare['m1']) or len(compare['m2']):
-                dists.append(lv.fastlev.plaindist(compare['m1'], compare['m2']))
-            else:
-                dists.append(0)
-        dists.append(lv.fastlev.plaindist(string1, string2))             
+        for i, regs in enumerate(regexlist):
+            compare = ["",""]
+            for v, s in enumerate(strings):
+                for r in regs:
+                    while True:
+                        m = r.search(strings[v])
+                        if not m:
+                            break
+                        match, strings[v] = extract(m.start(), m.end(), strings[v])
+                        compare[v] += match
+
+            if len(compare[0]) or len(compare[1]):
+                p = mltp.Process(target=calcdistworker, args=(compare[0], compare[1], i, results))
+                p.start()
+                processes.append(p)
+
+        p = mltp.Process(target=calcdistworker, args=(strings[0], strings[1], len(regexlist), results))
+        p.start()
+        processes.append(p)
+        
+        if __debug__:
+            logDebug("spawned", len(processes))
+
+        for p in processes:
+            if p.is_alive():
+                p.join()
+                
+        if __debug__:
+            logDebug("recieved", results.qsize(), "results")
+
+        while not results.empty():
+            r = results.get()
+            dists[r[0]] = r[1] 
+
         return dists
 
     def calcgradient(self, revid, parentid): 
@@ -120,13 +187,5 @@ class WikiAnalyser:
             y = height1 - height2
             return 1 if x <= 0 else 0.5 - m.atan(y/x)/m.pi
         return 1
-
-    def makeweight(self, parentid, revid):
-        dists = self.calcdists(revid, parentid)
-        gradconst = self.calcgradient(revid, parentid)
-        return self.dtb.insertweight(revid, self.domain, dists, gradconst)
-
-#        self.dtb.updateweight('gradient',gradconst,revid,self.domain)
- #       self.dtb.updateweight('complete',True,revid,self.domain)
 
         
