@@ -22,21 +22,44 @@
 \input{quotes/quotes}
 
 \body
+\chapter{Introduction}
+\label{ch:introduction}
 \input{introduction/introduction}
-\input{background/background}
+
+\chapter{Background Theory}
+\label{ch:background}
+\input{background/editdistance}
+\input{background/wikipedia}
 
 % body of thesis comes here
 
-\input{approach/approach.tex}
+\chapter{Our approach}
+\input{approach/methods}
+\input{approach/technologies}
 
-\input{implementation/implementation.tex}
+\chapter{Implementation}
+\label{ch:implementation}
+\input{implementation/algorithms}
+\input{implementation/classes}
+\input{implementation/interface}
 
-\input{discussion/outcomes}
-\input{discussion/results}
+\chapter{Results}
+\label{ch:results}
+\input{results/results}
+\input{results/analysis}
+\input{results/findings}
 
-\input{evaluation/evaluation}
+\chapter{Evaluation}
+\label{ch:evaluation}
+\input{evaluation/testing}
+\input{evaluation/logging}
+\input{evaluation/validation}
 
-\input{conclusion/conclusion}
+\chapter{Conclusion}
+\label{ch:conclusions}
+\input{conclusion/achievements}
+\input{conclusion/applications}
+\input{conclusion/future}
 
 \appendix
 % appendices come here

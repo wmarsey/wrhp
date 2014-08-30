@@ -312,19 +312,21 @@ class WikiRevisionScrape:
                         size = len(content)
 
                         ## send to database
-                        self.db.indexinsert([int(childid),
-                                             int(parentid),
-                                             int(self.pageid),
-                                             user.encode("UTF-8"), 
-                                             int(userid), 
-                                             timestamp, 
-                                             size, 
-                                             comment.encode("UTF-8"),
-                                             self.api_domain])
-                        self.db.contentinsert([int(childid), 
-                                               int(pageid),
-                                               content.encode("UTF-8"),
-                                               self.api_domain])
+                        if not self.db.indexinsert([int(childid),
+                                                    int(parentid),
+                                                    int(self.pageid),
+                                                    user.encode("UTF-8"), 
+                                                    int(userid), 
+                                                    timestamp, 
+                                                    size, 
+                                                    comment.encode("UTF-8"),
+                                                    self.api_domain]):
+                            return False
+                        if not self.db.contentinsert([int(childid), 
+                                                      int(pageid),
+                                                      content.encode("UTF-8"),
+                                                      self.api_domain]):
+                            return False
                     pages = []                        
                 else:
                     print "\nToo few revisions, article discarded"

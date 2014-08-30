@@ -1,0 +1,34 @@
+\section{Future Work}
+
+From this project, two different directions are recommended. We can
+either use the existing technique on text-history system or we can
+change the current system to make better analyses of the existing
+network. For instance, analyse other parts of Wikipedia in order to
+understand better the context of each edit, like the talk page. 
+
+\subsubsection*{Extending data}
+Current intentions are to approach the data on an article-by-article
+basis, grabbing a particular version and tracing its history
+backwards. We grab the pages using HTTP requests, via Mediawiki's
+inbuilt API. We could, however, download Wikipedia in its
+entirety. The entire site is compressed and dumped monthly, and the
+dumps are free to download (though they are 800GB
+compressed).\cite{wiki-dump}
+
+
+\subsubsection*{Further subjects}
+The project may well extend to subjects beyond Wikipedia. A git
+project history, for instance, may be of interest for further
+study. We may combine the existing research with metrics that concern
+code in particular, such as Cyclomatic Complexity, which measures code
+flow complexity according to its logical operators.\cite{McCabe1976}
+It would also be interesting to figure out a way of changing our
+algorithm in order to regard non-linear revision histories.
+
+%%COULD HAVE DONE RESTRUCTURING
+\subsection*{Awarding restructuring}
+\label{restructuring}
+It has been found that, even in the most accurate articles, that the
+structure of Wikipedia article can be weak.\cite{Giles2005} We should
+award attempts to reorganize articles, possibly looking out for lange
+block displacements. 
