@@ -172,7 +172,7 @@ class WikiAnalyser:
     ##########
     def maketrajectory(self, contentx, revx, oldrev):
         if __debug__:
-            logDebug("getting trajectory between revisions " + str(revx) + " and " + str(oldrev))
+            logDebug("getting trajectory distance, between revisions " + str(revx) + " and " + str(oldrev))
         
         dist = self.dtb.gettraj(revx, oldrev, self.domain)
         
