@@ -1,5 +1,10 @@
+TESTMOD:= testARGS
+
 clean:
 	find . -name "*.pyc" -exec rm {} \;
+
+test:
+	python -m unittest $(TESTMOD)
 
 fetch:
 	wget https://gitlab.doc.ic.ac.uk/wm613/inidividual-project/repository/archive.tar
