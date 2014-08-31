@@ -122,7 +122,7 @@ final version (see figure~\ref{fig:dummy-history}).
     \end{axis}
   \end{tikzpicture}
   \caption{Graph showing a `trajectory plot'}
-  \label{fig:dummy_history}
+  \label{fig:dummy-history}
 \end{figure}
 
 Each point represents a different version, it's coordinates being its
@@ -154,10 +154,10 @@ final version (red).
 \end{figure}
 
 We need not compute edit distances with a positive gradient (the two
-red lines). This is simple to implement. Given a version $v_i$, having
-computed it's immediate edit distance $ed(v_{i-1},v_i)$, and it's edit
+red lines). This is simple to implement. Given a version $rev_i$, having
+computed it's immediate edit distance $ed(rev_{i-1},rev_i)$, and it's edit
 distance from the final version, $ed_{final_i}$, we know our next
-computation must be $ed(v_{j-1},ed_j)$, such that $j$ is the smallest
+computation must be $ed(rev_{j-1},rev_j)$, such that $j$ is the smallest
 number that satisfies the qualities $j > i$ and $ed_{final_j} <
 ed_{final_{j-1}}$.
 
@@ -193,9 +193,9 @@ shown in figure~\ref{fig:traj-preen-2}
 
 In this graph, $rev_i$, the currently considered version, is
 represented by the node at (4,13). The green rectangle shows
-the area in which we look to find $revv_j$, and the blue lines
+the area in which we look to find $rev_j$, and the blue lines
 are those edit distances we both to compute. In this case,
-after considering $v_i$, we move to the $rev_j$ such that $j$ is
+after considering $rev_i$, we move to the $rev_j$ such that $j$ is
 the smallest number that satisfies to qualities $j > i$ and
 $ed_{final_j} < ed_{final_i}$. In this graph above we move
 from (4,13) to (8,12).
@@ -359,9 +359,8 @@ figure~\ref{database-schema}. These databases are referenced at all
 points of this project.
 
 \begin{figure}
-  \label{database-schema}
   \centering
-  \begin{subfigure}[b!]{0.3\linewidth}
+  \begin{subfigure}[t]{0.3\linewidth}
     \centering
     \begin{tabular}{ccc}
       \toprule
@@ -371,7 +370,7 @@ points of this project.
     \end{tabular}
     \caption{Table: wikicontent}
   \end{subfigure}
-  \begin{subfigure}[b!]{0.3\linewidth}
+  \begin{subfigure}[t]{0.2\linewidth}
     \centering
     \begin{tabular}{cc}
       \toprule
@@ -381,7 +380,7 @@ points of this project.
     \end{tabular}
     \caption{Table: wikifetched}
   \end{subfigure}
-  \begin{subfigure}[b!]{0.3\linewidth}
+  \begin{subfigure}[t]{0.4\linewidth}
     \centering
     \begin{tabular}{cccc}
       \toprule
@@ -404,7 +403,7 @@ points of this project.
     \end{tabular}
     \caption{Table: wikirevisions}
   \end{subfigure}
-
+  \vspace{30 mm}
   \begin{subfigure}[b!]{\linewidth}
     \centering
     \begin{tabular}{ccccccccc}
@@ -416,9 +415,9 @@ points of this project.
       $\vdots$ & $\vdots$ & $\vdots$ \\
     \end{tabular}
     \caption{Table: wikiweights} 
-    %% \subref{weightstable}
   \end{subfigure}
   \caption{Schemata for the database used to store wikipedia data}
+  \label{database-schema}
 \end{figure}
 
 \section{Analytical procedures}
