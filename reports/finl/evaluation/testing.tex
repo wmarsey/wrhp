@@ -1,48 +1,56 @@
-\section{Testing}
-\subsection{The interface and classes}
+\section{Unit testing the interface}
+We use the python `unittest' package to automate most of our
+testing. The scripts can be found in the package root folder in the
+script `tester.py'.
 
-TALK ABOUT unittest
+Most of the test cases test the ArgParser logic -- the module that
+checks for errors in the CLI arguments -- as most of the
+classes only fail in their tasks given incorrect parameters. We also
+pay special attention to the return values of each class -- in
+particular the return values on failure. In our package, all exits are
+intended to be handled by, and filtered up to, the wrhp.py main()
+function, so these functions must fail gracefully.
 
-\subsection{The database}
-\subsubsection*{Evaluation of structure}
-
+\section{Evaluation of storage system}
 The database was written initially to take pageid and revids for
 granted, but, on adding different domains to the program had to grow
 to acomodate the lack of uniqueness in these values. The database has
 grown organically with the project, and is robust. However, I believe
-it's structure could be improved a little. The key dependencies are such: 
+it's structure could be improved a little. The key dependencies are
+such:
 
-\begin{figure}
-  \begin{math}
-    P = Pageid\\
-    T = Page title\\
-    R = Revid\\
-    D = Domain\\
-    Cn = Content\\
-    Un = Username\\
-    Ui = Ui\\
-    T = Revision timestamp\\
-    S = Revision size\\
-    Cm = Revision comment\\
-    Mw = Math weight\\
-    Cw = Citation weight\\
-    Fw = Files / Images weight\\
-    Lw = Link weight\\
-    Sw = Structure weight\\
-    Nw = Normal text weight\\
-    G = Trajectory gradient\\
-    Td = Trajectory distance\\
-    F = Fetched flag\\
-\\
-    RD \rightarrow PMwCwFwLwSwNwCnCmGSTUnUiTd\\
-\\
-    PD \rightarrow TF\\
-    \\
-    UnD \rightarrow Ui\\
-  \end{math}
+\begin{wrapfigure}{R}{0.45\linewidth}
+  \begin{lstlisting}[
+      basicstyle=\footnotesize,
+      basicstyle=\linespread{0.6}\ttfamily,
+    mathescape = true]
+    P = Pageid
+    T = Page title
+    R = Revid
+    D = Domain
+    Cn = Content
+    Un = Username
+    Ui = Ui
+    T = Revision timestamp
+    S = Revision size
+    Cm = Revision comment
+    Mw = Math weight
+    Cw = Citation weight
+    Fw = Files / Images weight
+    Lw = Link weight
+    Sw = Structure weight
+    Nw = Normal text weight
+    G = Trajectory gradient
+    Td = Trajectory distance
+    F = Fetched flag
+
+    RD $\rightarrow$ PMwCwFwLwSwNwCnCmGSTUnUiTd
+    PD $\rightarrow$ TF
+    UnD $\rightarrow$ Ui
+  \end{lstlisting}
   \caption{Database entities and key dependencies}
   \label{fig:dat-key}
-\end{figure}
+\end{wrapfigure}
 
 We can in figure~\ref{fig:dat-key} that the many of the entities of
 the database rely on the $(revid, domain)$ key-pair, the only

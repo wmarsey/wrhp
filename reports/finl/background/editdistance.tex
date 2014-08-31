@@ -1,10 +1,12 @@
 \section{Edit difference algorithms}
 To measure difference between different text revisions, we will refer
-edit distance. Edit distance between two texts, as first defined by
-Levenshtein,\cite{Levenshtein1966} can be defined as the minimum
-amount of insert, delete and substitutions operations needed to
-transform one text into another. We find a trivial illustration of
-this in figure~\ref{fig:fork-spork}
+edit distance. Edit distance between two texts, first defined by
+Vladimir Levenshtein in the 1960s,\cite{Levenshtein1966} can be
+defined as the minimum amount of insert, delete and substitutions
+operations needed to transform one text into another. We use this as
+our basis for measuring differences between revisions. We find a
+trivial illustration of the edit distance primitives in
+figure~\ref{fig:fork-spork}
 
 \begin{figure}
   \centering
@@ -34,7 +36,6 @@ this in figure~\ref{fig:fork-spork}
 \end{figure}
 
 \begin{figure}
-  \label{fig:levdef}
   \centering
   for the function $\mbox{lev}_{a,b}(|a|,|b|)$:\\
   $$\mbox{lev}_{a,b}(i,j) = 
@@ -54,6 +55,7 @@ this in figure~\ref{fig:fork-spork}
   when $a_i = b_j$, $1_{(a_i{\neq}b_j)} = 1$\\
   when  $a_i \neq b_j$, $1_{(a_i{\neq}b_j)} = 0$
   \caption{The definition of Levenshtein edit distance.}
+  \label{fig:levdef}
 \end{figure}
 
 Levenshtein's characterisation of this distance is given in
@@ -96,7 +98,7 @@ throughout the study.)
   \label{fig:levenshtein-dynamic}
 \end{figure}
 
-In figure~\ref{levenshtein-dynami} we find a dynamic programming
+In figure~\ref{levenshtein-dynamic} we find a dynamic programming
 implementation of Levenshtein - the basic 'textbook'
 implementation. We can see that on comparing strings $x$ and $y$, a
 $|x|$ by $|y|$ table is created, and then filled with values. For this
@@ -114,65 +116,58 @@ iteration $i$, where is great than $1$, we may disregard rows $0 \dots
 There are more complicated techniques that allow us to also disregard
 unneccesary computation --- a few implementations employ strategies
 that allow them to trace the table space diagonally, rather than
-iteratively, achieving a time complexities as low as $O(ed(x,
-y)^2)$.\cite{Chang1992} Another harnesses bit vectors to achieve a
-time complexity of $O(nm/w)$ or $O(nm log {\Sigma}/w)$ time where $w$
-the bit-word size of the machine, and $\Sigma$ is the alphabet
-size.\cite{Myers1999}\cite{Hyyro2003} 
+iteratively, achieving a time complexities as low as $O(ed(x, y)^2)$
+(though they sacrifice some accuracy).\cite{Chang1992} Another
+harnesses the speed of bit operations to achieve a time complexity of
+$O(nm/w)$ or $O(nm log {\Sigma}/w)$ time where $w$ the bit-word size
+of the machine, and $\Sigma$ is the alphabet
+size.\cite{Myers1999}\cite{Hyyro2003}
 
 In this project, however, it was suffice to simply reduce the space
-needed for the computation. The texts were relatively small, and the
-program was sped up using some simple threading operations. We talk
-more about our implementation of edit distance later in the report. 
+needed for the computation, as the texts were relatively small, and
+speed not an issue. However, we were able to speed up the program
+somewhat by implementing some simple multiprocessing.  Both these
+procedures are discussed in chapter REFERENCE. In chapter REFERENCE we
+also discuss  
 
-\subsection*{Varieties of edit distance}
-Modifications can be made to the nature of the distance itself, in
-order to adapt the measure a variety of different and specific
-needs. Here is a brief overview of the main groups these extensions
-fall into:
+%% \subsection*{Varieties of edit distance}
+%% Modifications can be made to the nature of the distance itself, in
+%% order to adapt the measure a variety of different and specific
+%% needs. Here is a brief overview of the main groups these extensions
+%% fall into:
 
-\begin{itemize}
-\item \textbf{Hamming distance.} This allows for substitutions only,
-  comparing same-length strings, such
-  that:\\ $ed_{hamming}(\text{``abc''},\text{``abd''})
-  =1$,\\ $ed_{hamming}(\text{``abc''},\text{``bcd''}) = 3$,\\ and
-  $ed_{hamming}(\text{``abc''},\text{``ab''})$ is
-  undefined.\cite{Hamming1950}
-\item \textbf{Reversals.} The Damerau-Levenshtein distance defines an
-  `swap' operation, which is the reversal of two adjacent
-  characters. It is particularly suited to spell-checking, and for
-  analysing DNA-sequence variations. In this
-  case:\\ $ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
-\item \textbf{Block distance.} This allows for displacements of entire
-  blocks to count as one operation. For
-  example:\\ $ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$ \\ One
-  move of the block `cde', one substitution of `b' for
-  `x'.\cite{Tichy1984}
-\item \textbf{\textit{q}-grams distance.} \textit{q}-grams are simply
-  sub-strings, and this measure describes the similarity of two
-  strings in terms of \textit{q}-grams they
-  share.\cite{Ukkonen1992}\\ $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma
-    ^q}|G(x)[v]-G(y)[v]|$\\ where $G(x)[v]$ returns the number of
-  occurrences of \textit{q}-gram v in string x, and $\Sigma ^q$ is all
-  the possible \textit{q}-grams in the alphabet (capped by string
-  length). $|G(x)[v]-G(y)[v]|$ a large positive number every time a
-  \textit{q}-gram appears a large amount of times in one string, but
-  not the other; it returns 0 if the substring apears the same number
-  of times. So, the whole function measures this difference for all
-  possible substrings, and sums them, returning a high number for
-  difference, and a low number for similarity.
-\end{itemize}
+%% \begin{itemize}
+%% \item \textbf{Hamming distance.} This allows for substitutions only,
+%%   comparing same-length strings, such
+%%   that:\\ $ed_{hamming}(\text{``abc''},\text{``abd''})
+%%   =1$,\\ $ed_{hamming}(\text{``abc''},\text{``bcd''}) = 3$,\\ and
+%%   $ed_{hamming}(\text{``abc''},\text{``ab''})$ is
+%%   undefined.\cite{Hamming1950}
+%% \item \textbf{Reversals.} The Damerau-Levenshtein distance defines an
+%%   `swap' operation, which is the reversal of two adjacent
+%%   characters. It is particularly suited to spell-checking, and for
+%%   analysing DNA-sequence variations. In this
+%%   case:\\ $ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
+%% \item \textbf{Block distance.} This allows for displacements of entire
+%%   blocks to count as one operation. For
+%%   example:\\ $ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$ \\ One
+%%   move of the block `cde', one substitution of `b' for
+%%   `x'.\cite{Tichy1984}
+%% \item \textbf{\textit{q}-grams distance.} \textit{q}-grams are simply
+%%   sub-strings, and this measure describes the similarity of two
+%%   strings in terms of \textit{q}-grams they
+%%   share.\cite{Ukkonen1992}\\ $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma
+%%     ^q}|G(x)[v]-G(y)[v]|$\\ where $G(x)[v]$ returns the number of
+%%   occurrences of \textit{q}-gram v in string x, and $\Sigma ^q$ is all
+%%   the possible \textit{q}-grams in the alphabet (capped by string
+%%   length). $|G(x)[v]-G(y)[v]|$ a large positive number every time a
+%%   \textit{q}-gram appears a large amount of times in one string, but
+%%   not the other; it returns 0 if the substring apears the same number
+%%   of times. So, the whole function measures this difference for all
+%%   possible substrings, and sums them, returning a high number for
+%%   difference, and a low number for similarity.
+%% \end{itemize}
 
-Other algorithms we may look at are those that, like the
-\textit{q}-gram distance, principally concern themselves with finding
-common subsequences between the strings. The common subsequence
-problem relates to the editdistance problem by way of the
-heuristic that two similar strings will have similar subsequences ---
-the \textit{q}-gram algorithm, for instance, relies on this heuristic,
-and works well for most texts, it does not agree with all distance
-measures. For example, two strings that are very different according
-to this heuristic may be quite similar according to the
-Damrau-Levenshtein measure.
 
 \subsection*{Optimal alignment}
 Another part of the problem of working out optimal edit distance is
@@ -265,25 +260,26 @@ and/or $y[j]$ thus:
   \label{fig:smith-waterman-traceback}
 \end{figure}
 
-\subsection*{Delta encoding}
-Finally, we may also look into Delta encoding algorithms. These
-describe ways of compressing the storage of a document's history --- a
-format in which only the differences between each text is stored, not
-the entire version. These algorithms are of the same family of
-algorithms discussed above. In fact, we find that one of the fastest
-known algorithms,\footnote{According to Hunt's 1998
-  study\cite{Hunt1998}} \textit{VDelta}, is a refinement of the block
-distance algorithm mentioned above. For a given version $n$ of a
-document $doc$ is defined as:
 
-$$v_n = v_0 \cup {\Delta}(v_0,v_1) \cup {\Delta}(v_1,v_2) \cup \dots
-\cup {\Delta}(v_{n-1},v_n) $$
 
-where ${\Delta}(v_i,v_j)$ is the difference between version $i$ and
-version $j$ of the document, and the union operation $\cup$ combines
-each version in a manner particular to the $\Delta$ data-type. Storing
-data in this way can be very efficient, resulting in a compression
-factors of five or ten on typical data.\cite{Macdonald2000} It may
-also be relatively easy to maintain in our case, due to the linear
-nature of Wikipedia revision histories.
+%% \subsection*{Delta encoding}
+%% Finally, we may also look into Delta encoding algorithms. These
+%% describe ways of compressing the storage of a document's history --- a
+%% format in which only the differences between each text is stored, not
+%% the entire version. These algorithms are of the same family of
+%% algorithms discussed above. In fact, we find that one of the fastest
+%% known algorithms,\footnote{According to Hunt's 1998
+%%   study\cite{Hunt1998}} \textit{VDelta}, is a refinement of the block
+%% distance algorithm mentioned above. For a given version $n$ of a
+%% document $doc$ is defined as:
 
+%% $$v_n = v_0 \cup {\Delta}(v_0,v_1) \cup {\Delta}(v_1,v_2) \cup \dots
+%% \cup {\Delta}(v_{n-1},v_n) $$
+
+%% where ${\Delta}(v_i,v_j)$ is the difference between version $i$ and
+%% version $j$ of the document, and the union operation $\cup$ combines
+%% each version in a manner particular to the $\Delta$ data-type. Storing
+%% data in this way can be very efficient, resulting in a compression
+%% factors of five or ten on typical data.\cite{Macdonald2000} It may
+%% also be relatively easy to maintain in our case, due to the linear
+%% nature of Wikipedia revision histories.

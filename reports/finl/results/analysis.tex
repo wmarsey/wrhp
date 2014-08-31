@@ -1,4 +1,20 @@
 \section{Analysis}
+Our basic analysis is based on the following three measures:
+\begin{itemize}[]
+\item \textbf{Trajectory graph.} This plots the change of the article
+  over time. By measuring a levenshtein distance between each revision
+  text against the final version (see algorithm~\ref{traj-calc}), we
+  see the article in terms of its growth from an empty article, and
+  the approach to its final version. We also plot the size of the
+  article at each point of this graph for greater context.
+\item \textbf{User by share.} We sum up each user's 'share' of the
+  article using the calculations made during analysis, and order them
+  here by user.
+\item \textbf{User by edit count.} Our understanding of the previous
+  graph can be made greater if we understand how many edits each user
+  has made.
+\end{itemize}
+
 \subsection*{Trajectory plots}
 We noticed a number of notable things using these plots. But, on
 average, they follow a similar pattern: the levnshtein distance of the
@@ -121,7 +137,6 @@ bots, but it is also traditional for the bot to be also be given an
 identifying name.\cite{wiki-bot-policy}}
  
 \begin{figure}
-  \label{fig:traj-bot}
   \centering
   \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
@@ -129,7 +144,7 @@ identifying name.\cite{wiki-bot-policy}}
       \includegraphics[width=0.45\linewidth]{img/traj-bot/ang7120traj.png}
       \includegraphics[width=0.45\linewidth]{img/traj-bot/ang7120users.png}
       \caption{\href{http://ang.wikipedia.org/wiki/index.php?curid=7120}{Anglo-Saxon
-      Wikipedia, Page ID 7120 (Persia)}}
+          Wikipedia, Page ID 7120 (Persia)}}
     \end{subfigure}
   }\\
   \makebox[\linewidth][c]{
@@ -138,7 +153,7 @@ identifying name.\cite{wiki-bot-policy}}
       \includegraphics[width=0.45\linewidth]{img/traj-bot/kw736traj.png}
       \includegraphics[width=0.45\linewidth]{img/traj-bot/kw736users.png}
       \caption{\href{http://kw.wikipedia.org/wiki/index.php?curid=736}{Cornish
-      Wikipedia, Page ID 726 (United Kingdom)}}
+          Wikipedia, Page ID 726 (United Kingdom)}}
     \end{subfigure}
   }\\
   \makebox[\linewidth][c]{
@@ -146,11 +161,12 @@ identifying name.\cite{wiki-bot-policy}}
       \centering
       \includegraphics[width=0.45\linewidth]{img/traj-bot/zh-min-nan10733traj.png}
       \includegraphics[width=0.45\linewidth]{img/traj-bot/zh-min-nan10733users.png}
-      \caption{\href{http://zh-min-nan.wikipedia.org/wiki/index.php?curid=10733}{Min Nan
-      Wikipedia, Page ID 10733 (Auckland Grammar School)}}
+      \caption{\href{http://zh-min-nan.wikipedia.org/wiki/index.php?curid=10733}{Min
+          Nan Wikipedia, Page ID 10733 (Auckland Grammar School)}}
     \end{subfigure}
   }\\
-\caption{Trajectory graphs showing bot editing characteristics.}
+  \caption{Trajectory graphs showing bot editing characteristics.}
+  \label{fig:traj-bot}
 \end{figure}
 
 The explanation is in the articles' histories. In each one, we find a
@@ -171,21 +187,21 @@ this act of housekeeping is a momentous event in the history of small
 articles.
 
 \begin{figure}
-  \label{fig:traj-bot-explanation}
-  \centering
-  \makebox[\linewidth][c]{
+  \centering \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
       \includegraphics[width=1\linewidth]{img/traj-bot/botmigration.png}
-      \caption{Migration event in article history (16:35, 7 March 2013)}
+      \caption{Migration event in article history (16:35, 7 March
+        2013)}
     \end{subfigure}
-  }\\
-  \makebox[\linewidth][c]{
+  }\\ \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
       \includegraphics[width=1\linewidth]{img/traj-bot/botdiff.png}
       \caption{The Wikipedia diff for the migration event}
     \end{subfigure}
   }
-\caption{Screenshots showing automated migration of inter-language links.}
+\caption{Screenshots showing automated migration of inter-language
+  links.}
+\label{fig:traj-bot-explanation}
 \end{figure}
 
 How do we characterise this? In this case the `article', as such, is

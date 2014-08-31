@@ -1,29 +1,33 @@
-\chapter {Discussion}
-
 \section{Results}
 The basic output of the model described here is a set of numbers, a
 levenshtein distance for each of the groups described in
 line~\ref{dist-calc-groups} of algorithm~\ref{dist-calc} (and
 described more clearly by the schema in figure~\ref{weightstable}),
 and a trajectory factor, calculated by the procedure found in
-algorithm~\ref{traj-calc}. As such, the output can be analysed in
-numerous ways.
+algorithm~\ref{traj-calc}. Accompanying this is the trajectory
+distance of each revision.
 
-Our basic analysis is based on the following three measures:
-\begin{itemize}[]
-\item \textbf{Trajectory graph.} This plots the change of the article
-  over time. By measuring a levenshtein distance between each revision
-  text against the final version (see algorithm~\ref{traj-calc}), we
-  see the article in terms of its growth from an empty article, and
-  the approach to its final version. We also plot the size of the
-  article at each point of this graph for greater context.
-\item \textbf{User by share.} We sum up each user's 'share' of the
-  article using the calculations made during analysis, and order them
-  here by user.
-\item \textbf{User by edit count.} Our understanding of the previous
-  graph can be made greater if we understand how many edits each user
-  has made.
-\end{itemize}
+Through simple database queries we may also find out other related
+information, such as how many edits an article has, how frequent these
+edits were, and the article's final or average size.
 
+With a large enough random sample, we begin to be able to report the
+relative activity of individual editors also. If, for every page `$X$'
+we also grab the page `Talk:$X$' we may see which editors were
+involved in discussions around the edits, and begin to more clearly
+see the context surrounding each article. We can also look for pages
+named `Wikipedia:Requests\_for\_arbitration/$X$' to discover
+evidence of more serious disputes. We discuss this in more detail
+later.
 
+Using the dataplot module we can output three graphs -- trajectory
+graphs, a bar chart grading users by edit count, and a similar graph
+grading them by the `share' of the article. This latter graph can be
+modified by the application of weights. The weights allow us to take
+some species of text as more important than others when calculating a
+user's share in the article.
 
+The DataPlot module can also output graphs on the database as a
+whole. Running it as a script we can plot information about how the
+size of articles in each language, the lengths of their histories,
+etc. 
