@@ -37,11 +37,13 @@ def safefilename(string):
 ##########
 ##########
 class Plotter:
-    def __init__(self, fileloc=None):
+    def __init__(self, fileloc=None, weights=None):
         if fileloc:
             self.plotdir = fileloc + "/"
         else:
             self.plotdir = BASEPATH + "/plot/images/"
+        
+        self.weights = weights
 
     ##########
     ## The main function for plotting 
@@ -87,6 +89,68 @@ class Plotter:
 
         return filenames
             
+    def weightplot(self,clip=50):       
+        dtb = db.Database()
+        pages = dtb.getallfetched()
+        print "got", len(pages)
+
+        import itertools
+        possw = list(itertools.product([0,0.5,1], repeat=6))
+
+        shuffle(pages)
+        for r in pages[:clip]:
+            article = r[0].decode('utf-8')
+            pageid = r[1]
+            domain = r[2]
+            xaxisname = "Username"
+            yaxisname = "Edit share",
+            title = "Editors of " + safefilename(article) + ", " + domain + str(pageid) + ", by edit count"
+            filename = domain + str(pageid) + "editcW"
+
+            dbdata = dtb.getuserchange2(pageid,domain)
+            dat = DHandler()
+            # for w in possw:
+            #     for d in (0,1):
+            #         ww = list(w + (d,))
+            #         f = filename + str(ww)
+            #         xlabels, ypoints = dat.editsharedata(pageid,domain,ww)
+            #         print self.barchart(xlabels, ypoints, xaxisname, yaxisname, title, 
+            #                             f, width=17)
+            xlz = []
+            ylz = [[],[]]
+            for w in possw:
+                for d in (0,1):
+                    ww = list(w + (d,))
+                    f = filename + str(ww)
+                    xlabels, ypoints = dat.editsharedata(pageid,domain,weights=ww,namesort=True,dbdata=dbdata)
+                    xlz = xlabels
+                    ylz[d].append(ypoints)
+                    sys.stdout.write(".")
+                    sys.stdout.flush()
+
+            realy = [[],[]]
+            for i,y in enumerate(ylz):
+                yy = zip(*y)
+                yyy = [sum(e) for e in yy]
+                assert len(yyy) == len(xlz)
+                realy[i] = yyy
+                sys.stdout.write(".")
+                sys.stdout.flush()
+            
+            xf = []
+            yf = [[],[]]
+            for i,y in enumerate(realy):
+                f = filename + "average" + "G" + str(i)
+                comb = zip(xlz,y)
+                comb = sorted(comb, key = lambda x: x[1])
+                xf, yf[i] = zip(*comb) 
+                # print self.barchart(xf, yf, xaxisname, yaxisname,
+                #                     title, f, width=17)
+                xpoints = list(range(len(xf)))
+            print self.specialtrajectory(xpoints, yf[0], xpoints,
+                                         yf[1], None, None, None,
+                                         xaxisname, yaxisname, None,
+                                         title, filename, width=20, height=12)
 
     def specialplot(self):
         dat = DHandler()
@@ -96,20 +160,47 @@ class Plotter:
         pageid2 = 8279367
         pageid3 = 22656812
         
-        xpoints1, tpoints1, _ = dat.trajectorydata(pageid1, domain)
+        xpoints1, tpoints1, _ = dat.trajectorydata(pageid1, domain, normalise=False)
+        xpoints2, tpoints2, gpoints = dat.trajectorydata(pageid2, domain, normalise=False)
+        xpoints3, tpoints3, _ = dat.trajectorydata(pageid3, domain, normalise=False)
+        #xpoints3, tpoints3 = None, None
 
-        print xpoints1, tpoints1
+        t1sum = max(tpoints1) 
+        for i in xrange(len(tpoints1)):
+            tpoints1[i] /= t1sum
 
-        xpoints2, tpoints2, gpoints = dat.trajectorydata(pageid2, domain)
+        t2sum = max(tpoints2) 
+        for i in xrange(len(tpoints2)):
+            tpoints2[i] /= t2sum
 
-        xpoints3, tpoints3, _ = dat.trajectorydata(pageid3, domain)
-        
+        t3sum = max(tpoints3) 
+        for i in xrange(len(tpoints3)):
+            tpoints3[i] /= t3sum
+
+        gsum = max(gpoints) 
+        for i in xrange(len(gpoints)):
+            gpoints[i] /= gsum
+
+        creation = min(xpoints1[0],xpoints2[0],xpoints3[0])
+        for x in (xpoints1, xpoints2, xpoints3):
+            for i in xrange(len(x)):
+                x[i] = (x[i]-creation).total_seconds()/3600
+
         title = "Derek Smart trajectory vs talk page and arbitration requests"
+        xaxisname = "Hours since creation"
+        taxisname = "Change"
+        gaxisname = "Article page size"
+        filename = "DerekSmart Special Combo"
 
-    def trajectory(self, xpoints1, tpoints1, xpoints2, tpoints2,
+        print self.specialtrajectory(xpoints1, tpoints1, xpoints2,
+                                     tpoints2, xpoints3, tpoints3, gpoints,
+                                     xaxisname, taxisname, gaxisname,
+                                     title, filename, width=20, height=12)
+
+    def specialtrajectory(self, xpoints1, tpoints1, xpoints2, tpoints2,
                      xpoints3, tpoints3, gpoints, xaxisname,
-                     taxisname, gaxisname, title, filename, width=40,
-                     height=30):
+                     taxisname, gaxisname, title, filename, width=13,
+                     height=8):
 
          #filename = domain + str(pageid) + 'traj'
         imagefile = self.plotdir + filename + " " + title + ".png"
@@ -122,15 +213,17 @@ class Plotter:
         ax1 = fig.add_subplot(111)
         ax1.plot(xpoints1, tpoints1, 'bo-', label='Arbitration trajectory')
         ax1.plot(xpoints2, tpoints2, 'go-', label='Article page trajectory')
-        ax1.plot(xpoints3, tpoints3, 'ro-', label='Talk page trajectory')
+        if xpoints3:
+            ax1.plot(xpoints3, tpoints3, 'ro-', label='Talk page trajectory')
         ax1.set_xlabel(xaxisname)
-        ax1.set_ylabel(taxisname, color='b')
-        ax1.get_yaxis().get_major_formatter().set_scientific(False)
+        ax1.set_ylabel(taxisname)
+        ax1.get_yaxis().set_ticks([])
+        #ax1.get_xaxis().set_ticks([])
+        if gpoints:
+            ax1.plot(xpoints2, gpoints, 'ko-', label='Article length')
         
-        ax2 = ax1.twinx()
-        ax2.plot(xpoints, gpoints, 'ko-', label='Article length')
-        ax2.set_ylabel(gaxisname, color='k')
-        ax2.get_yaxis().get_major_formatter().set_scientific(False)
+        ax1.legend(loc='upper right')
+
         for tl in ax1.get_yticklabels():
             tl.set_color('b')
         plt.title(title)
@@ -200,7 +293,6 @@ class Plotter:
 
         ax1.set_xlabel(xaxisname)
         ax1.set_ylabel(yaxisname, color='b')
-
         
         plt.title(title)
 
@@ -344,6 +436,11 @@ def main():
         p.metricplots()
     if "--special" in sys.argv:
         p.specialplot()
+    if "--weight" in sys.argv:
+        if "--clip" in sys.argv:
+            p.weightplot(int(sys.argv[sys.argv.index("--clip") + 1]))
+        else: 
+            p.weightplot()
         
 if __name__ == "__main__":
     main()

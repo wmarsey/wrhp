@@ -188,6 +188,13 @@ class Database:
         if(self._execute(sql,data)):
             return self.crsr.fetchall()
         return None
+
+    def getuserchange2(self, pageid, domain):
+        sql = "SELECT username, maths, citations, filesimages, links, structure, normal, gradient FROM " + self.weighttable + " AS a JOIN " + self.revisiontable + " AS b USING(revid, domain) WHERE b.pageid = %s AND domain = %s;"
+        data = (pageid,domain)
+        if(self._execute(sql,data)):
+            return self.crsr.fetchall()
+        return None
     
     def getusereditcounts(self, pageid, domain):
         sql = "SELECT username, count(revid) AS rcount FROM " + self.revisiontable + " AS a JOIN " + self.fetchedtable + " AS b USING (pageid) WHERE pageid = %s AND language = %s GROUP BY username ORDER BY rcount;"
