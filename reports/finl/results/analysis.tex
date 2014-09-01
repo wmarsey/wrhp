@@ -34,13 +34,14 @@ figure~\ref{fig:traj-classic}.
       \centering
       \includegraphics[width=\linewidth]{img/traj-classic/bg90882traj.png}
       \caption{\href{http://bg.wikipedia.org/wiki/index.php?curid=90882}{Bulgarian
-      Wikipedia, Page ID 90882 (History of South Georgia and the South Sandwich Islands)}}
+          Wikipedia, Page ID 90882 (History of South Georgia and the
+          South Sandwich Islands)}}
     \end{subfigure}
     \begin{subfigure}[b!]{0.6\linewidth}
       \centering
       \includegraphics[width=\linewidth]{img/traj-classic/fr572796traj.png}
       \caption{\href{http://fr.wikipedia.org/wiki/index.php?curid=572796}{French
-      Wikipedia, Page ID 572796 (Agatha of Catania)}}
+          Wikipedia, Page ID 572796 (Agatha of Catania)}}
     \end{subfigure}
   }\\
   \makebox[\linewidth][c]{
@@ -48,15 +49,15 @@ figure~\ref{fig:traj-classic}.
       \centering
       \includegraphics[width=\linewidth]{img/traj-classic/pl291709traj.png}
       \caption{\href{http://pl.wikipedia.org/wiki/index.php?curid=291709}{Polish
-      Wikipedia, Page ID 291709 (Fredrikstad FK, a Norwegian football
-      club)}}
+          Wikipedia, Page ID 291709 (Fredrikstad FK, a Norwegian
+          football club)}}
       \label{fig:fredrikstad}
     \end{subfigure}
     \begin{subfigure}[b!]{0.6\linewidth}
       \centering
       \includegraphics[width=\linewidth]{img/traj-classic/tl62286traj.png}
       \caption{\href{http://tl.wikipedia.org/wiki/index.php?curid=62286}{Tagalog
-      Wikipedia, Page ID 62286 (The Nicene Creed)}}
+          Wikipedia, Page ID 62286 (The Nicene Creed)}}
       \label{fig:nicine-creed}
     \end{subfigure}
   }\\
@@ -238,19 +239,175 @@ gradient as follows:
   rev_{n_{content}}), rev_{n_{tstamp}} - v_{0_{tstamp}})
 \]
 
+\subsection*{Combining trajectory plots}
+Derek Smart's wikipedia page has been named as the battleground of one
+of the `lamest WikiWars' -- it is the place where a very long argument
+about whether or not to include criticisms of his work on his page.
+We use it here as a case study for how derive more information about
+the context of a page given the tools developed here.
 
-GRAPH OF
-GRADIENT SUM VS
+In figure~\ref{fig:dsmart-case} we see the combination of trajectory
+plots on three different pages -- the green and black lines represent
+the same article trajectory / article size we've looked at previously,
+but accomanying those we have plots of the talkpage for that article,
+and the page detailing the arbitration request made for that page. We
+see clearly page's activity density is relative to the density on the
+respective talk page.
 
-IS THERE MORE EXAMPLE OF WEIRD WIKI STUFF MESSING UP RESULTS?
+But perhaps the most interesting part of this graph is the plot of the
+request for arbitration page -- the blue line. We see it created at
+the height of the page's size and from-final distance, and during a
+particularly turbulent patch of the talk page history. We also see
+that as the arbitration page reaches it's final versions (the
+decision on the dispute), the edit warring begins to cease, and the
+page shortens, and is edited less frequently.
 
-PLOT DISTRIBUTION OF EDIT NUMBER ON EN, DE, IT
+\begin{figure}
+  \centering
+  \makebox[\linewidth][c]{
+    \begin{subfigure}[b!]{1.2\linewidth}
+      \centering
+      \includegraphics[width=0.3\linewidth]{img/dsmart/dereksmarttraj.png}
+      \includegraphics[width=0.3\linewidth]{img/dsmart/dereksmarttalk.png}
+      \includegraphics[width=0.3\linewidth]{img/dsmart/dereksmartarbritration.png}
+    \end{subfigure}
+  }\\
+  \makebox[\linewidth][c]{
+    \begin{subfigure}[b!]{1.2\linewidth}
+      \centering
+      \includegraphics[width=1\linewidth]{img/dsmart/dereksmartcombo.png}
+      \caption{\href{http://kw.wikipedia.org/wiki/index.php?curid=736}{Cornish
+          Wikipedia, Page ID 726 (United Kingdom)}}
+    \end{subfigure}
+  }\\
+  \caption{Obtaining greater context of an article's history by
+    combining page trajectories (Y-axis figures normalised)}
+  \label{fig:dsmart-case}
+\end{figure}
 
-PLOT DISTRIBUTION OF SPECIES OF TEXT 
+We can take many interesting things away from this combination
+graph. That the page-edit density increases with the talk page shows a
+correlation between those who make dits and those who participate in
+the bearocracy is high. The persistence of the correlation, seems to
+indicate a tolerance for unconstructive editing when users participate
+in the beaurocracy of the page -- similar edits made by anonymous
+editors would be undone. but most importantly, we see that the
+arbitration request really controls this page. It is the features in
+this history that really help bring the page to it final version.
 
-THE CASE FOR STUDYING NETWORK 
+So perhaps it would be important for us to reward editors who
+participate in these discussions accordingly. With simple aithmentic
+operations we can see when an argument has harmed a page -- we see
+that this one involved the addition of a lot of eventually removed
+text -- and perhaps penalise the key editors involved by
+corss-referencing their edits between the pages. We can also see when
+the opposite occurs. The downward trajectory of the graph in
+figure~\ref{fig:dsmart-case} perhaps shows a reconciliation, and
+efforts to change the article according to the conclusions of the
+article. We may see if the arguin editors are involved in this
+`tidying', and reqard them accordingly.
 
---Frederick Chopin + talk
---Rupert Sheldrak + talk
---Derek Smart + talk
---Aluminium + talk
+Another interesting case show these pages can also be a battleground
+for fights going outside of wikipedia. We examine the english
+Wikipedia page on biologist Rupert Sheldrake. Rupert Sheldrake is a
+biologist, who, with his `astonishingly visionary' early work in plant
+science had him described as `one of the brightest Darwinians of his
+generation',\cite{odyssey-auxin}\cite{guardian-shel}, came under heavy
+criticism for his later work in psychical research, and `mysterious
+telepathy-type interconnections between organisms and collective
+memories within species'.\cite{sheldrake-biog}
+Figure~\ref{fig:sheldrake-plots} shows WHAT DOES IT EVEN SHOW
+
+\begin{figure}
+  \centering
+  \makebox[\linewidth][c]{
+    \begin{subfigure}[b!]{0.6\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/traj-classic/bg90882traj.png}
+      \caption{\href{http://bg.wikipedia.org/wiki/index.php?curid=90882}{Bulgarian
+          Wikipedia, Page ID 90882 (History of South Georgia and the South Sandwich Islands)}}
+    \end{subfigure}
+    \begin{subfigure}[b!]{0.6\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/traj-classic/fr572796traj.png}
+      \caption{\href{http://fr.wikipedia.org/wiki/index.php?curid=572796}{French
+          Wikipedia, Page ID 572796 (Agatha of Catania)}}
+    \end{subfigure}
+  }\\
+  \caption{Simple trajectory graphs.}
+  \label{fig:sheldrake-plots}
+\end{figure}
+
+\subsection*{Summary}
+With these latter cases we see the effects of things external to the
+articles affecting their content, and how we may bring these things to
+bear on the calculation of share. 
+
+It is perhaps one of the most interesting parts of Wiki analysis that
+evidence such interpersonal acts is so readily available. Due to the
+nature of the WikiMedia software, these interactions are as publicly
+available as the article's themselves, all utilising the same text
+revision framework. 
+
+Though, we are concious that in other forms of collaboration -- for
+which the Wiki dataset is standing in for proof-of-concept study --
+these interactions are less readily available. In cases of multi-user
+source control, these interactions may occur over personal emails, on
+private forums, or in the physical space of a shared workspace.
+
+In this way then, the Wikipedia dataset is almost too complete. By
+tunnelling all activity through a common system, we are able to
+discover all organisation that surround the creation of the
+collaborative works. And while we see that these interactions give
+much greater context to collaborative contributions, we must
+understand that this kind of data is unavailable on some platforms.
+
+Our findings corroborate with existing research on individual user
+activity in large-scale collaboration platforms. 
+
+It has been found that the population and dynamics of an online space
+may affect individual user behaviour. Jones, Ravid, Rafaeli find that
+Newsgroups users publish shorter posts in more populous threads.
+
+INSERT THING ABOUT GOOGLE POPULAR THING
+
+%% In the world of physical collaboration these kind of interpersonal
+%% artefacts of cooperation are apparent. With wikipedia we get a clearly
+%% traceable stuff.
+
+%% PLOT DISTRIBUTION OF EDIT NUMBER ON EN, DE, IT
+
+%% PLOT DISTRIBUTION OF SPECIES OF TEXT 
+
+%% THE CASE FOR STUDYING NETWORK 
+
+%% --Frederick Chopin + talk
+%% --Rupert Sheldrak + talk
+%% --Derek Smart + talk
+%% --Aluminium + talk
+
+\url{https://en.wikipedia.org/wiki/Wikipedia:Harassment#User_space_harassment}
+\url{https://en.wikipedia.org/wiki/Wikipedia:Wikipedia_is_in_the_real_world}
+\url{https://en.wikipedia.org/wiki/Wikipedia:Wikipedia_is_anonymous}
+\url{https://en.wikipedia.org/wiki/Wikipedia:Harassment#Wikihounding}
+
+\begin{figure}
+  \begin{subfigure}[t]{0.45\linewidth}
+    \lstinputlisting[
+      language=SQL,
+      basicstyle=0.8\footnotesize,
+      firstline=44,
+      lastline=70,
+    ]{results/sqlsnippet1.sql}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.45\linewidth}
+    \lstinputlisting[
+      language=SQL,
+      basicstyle=0.8\footnotesize,
+      firstline=71,
+      lastline=97,
+    ]{results/sqlsnippet1.sql}
+  \end{subfigure}
+  \caption{SQL snippet used to measure discrepancy between Trajectory
+    calculations and distance calculations}
+\end{figure}
