@@ -307,6 +307,14 @@ class Database:
     ## DUMP / PLOT SPECIFIC FUNCTIONS
     ##########
         
+    def getrevidlog(self, pageid, domain):
+        sql = "SELECT w.*, time FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " USING (revid, domain) WHERE pageid = %s AND domain = %s;"
+        if(self._execute(sql, (pageid,domain))):
+            result = self._crsrsanity()
+            if result:
+                return [list(w[:-2]) + [sum(w[2:-3])*w[-3]] + [w[-1]] for w in result]
+        return None
+
     def getallrevs(self):
         sql = "SELECT DISTINCT revid, language FROM " + self.fetchedtable + " JOIN " + self.revisiontable + " USING (pageid) WHERE language = domain;"
         if(self._execute(sql, ())):

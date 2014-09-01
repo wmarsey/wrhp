@@ -9,6 +9,7 @@ from traceback import print_exception
 from argParser import ArgParser
 import wikiScraper as wk
 from interface import WikiAnalyser
+from logger import revidLog
 
 class WikiCLI:
     params, flags = None, None
@@ -27,13 +28,15 @@ class WikiCLI:
                             self.params['revid'], 
                             self.params['domain'])
             else:
-                wl.shorev(self.params['revid'], 
+                wl.showrev(self.params['revid'], 
                           self.params['domain'])
         elif self.params['pageid']:
             wl.showpage(self.params['pageid'], 
                         self.params['domain'])
-        else:
-            wl.showuser(self.params['user'],
+        elif self.params['title']:
+            wl.showtitle(self.params['title'], 
+                         self.params['domain'])
+        else: wl.showuser(self.params['user'],
                         self.params['domain'])
         return 0
 
@@ -76,9 +79,9 @@ class WikiCLI:
                 title, pageid, domain = scraper.scrape()
                 
                 if title and pageid and domain:
-                    return title and pageid and domain
+                    break
                 elif (self.params['title'] or self.params['pageid']):
-                    retun -1 ##if you asked but didnt get. terminate
+                    return -1 ##if you asked but didnt get. terminate
                              ##instead of trying again
                 
 
@@ -96,6 +99,8 @@ class WikiCLI:
                 plotter = dpl.Plotter(os.path.abspath(self.params['plotpath']) if self.params['plotpath'] else None)
                 plotted = plotter.plot(title, pageid, domain)
                 print len(plotted), "plotted"
+
+            revidLog(title, pageid, domain)
 
             if not self.flags['trundle']:
                 break

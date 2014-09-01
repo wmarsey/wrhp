@@ -95,6 +95,22 @@ identical, so the changes in $v_i$ must have been completely
 undone. These reverts are common in normal Wikipedia edit
 practice.\cite{wiki-revert}
 
+\begin{floatingfigure}[p]{0.4\textwidth}
+  \centering
+  \pgfplotsset{width=0.4\textwidth}
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Dummy revision history},
+        ylabel={Ed. distance from final},
+        xlabel={revision ID},
+      ]
+      \addplot table {dat/dummy_history.dat};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Graph showing a `trajectory plot'}
+  \label{fig:dummy-history}
+\end{floatingfigure}
+
 This algorithm, however, is limited in its scope, and we may
 come across situations where reversions occur over a series of
 edits. Although the system may easily be extended to cover
@@ -109,22 +125,6 @@ previous edits in order to do so. Let us graph the entirety of a
 wikipedia's revision history in terms of the edit distance from this
 final version (see figure~\ref{fig:dummy-history}).
 
-\begin{figure}
-  \centering
-  \pgfplotsset{width=0.4\textwidth}
-  \begin{tikzpicture}
-    \begin{axis}[
-        title={Dummy revision history},
-        ylabel={Ed. distance from final},
-        xlabel={revision ID},
-      ]
-      \addplot table {dat/dummy_history.dat};
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Graph showing a `trajectory plot'}
-  \label{fig:dummy-history}
-\end{figure}
-
 Each point represents a different version, it's coordinates being its
 timestamp, and the edit distance from that revision to the final
 revision. A line between two points represents the edit-distance
@@ -134,7 +134,7 @@ in figure~\ref{fig:traj-preen-1} as lines with a negative gradient
 (blue); those with a positive gradient take us further away from the
 final version (red).
 
-\begin{figure}
+\begin{floatingfigure}[p]{0.4\textwidth}
   \centering
   \pgfplotsset{width=0.4\textwidth}
   \begin{tikzpicture}
@@ -151,7 +151,7 @@ final version (red).
   \end{tikzpicture}
   \caption{Trajectory plotting: a technique for preening results}
   \label{fig:traj-preen-1}
-\end{figure}
+\end{floatingfigure}
 
 We need not compute edit distances with a positive gradient (the two
 red lines). This is simple to implement. Given a version $rev_i$, having
@@ -163,10 +163,9 @@ ed_{final_{j-1}}$.
 
 Another possible strategy would be to disregard all edit distances
 that, at any point, lie between two versions that are further away
-from final version than the version currently being considered, as
-shown in figure~\ref{fig:traj-preen-2}
+from final version than the version currently being considered.
 
-\begin{figure}
+\begin{floatingfigure}[p]{0.4\textwidth}
   \centering
   \pgfplotsset{width=0.4\textwidth}
   \begin{tikzpicture}
@@ -189,21 +188,170 @@ shown in figure~\ref{fig:traj-preen-2}
   \end{tikzpicture}
   \caption{Trajectory plotting: a more lossy approach}
   \label{fig:traj-preen-2}
-\end{figure}
+\end{floatingfigure}
 
-In this graph, $rev_i$, the currently considered version, is
-represented by the node at (4,13). The green rectangle shows
-the area in which we look to find $rev_j$, and the blue lines
-are those edit distances we both to compute. In this case,
-after considering $rev_i$, we move to the $rev_j$ such that $j$ is
-the smallest number that satisfies to qualities $j > i$ and
-$ed_{final_j} < ed_{final_i}$. In this graph above we move
-from (4,13) to (8,12).
+In figure~\ref{fig:traj-preen-2}, $rev_i$, the currently considered
+version, is represented by the node at (4,13). The green rectangle
+shows the area in which we look to find $rev_j$, and the blue lines
+are those edit distances we both to compute. In this case, after
+considering $rev_i$, we move to the $rev_j$ such that $j$ is the
+smallest number that satisfies to qualities $j > i$ and $ed_{final_j}
+< ed_{final_i}$. In this graph above we move from (4,13) to (8,12).
 
 It is worth stating here that, in both these strategies, after
-discovering $rev_j$, we always compute $ed(rev_{j-1}, rev_j)$ rather than
-$ed(rev_i,rev_j)$. We will look into the pros and cons of these different
-strategies further into the project.
+discovering $rev_j$, we always compute $ed(rev_{j-1}, rev_j)$ rather
+than $ed(rev_i,rev_j)$. 
+
+\begin{floatingfigure}[p]{0.4\textwidth}
+  \centering
+  \pgfplotsset{width=0.4\textwidth}
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Dummy revision history},
+        ylabel={Ed. distance from final},
+        xlabel={revision ID},
+      ]
+      \addplot [blue] table {dat/dummy1.dat};
+      \addplot [red] table {dat/dummy7.dat};
+      \addplot [blue] table {dat/dummy6.dat};
+      \addplot [blue, only marks] table {dat/dummy8.dat};
+      \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
+      cs:1,0);
+      \addplot[red,dashed,update limits=false] 
+      coordinates {(-2,13) (14,13)};
+      \addplot[red,dashed,update limits=false] 
+      coordinates {(4,-2) (4,23)};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Trajectory plotting}
+  \label{fig:traj-preen-3}
+\end{floatingfigure}
+
+However, with this technique we find some limitations -- we may find a
+history such as the one found in
+figure~\ref{fig:traj-preen-3}. Between time-points 5 and 6, we find a
+downward trajectory, and we may infer here that the editor has altered
+the article so as to more closely approximate the final
+version. Perhaps we should not simply disregard this edit simply
+because it is undone in the next revision. 
+
+Also, perhaps we may give some lessened reward to edits that move away
+from the final version, rather than disregarding them altogether. We
+may imagine quite easily that the work done here may have inspired
+`correction', or at least be part of an ongoing discussion which moves
+devlopment of the article on if not towards its final version. %%LESS
+%%                                                                %%BULSHIT
+%% \begin{floatingfigure}[p]{0.4\textwidth}
+%%   \centering
+%%   \pgfplotsset{width=0.4\textwidth}
+%%   \begin{tikzpicture}
+%%     \begin{axis}[
+%%         title={Dummy revision history},
+%%         ylabel={Ed. distance from final},
+%%         xlabel={revision ID},
+%%       ]
+%%       \addplot [blue] table {dat/dummy1.dat};
+%%       \addplot [red] table {dat/dummy7.dat};
+%%       \addplot [blue] table {dat/dummy6.dat};
+%%       \addplot [blue, only marks] table {dat/dummy8.dat};
+%%       \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
+%%       cs:1,0);
+%%       \addplot[red,dashed,update limits=false] 
+%%       coordinates {(-2,13) (14,13)};
+%%       \addplot[red,dashed,update limits=false] 
+%%       coordinates {(4,-2) (4,23)};
+%%     \end{axis}
+%%   \end{tikzpicture}
+%%   \caption{Trajectory plotting: An unfair example}
+%%   \label{fig:traj-preen-3}
+%% \end{floatingfigure}
+
+
+So, we calculate a `gradient factor', which we may use to modify the
+reward given to an edit. Taking the trajectory distance as $\Delta y$,
+and the time difference between that revision and it's predecessor as
+$\Delta x$, we calculate a real number between 0 and 1 using the
+function in~\ref{fig:circle-map}. We map every point on a the shown
+arc to a our gradient factor. The real number increases the more
+acutely the article approaches it's final version: inserting a lot of
+text that is eventually deleted results in a small gradient factor,
+and including a lot of text that is also in the final text results in
+a number closer to one. The time frame of this change alters the
+number also -- the sooner an edit is made after the previous one, the
+closer the gradient factor will be towards either 0 or 1, depending on
+the sign of $\Delta y$. (Note that the gradient factor a negative
+$\Delta x$ is undefined, as a revision cannot occur before it's
+predecessor.)
+
+%% Our most important algorithm, however, is the trajectory calculation
+%% algorithm. With this algorithm we allow ourselves to automatically
+%% identify some of the context of the revision history, using the same
+%% tools with which we analyse pair distance.
+
+%% We consider that, although Wikipedia articles have no endpoint as a
+%% rule -- we refer to page~\ref{quote-page} -- we must take the most
+%% recent page in our history sample as a kind of `goal'. We measure
+%% every revision's levenshtein distance from the final version, giving
+%% us an idea of how close to `finished' it is, at least in terms of this
+%% history. We then, taking that levenshtein distance as $\Delta y$, and
+%% the time difference between that revision and it's predecessor as
+%% $\Delta x$.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \[gfactor(\Delta x,\Delta y) = \left\{ 
+    \begin{array}{l l l}
+      1 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y < 0$ }\\
+      0 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y >= 0$ }\\
+      \frac{arctan({\Delta}y/{\Delta}x)}{\pi}\quad\text{if ${\Delta}x > 0$}
+    \end{array} \right.\]
+    \caption{Gradient factor definition}
+  \end{subfigure}
+
+  \vspace{10mm}
+
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \begin{tikzpicture}[x=1.25cm,y=1.25cm]
+
+      \draw[thick,red,dashed] (4,0) -- (4,1);
+      \draw[thick,red,dashed] (4,7) -- (4,8);
+      \draw[thick,red,dashed] (7,4) -- (8,4);
+      \draw [green] (4,4) circle (3cm);
+      \node[fill,blue,circle] at (4,4) (o) {};
+      \node[fill,blue,circle] at (7,4) (a) {};
+      \node[fill,blue,circle] at (6,2) (b) {};
+      \node[fill,blue,circle] at (6,6) (c) {};
+      \node[fill,blue,circle] at (4,1) (d) {};
+      \node[fill,blue,circle] at (4,7) (e) {};
+      
+      \node[fill=white,left=1.5cm of o, minimum height=3cm]{\textit{undefined region}};
+      \node at (6,7) {\textit{moving away from final}};
+      \node at (6,1) {\textit{moving towards final}};
+      
+      \draw [thick, blue, ->] (o) -- (7,4) node[sloped, midway, above]{$0.5$};
+      \draw [thick, blue, ->] (o) -- (6,2) node[sloped, midway, above]{$0.75$};
+      \draw [thick, blue, ->] (o) -- (6,6) node[sloped, midway, below]{$0.25$};
+      \draw [thick, blue, ->] (o) -- (4,1) node[midway, right]{$1$};
+      \draw [thick, blue, ->] (o) -- (4,7) node[midway, right]{$0$};
+    \end{tikzpicture}
+    \caption{Gradient factor definition: a visual representation}
+  \end{subfigure}
+  \caption{Mapping of trajectory angle from a single revision point to
+    gradient factor}
+  \label{fig:circle-map}
+\end{figure}
+
+The significance of this number is two-fold -- it at once describes
+the amount of change created in the history in terms of the target of
+that history, and the longevity of the article's previous state,
+(i.e. it's stability). For an edit to approach 1, it needs not only to
+contribute a large proportion of the text's final form, but also to do
+so very quickly after the previous revision. Later we will discuss
+what we can understand from these values in isolation, and how they
+relate to one another as a set. 
 
 \subsection*{Visualisation}
 Given that we are distributing wealth according to a series of weight
@@ -420,8 +568,7 @@ points of this project.
   \label{database-schema}
 \end{figure}
 
-\section{Analytical procedures}
-
+\section{Procedures}
 The data we collect via the Wikipedia API goes through a series of
 procedures in order to extract measurements of it.
 
@@ -430,224 +577,3 @@ First we compare the difference between the child-parent pairs of
 revisions. This process is fairly simple, and is described in
 algorithm~\ref{pair-comp}. The only special condition we introduce
 here is comparing the oldest revision with an empty string.
-
-%%%%% Pair comparison algorithm
-\begin{algorithm}
-\caption{Pair comparison}\label{pair-comp}
-  \begin{algorithmic}
-    \Procedure{PairComparison}{$revids$}
-    \For {$ i \gets 0, $length($revids$)}
-    \If{pair distance not already in database}
-    \State $str1 \gets $\LineIf{``"}{$i=0$}{database.gettext($revs[i-1]$)}
-    \State $str2 \gets $database.gettext($revs[i]$)
-    \State $dist \gets $PairDistance($str1, str2$)\Comment{See algorithm~\ref{dist-calc}}
-    \State databaseinsert.pairdistanceinsert($dist$)  
-    \EndIf
-    \EndFor
-  \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-The interest, instead, is in exactly how we calculate this
-distance. We discussed earlier that we would use native WikiMarkup
-tags in order to identify different `species' of text. By doing so, we
-could characterise a single revision in terms of the kinds of text
-dealt in. By characterising an edit with a series of different edit
-difference we also perhaps create the opportunity to consider some as
-more valuable than others.
-
-The algorithm that was settled upon left the levenshtein calculator
-itself naive of text species -- instead we simply split the text up
-and calculate levenstein distance separately. We traverse each string
-from beginning to end, using simple regex expressions to identify and
-extract different kinds of text, and calculating the levenshtein
-distance for each separately. This process is detailed in
-algorithm~\ref{dist-calc}. 
-
-%%%%% Distance calculation procedure
-\begin{algorithm}
-  \caption{Revision pair distance calculation}\label{dist-calc}
-  \begin{algorithmic}
-    \State $regexes \gets $\{
-    \Statex \tab`math1': `$<$math$>$((?!$<${\textbackslash}/math$>$).)*$<${\textbackslash}/math$>${\textbackslash}S',
-    \Statex \tab`math2': `\{\{math((?!\}\}).)*\}\}',
-    \Statex \tab`bquote': `$<$blockquote$>$((?!$<${\textbackslash}/blockquote$>$).)*$<${\textbackslash}/blockquote$>${\textbackslash}S'
-    \Statex  \tab...
-    \Statex\}\Comment{Regexes that recognise single Wikimarkup tags}
-    \State $reggroups \gets $\{\label{dist-calc-groups}
-    \Statex  \tab`maths':(regexes[`math1'], regexes[`math2']),
-    \Statex  \tab...
-    \Statex \}\Comment{Group of regexes by 'species'}
-    \State $distances \gets \emptyset$
-    \Function{PairDistance}{$str1,str2$}
-    \State $strs \gets [str1, str2]$
-    \ForAll {$key, reg \in reggroups$}
-    \State $comparestr \gets [``", ``"]$
-    \For {$i \gets 0,1$}
-    \State $matches \gets reg.matches(strs[i])$
-    \ForAll {$m \in matches$}
-    \State $match, strs[i] \gets $extractsplit($m.start, m.end, strs[i]$)
-    \State $comparestr[i] \gets comparestr[i] + match$
-    \EndFor
-    \EndFor
-    \If {length($comparestr[0]$)$ > 0$ OR length($comparestr[1]$)$ > 0$}
-    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \Comment{See algorithm~\ref{lev-dist}}
-    \Else
-    \State $distances[key] \gets 0$
-    \EndIf
-    \EndFor
-    \State $distances[$`$norm$'$] \gets LevDist(strs[0], strs[1])$
-    \Comment{Process the remainder}
-    \State return $distances$
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
-
-In practice, this algorithm was much quicker than trying to add an
-awareness of text species to the levenshtein calculator itself. We
-using regex statements, we can search and split the string relatively
-quickly, and use this preprocessing to alleviate the levenshtein
-distance calculator of the burden of being aware of the kinds of text
-it is dealing with. With this awareness integrated, because
-levenshtein distance considers one character at a time, these
-operations of flagging and identifying areas of text were inevitably
-multiplied many thousands of time in one operation. Instead we were
-able to use a fairly simply algorithm for calculating levenshtein
-distance, found in algorithm~\ref{lev-dist}.
-
-We will discuss different levenshtein-related algorithms further on
-this thesis, but for now we can say that the one we reference here is
-fairly basic, but with an optimised space efficiency. We see that we
-don't hold a whole matrix for the two strings, only the current and
-previous row. We may also describe the PairDistance overall as a
-divide-and-conquer algorithm. It improves the space complexity of the
-algorithm a little, and allows us the employ parallel or threaded
-processing in order to improve efficiency of computation.
-
-\begin{algorithm}
-  \caption{Levenshtein distance calculator}\label{lev-dist}
-  \begin{algorithmic}
-    \Function{LevDist}{$str1, str2$}
-    \State $s1len \gets $length($str1$)
-    \State $s2len \gets $length($str2$)
-    \State $column \gets [0_{1}, 0_{2}, \ldots, 0_{s1len}]$
-    \For{$x \gets 1,s2len$}
-    \State $col[x] \gets x$
-    \EndFor
-    \For{$p \gets 1,s1len$}
-    \State $column[0] \gets p$
-    \State $r \gets p-1$
-    \For{$q \gets 1,s2len$}
-    \State $oldnum \gets column[q]$
-    \State $column[q] \gets min(col[q]+1, col[q-1] + 1, r + str1[p-1] \neq str2[q-1])$
-    \EndFor
-    \EndFor
-    \State return $col[s1len]$
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
-
-Our most important algorithm, however, is the trajectory calculation
-algorithm. With this algorithm we allow ourselves to automatically
-identify some of the context of the revision history, using the same
-tools with which we analyse pair distance.
-
-We consider that, although Wikipedia articles have no endpoint as a
-rule -- we refer to page~\ref{quote-page} -- we must take the most
-recent page in our history sample as a kind of `goal'. We measure
-every revision's levenshtein distance from the final version, giving
-us an idea of how close to `finished' it is, at least in terms of this
-history. We then, taking that levenshtein distance as $\Delta y$, and
-the time difference between that revision and it's predecessor as
-$\Delta x$, we calculate the following:
-
-\[gfactor(\Delta x,\Delta y) = \left\{ 
-\begin{array}{l l l}
-  1 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y < 0$ }\\
-  0 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y >= 0$ }\\
-  \frac{arctan({\Delta}y/{\Delta}x)}{\pi}\text{if ${\Delta}x > 0$}
-\end{array} \right.\]
-
-This function maps every point on a given arc to a real number in the
-range 0 to 1 as shown in figure~\ref{fig:circle-map}· The real number
-increases the more acutely the article approaches it's final version:
-inserting a lot of text that is eventually deleted results in a small
-gradient factor, and including a lot of text that is also in the final
-text results in a number closer to one. The time frame of this change
-alters the number also -- the sooner an edit is made after the
-previous one, the closer the gradient factor will be towards either 0
-or 1, depending on the sign of $\Delta y$. (Note that the gradient
-factor a negative $\Delta x$ is undefined, as a revision cannot occur
-before it's predecessor.)
-
-\begin{figure}
-  \centering
-  \begin{tikzpicture}[x=1.25cm,y=1.25cm]
-
-    \draw[thick,dashed] (4,0) -- (4,1);
-    \draw[thick,dashed] (4,7) -- (4,8);
-    \draw[thick,dashed] (7,4) -- (8,4);
-    \draw (4,4) circle (3cm);
-    \node[fill,circle] at (4,4) (o) {};
-    
-    \node[fill=white,left=1.5cm of o, minimum height=3cm]{\textit{undefined region}};
-    \node at (6,7) {\textit{moving away from final}};
-    \node at (6,1) {\textit{moving towards final}};
-    
-    \draw [thick, ->] (o) -- (7,4) node[sloped, midway, above]{$0.5$};
-    \draw [thick, ->] (o) -- (6,2) node[sloped, midway, above]{$0.75$};
-    \draw [thick, ->] (o) -- (6,6) node[sloped, midway, below]{$0.25$};
-    \draw [thick, ->] (o) -- (4,1) node[midway, right]{$1$};
-    \draw [thick, ->] (o) -- (4,7) node[midway, right]{$0$};
-  \end{tikzpicture}
-  \caption{Mapping of trajectory angle to gradient factor}
-  \label{fig:circle-map}
-\end{figure}
-
-The significance of this number is two-fold -- it at once describes
-the amount of change created in the history in terms of the target of
-that history, and the longevity of the article's previous state,
-(i.e. it's stability). For an edit to approach 1, it needs not only to
-contribute a large proportion of the text's final form, but also to do
-so very quickly after the previous revision. Later we will discuss
-what we can understand from these values in isolation, and how they
-relate to one another as a set. 
-
-Our procedure for collecting these values is described in
-algorithm~\ref{traj-calc}.
-
-%%%%% Trace trajectory algorithm
-\begin{algorithm}
-\caption{Page trajectory calculation}\label{traj-calc}
-  \begin{algorithmic}
-    \Procedure{TrajectoryCalculation}{$revids, domain$}
-    \State $target \gets $database.gettext($revids[-1]$)\Comment{Last revision in list is most recent}
-    \For {$i \gets length(revids), 0$}
-    \If{trajectory distance not already in database}
-    \State $str1 \gets $database.gettext($revids[i]$)
-    \State $dist \gets $LevDist($str1, target$)\Comment{See algorithm~\ref{lev-dist}}
-    \State $database.inserttrajectoryinsert(dist)$    
-    \EndIf
-    \EndFor
-    \For{$i \gets 0, length(revids)$}
-    \State $dist2 \gets $database.gettrajectory($revids[i],domain$)
-    \State $dist1 \gets$
-        \LineIf{database.gettrajectory($revid[i-1],domain$)}{$i \neq 0$}{$2
-          \times disty$}
-    \State $time2 \gets $database.gettimestamp($revid[i],domain$)
-    \State $time1 \gets $
-        \LineIf{database.gettimestamp($revid[i-1],domain$)}{$i \neq 0$}{$timex$} 
-    \State ${\Delta}x \gets time2 - time1$
-    \State ${\Delta}y \gets dist2 - dist1$
-    \If{${\Delta}x > 0$}
-    \State $gradient = \frac{arctan({\Delta}y/{\Delta}x)}{\pi}$ 
-    \ElsIf{$x = 0$}
-    \State $gradient = $\LineIf{1}{$y < 0$}{0}
-    \EndIf
-    \State database.insertgradient($revid[i],domain,gradient$)
-    \EndFor
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-

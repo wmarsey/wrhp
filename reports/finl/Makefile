@@ -12,6 +12,5 @@ litreview: thesis.tex thesis.bib
 	echo "hey" | mutt wmarsey@gmail.com -s "finalreport" -a thesis.pdf
 	evince thesis.pdf
 
-
 clean:
 	rm -f *.aux *.bbl *.log *.xml *.toc *.blg *.dvi *.out *~* \#*
