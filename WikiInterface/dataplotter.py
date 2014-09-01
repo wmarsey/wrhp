@@ -88,6 +88,56 @@ class Plotter:
         return filenames
             
 
+    def specialplot(self):
+        dat = DHandler()
+
+        domain = 'en'
+        pageid1 = 8584605
+        pageid2 = 8279367
+        pageid3 = 22656812
+        
+        xpoints1, tpoints1, _ = dat.trajectorydata(pageid1, domain)
+
+        print xpoints1, tpoints1
+
+        xpoints2, tpoints2, gpoints = dat.trajectorydata(pageid2, domain)
+
+        xpoints3, tpoints3, _ = dat.trajectorydata(pageid3, domain)
+        
+        title = "Derek Smart trajectory vs talk page and arbitration requests"
+
+    def trajectory(self, xpoints1, tpoints1, xpoints2, tpoints2,
+                     xpoints3, tpoints3, gpoints, xaxisname,
+                     taxisname, gaxisname, title, filename, width=40,
+                     height=30):
+
+         #filename = domain + str(pageid) + 'traj'
+        imagefile = self.plotdir + filename + " " + title + ".png"
+        
+         ##prepare matplotlib
+        fig = plt.figure(figsize=(width,height), 
+                         dpi=600, 
+                         tight_layout=None)
+        
+        ax1 = fig.add_subplot(111)
+        ax1.plot(xpoints1, tpoints1, 'bo-', label='Arbitration trajectory')
+        ax1.plot(xpoints2, tpoints2, 'go-', label='Article page trajectory')
+        ax1.plot(xpoints3, tpoints3, 'ro-', label='Talk page trajectory')
+        ax1.set_xlabel(xaxisname)
+        ax1.set_ylabel(taxisname, color='b')
+        ax1.get_yaxis().get_major_formatter().set_scientific(False)
+        
+        ax2 = ax1.twinx()
+        ax2.plot(xpoints, gpoints, 'ko-', label='Article length')
+        ax2.set_ylabel(gaxisname, color='k')
+        ax2.get_yaxis().get_major_formatter().set_scientific(False)
+        for tl in ax1.get_yticklabels():
+            tl.set_color('b')
+        plt.title(title)
+ 
+        plt.savefig(imagefile)
+        return imagefile        
+
     def barchart(self, xlabels, ypoints, xaxisname, yaxisname, title, 
                   filename, width=13, height=8):
         imagefile = self.plotdir + filename +  " " + title + ".png"
@@ -292,7 +342,8 @@ def main():
             p.dumpplot()
     if "--metrics" in sys.argv:
         p.metricplots()
+    if "--special" in sys.argv:
+        p.specialplot()
         
-
 if __name__ == "__main__":
     main()

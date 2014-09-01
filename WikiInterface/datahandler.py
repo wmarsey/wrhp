@@ -11,10 +11,16 @@ class DHandler:
         self.dtb = db.Database()
 
     def trajectorydata(self, pageid, domain):
+        print pageid, domain
+
         tdata = self.dtb.gettrajectory(pageid, domain)
         gdata = self.dtb.getgrowth(pageid, domain)
+        print tdata, gdata
+
         creation = tdata[0][0]
         
+        print 
+
         tpoints = [e[1] for e in tdata]
         gpoints = [e[1] for e in gdata]
         xpoints = [(e[0]-creation).total_seconds()/3600 for e in tdata]

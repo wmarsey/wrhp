@@ -74,16 +74,17 @@ class ArgParser():
                     if arg not in [e[0] for e in self.aoptions] and arg != "--trundle":
                             raise ValueError("argument " + arg + " is invalid")
             else:
-                if i > 0 and self.argv[i] != '-' and self.argv[i][1] != '-':
-                    if self.argv[i-1][0] == '-' and self.argv[i-1][1] != '-':
-                        raise ValueError("argument " + self.argv[i-1] + " does not take paramaters")
-                    
-                    for v in range(len(self.argv[:i]),-1,-1):
-                        if self.argv[v][0] == '-':
-                            if self.argv[v][1] != '-':
-                                raise ValueError("multiple values given for " + self.argv[i-1] + ", which does not take parameters")
-                            else:
-                                raise ValueError("multiple values given for " + self.argv[i-1])
+                if i > 0 and self.argv[i][:1] != '--':
+                    if self.argv[i-1][0] == '-':
+                        if self.argv[i-1][1] != '-':
+                            raise ValueError("argument " + self.argv[i-1] + " does not take paramaters")
+                    else:
+                        for v in range(len(self.argv[:i]),-1,-1):
+                            if self.argv[v][0] == '-':
+                                if self.argv[v][1] != '-':
+                                    raise ValueError("multiple values given for " + self.argv[i-1] + ", which does not take parameters")
+                                else:
+                                    raise ValueError("multiple values given for " + self.argv[i-1])
 
     def _arg_comb_check(self):
         ##invalid combinations
@@ -115,7 +116,7 @@ class ArgParser():
             raise ValueError("--revid, --oldrevid or --username params only used with -v option.")
 
     def _arg_sanity(self):
-        a = self.argv[1:]
+        a = self.argv
 
         if "--help" in a:
             self.print_help()
@@ -123,6 +124,7 @@ class ArgParser():
         if "--version" in a:
             print "Version:", VERSION_NUMBER
             return None
+
         for o in self.aoptions:
             if o[0] in a:
                 try:
