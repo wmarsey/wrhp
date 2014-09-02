@@ -373,14 +373,54 @@ class Database:
                 return result
         return None
 
-    def getusersbyeditcount(self, domain):
-        sql = "SELECT r.count, count(r.username) FROM (SELECT count(revid) AS count, username FROM " + self.revisiontable + " WHERE domain = %s GROUP BY username ORDER BY count DESC) AS r ORDER BY count DESC;"
-        data = (domain,)
+    def gettrainingdata1(self, limit=None, domain=None):
+        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient FROM " + self.weighttable + " AS w"
+        sql += " WHERE domain = %s;" if domain else ";"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    def gettrainingdata2(self, limit=None):
+        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, count(rr.*), w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN " + self.revisiontable + " AS rr USING (username, pageid, domain)"
+        sql += " GROUP BY w.revid, w.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient;"
         if(self._execute(sql,())):
             result = self._crsrsanity()
             if result:
                 return result
         return None
+
+    def gettrainingdata3(self, limit=None, domain=None):
+        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, count(rr.*), avg(w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN " + self.revisiontable + " AS rr USING (username, domain)"
+        if domain:
+            sql += " WHERE domain= %s"
+        sql += " GROUP BY w.revid, w.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient;"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    # def getcounttogradient(self):
+    #     sql = "SELECT count(r.revid), avg(w.gradient) FROM wikiweights AS w JOIN wikirevisions AS r USING (revid, domain) WHERE domain= 'en' AND r.userid <> 0 GROUP BY r.pageid, r.username;"
+    #     data = ()
+    #     if(self._execute(sql,data)):
+    #         result = self._crsrsanity()
+    #         if result:
+    #             return result
+    #     return None
+
+    # def getusersbyeditcount(self, domain):
+    #     sql = "SELECT r.count, count(r.username) FROM (SELECT count(revid) AS count, username FROM " + self.revisiontable + " WHERE domain = %s GROUP BY username ORDER BY count DESC) AS r ORDER BY count DESC;"
+    #     data = (domain,)
+    #     if(self._execute(sql,())):
+    #         result = self._crsrsanity()
+    #         if result:
+    #             return result
+    #     return None
 
     def geteditdistribution(self, domain=None):
         sql = "SELECT r.count AS edit_count, count(r.username) AS frequency FROM (SELECT count(rev.revid) AS count, rev.username FROM wikirevisions AS rev "

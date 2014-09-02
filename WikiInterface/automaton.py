@@ -104,7 +104,7 @@ class WikiCLI:
 
             if not self.flags['trundle']:
                 break
-            return 0
+        return 0
 
 
 def main():

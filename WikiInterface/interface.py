@@ -31,7 +31,7 @@ regexlist = [(math1,math2),#maths
              (bquote, cite, citeneed, asof),#citations
              (afile,score),#filesimages
              (linkint, linkext),#links
-             (h1, h2, h3, h4, h5, table, asof)]#structure
+             (h1, h2, h3, h4, h5, table)]#structure
 
 ##########
 ## extracts a slice mid-string

@@ -156,14 +156,14 @@ class Plotter:
         dat = DHandler()
 
         domain = 'en'
-        pageid1 = 8584605
-        pageid2 = 8279367
-        pageid3 = 22656812
+        pageid1 = 3787014
+        pageid2 = 142395
+        #pageid3 = 22656812
         
         xpoints1, tpoints1, _ = dat.trajectorydata(pageid1, domain, normalise=False)
         xpoints2, tpoints2, gpoints = dat.trajectorydata(pageid2, domain, normalise=False)
-        xpoints3, tpoints3, _ = dat.trajectorydata(pageid3, domain, normalise=False)
-        #xpoints3, tpoints3 = None, None
+        #xpoints3, tpoints3, _ = dat.trajectorydata(pageid3, domain, normalise=False)
+        xpoints3, tpoints3 = None, None
 
         t1sum = max(tpoints1) 
         for i in xrange(len(tpoints1)):
@@ -173,24 +173,24 @@ class Plotter:
         for i in xrange(len(tpoints2)):
             tpoints2[i] /= t2sum
 
-        t3sum = max(tpoints3) 
-        for i in xrange(len(tpoints3)):
-            tpoints3[i] /= t3sum
+        # t3sum = max(tpoints3) 
+        # for i in xrange(len(tpoints3)):
+        #     tpoints3[i] /= t3sum
 
         gsum = max(gpoints) 
         for i in xrange(len(gpoints)):
             gpoints[i] /= gsum
 
-        creation = min(xpoints1[0],xpoints2[0],xpoints3[0])
-        for x in (xpoints1, xpoints2, xpoints3):
+        creation = min(xpoints1[0],xpoints2[0])
+        for x in (xpoints1, xpoints2):
             for i in xrange(len(x)):
                 x[i] = (x[i]-creation).total_seconds()/3600
 
-        title = "Derek Smart trajectory vs talk page and arbitration requests"
+        title = "Rupert Sheldrake article trajectory vs talk page trajectory"
         xaxisname = "Hours since creation"
         taxisname = "Change"
         gaxisname = "Article page size"
-        filename = "DerekSmart Special Combo"
+        filename = "RupertSheldrake Special Combo"
 
         print self.specialtrajectory(xpoints1, tpoints1, xpoints2,
                                      tpoints2, xpoints3, tpoints3, gpoints,
@@ -211,18 +211,18 @@ class Plotter:
                          tight_layout=None)
         
         ax1 = fig.add_subplot(111)
-        ax1.plot(xpoints1, tpoints1, 'bo-', label='Arbitration trajectory')
+        if gpoints:
+            ax1.plot(xpoints2, gpoints, 'ko-', label='Article length')
+        ax1.plot(xpoints1, tpoints1, 'ro-', label='Talk page trajectory')
         ax1.plot(xpoints2, tpoints2, 'go-', label='Article page trajectory')
         if xpoints3:
-            ax1.plot(xpoints3, tpoints3, 'ro-', label='Talk page trajectory')
+            ax1.plot(xpoints3, tpoints3, 'ro-', label='Arbitration trajectory')
         ax1.set_xlabel(xaxisname)
         ax1.set_ylabel(taxisname)
         ax1.get_yaxis().set_ticks([])
         #ax1.get_xaxis().set_ticks([])
-        if gpoints:
-            ax1.plot(xpoints2, gpoints, 'ko-', label='Article length')
-        
-        ax1.legend(loc='upper right')
+       
+        ax1.legend(loc='upper left')
 
         for tl in ax1.get_yticklabels():
             tl.set_color('b')

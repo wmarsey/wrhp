@@ -1,1 +1,75 @@
-\section{Validation}
+\section{Machine learning validation attempts}
+\label{mlisbad}
+We attempted to validate our model using machine learning. Given the
+form of the model's output -- a 1D array of numbers -- machine
+learning seemed to be a natural choice.
+
+We were most interested if we could predict gradient factor. Since
+this is a real number measurement of whether or not the edit was
+included in the final version, we were interested if a machine
+learning could possibly predict the gradient factor given the weights
+that we calculate. We could possibly see if the data we had collected
+would be able to similarly measure affects on the article.
+
+We used the scikit-learn python package to approach the
+problem,~\ref{scikit-learn} working with the ~80,000 test cases extant
+in the database at the time. We tried predicting gradient factor with
+the following forms of training data:
+
+\begin{itemize}
+  \item \textbf{Weights}\\
+    Simply the calculated weights, as found in the database weight table. 
+
+  \item \textbf{Weights and size change}\\
+    The calculated, along with information about whether the revision
+    made the article larger or smaller
+
+  \item \textbf{Weights size change, time change}\\
+    The calculated, along with information about whether the revision
+    made the article larger or smaller
+
+  \item \textbf{Weights summed to one value, and size change}\\
+    Summing the weights to one value is roughly equivalent to taking a
+    plain levenshtein distance of the article on the whole, rather
+    than one separated by species.
+    
+  \item \textbf{Summed weights and user edit count over
+    domain}\\ We take the generic weight and combine it with the
+    user's activity over the whole wikipedia domain.
+    
+
+  \item \textbf{Summed weights and user edit count over
+    article}\\ Similar to above, but only counts user activity in the
+    same article.
+
+\end{itemize}
+
+We experimented with various types of learning, including the blah and
+blah. Appendix --> typical  output script
+
+Results not good. The regression models failed to fit to the data.
+
+Since the gradient factor is sensitive to time, and the scale of that
+time, we also tried seperating the data into two categories,
+'towards-final' as 1 and 'away-from-final' as 0, by simply rounding
+the gradient factor to it's nearest integer, and repeated the same
+tests as detailed above.
+
+Not good.
+
+Two problems. The way we collect our data, or text doesn't matter
+
+Why data collection could be a problem. talk about lack of talk-page
+data, refer to analysis. Please see appendix of plots of page to
+talk-page. But slowness of stuff, sad. 
+
+But then talk about all the research that says uknown edits are
+undone. 
+
+Talk about how editors are down since 2007.
+
+Talk about how this is trying to be undone by WikiMedia, but for the
+moment, more contextual.
+
+ALSO, complicating the wikipedia case. like the things in analyses,
+talk about completely external things. Like celebrity deaths.
