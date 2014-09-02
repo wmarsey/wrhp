@@ -1,54 +1,257 @@
 \section{Methods}
-\subsection*{Assumptions}
-\begin{itemize}
-\item \textbf{We assume that the final, or `target' article is of
-  `good' quality.} There are many studies which concern themselves
-  with verifying the accuracy and quality of Wikipedia articles --- In
-  this study we are specifically concerned with the quality of
-  contribution, i.e. the quality of text within the article, relative
-  to the domain of the article. Here, the quality of the article
-  itself is a moot point.
-\item \textbf{We assume the article is well-formed.} As much as we do
-  not concern ourselves with article accuracy, we also assume that the
-  Wikipedia markup is also well-formed. We may also eventually check
-  whether links are invalid, but for the moment we assume that they
-  are.
-\item \textbf{We make no distinction between humans, bots and
-  anonymous editors.}
-\end{itemize}
+From our background work, we take a three step method of analysing the
+article.
+
+Firstly, we must take the most recent version of an article and take
+it as a static, `finished' version of the collaboration. We will
+discuss later the possibility of predicting future versions of the
+article.
+
+Secondly, we measure the distance between each article version using a
+levenshtein distance, but splitting the text up into text species.
+
+Thirdly, we measure the levenshtein distance between each revision in
+the article's history
+
+%% \begin{itemize}
+%% \item \textbf{We assume that the final, or `target' article is of
+%%   `good' quality.} There are many studies which concern themselves
+%%   with verifying the accuracy and quality of Wikipedia articles --- In
+%%   this study we are specifically concerned with the quality of
+%%   contribution, i.e. the quality of text within the article, relative
+%%   to the domain of the article. Here, the quality of the article
+%%   itself is a moot point.
+%% \item \textbf{We assume the article is well-formed.} As much as we do
+%%   not concern ourselves with article accuracy, we also assume that the
+%%   Wikipedia markup is also well-formed. We may also eventually check
+%%   whether links are invalid, but for the moment we assume that they
+%%   are.
+%% \item \textbf{We make no distinction between humans, bots and
+%%   anonymous editors.}
+%% \end{itemize}
+
+\section{Data collection and storage}
+\subsection*{The WikiMedia API}
+WikiMedia's API service provides simple access to a wiki data,
+features and meta-data over HTTP,\cite{wiki-api} and for this project,
+provides the entirety of our data. In this section we explore the
+process of collecting Wikipedia data, the peculiarities of Wikipedia
+as a data source, and the algorithmic caveats necessary to deal with
+them.
+
+Our basic request is simple: we send a HTTP request to a given wiki
+site's `/api.php' file, sending the query parameters a
+`prop=revisions', `rvprop=content', and `titles=X|Y' to get those
+page's most recent revision contents. We can prefetch a title using a
+random request (parameters `list=random\&rnlimit=1'), and in each case
+we can add the `format=json' parameter, and quite easily parse the
+results. 
+
+To trace the history of a given page, then, we need only augment the
+`rvprop' argument to include `ids' (`rvprop=content|ids') in order to
+discover the parent id and trace the history backwards from there. The
+procedure defined in algorithm~\ref{alg-data} demonstrates this
+clearly, showing the child-parent swap at line~\ref{datal2}. The
+condition on the while loop (line~\ref{datal1}), however, shows the
+first oddity with the Wikipedia histories. Most articles will
+terminate at their origin, showing parentid 0. Some, instead, enter a
+terminal cycle, with the oldest fetched revision giving its parent to
+be a much younger version of the same article. 
+
+%%%% Data fetching algorithm
+\begin{algorithm}
+  \caption{Data fetching}\label{alg-data}
+  \begin{algorithmic}
+    \Procedure{Fetch}{$pageid$}
+    \State $corrupt \gets \emptyset$
+    \State $visitedpages \gets \emptyset$
+    \State $revid \gets 0$
+    \State $parentid \gets wiki.getlatest(pageid)$
+    \While{$revid \ne 0$ AND $revid \notin visitedpages$}\label{datal1} 
+    \If{$revid$ is in the database}
+    \State $parentid \gets database.getparentid(revid)$
+    \Else
+    \State $pagedata \gets wiki.getpage(revid)$
+    \EndIf
+    \If{$pagedata$ is corrupt}\label{datal3}
+    \If{corruptness is within recoverability bounds}
+    \State $corruptpages \gets corruptpages + (revid, parentid, domain)$
+    \Else
+    \State terminate fetch
+    \EndIf
+    \Else
+    \State $database \gets page data$
+    \EndIf
+    \State $visitedpages \gets visitedpages + (revid, domain)$
+    \State $revid \gets parentid$\label{datal2}
+    \EndWhile
+    \ForAll {$(revision, parent, domain) \in corrupt$}
+    \State $CorruptClean(revision, parent, domain)$\Comment{See
+      algorithm~\ref{corrupt-clean}}
+    \EndFor
+    \State Mark $pageid$ as complete in $database$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+We must do is keep a track of all the revisions we already know exist
+of that article, so that we may identify these cycles, and terminate
+the fetch loop early. In early tests, we find that these cycles occur
+exclusively amongst older articles (though not all old articles have
+the problem). For the purposes of this study, then, we must
+acknowledge that any `complete' history of an article in our databases
+is in fact only the complete \textit{discoverable}
+history.\footnote{We may note that the Wikipedia site warns that some
+  histories are only part-discoverable. Using our fetch algorithm we
+  have managed to often surpass the boundaries described on Wikipedia,
+  though the cycle problem does occur at a time approximate to that
+  mentioned on the Wikipedia. We may assume that some server
+  corruption occurred at around that point in Wikipedia's history.}
+
+A second notable problem was the regular corrupt values returned by
+Wikipedia. We see that we test for corruption in at line~\ref{datal3},
+storing a list of corrupt pages - often the data is returned with
+missing entries, but was often missing data that was pertinent to
+later study - namely, timestamp and revision content. For ease of
+analysis later, we choose to `circumnavigate' corrupt entries in the
+database, changing pointers between children and parents in situ. We
+may then later trace a history of incorrupt entries using these
+pointers. The procedure for this is detailed in
+algorithm~\ref{corrupt-clean}.
+
+Finally, we define some corruptness of data to constitute a fetching
+failure. With our model, we only do this when the parentid is
+missing. Though this does not happen often, to handle these cases we
+mark a pageid as having a succesful fetch by adding it to a special
+table in the database. This can also be useful for fetches that are
+interrupted in other ways, as with hardware and network problems. This
+table is found in figure~\ref{database-schema} as `wikifetch'. 
+
+\begin{algorithm}
+  \caption{Corrupt pages}\label{corrupt-clean}
+  \begin{algorithmic}
+    \Procedure{CorruptClean}{corruptrev, parent, domain}
+    \State $childrev \gets database.getchild(corruptrev)$
+    \State $database.setparent(childrev, parent)$ \Comment{Now the
+      corrupt revid is circumnavigated}
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection*{The database}
+The database is implemented in PSQL, and accessed via a python package
+leveraging the psycopg library. The package is used by all the other
+classes used in this project and provides simple inserting, changing,
+fetching and checking of data. The only more complex operation is the
+datadump function. The operation is more specific than the other
+functions, and may have been pieced together using these functions,
+but in implementation it was much quicker to correlate and fetch data
+using the SQL `JOIN' statements, rather than multiple fetches in a
+Python for loop, for example.
+
+The database relies upon the uniqueness of revision ID and domain-name
+pairs to function. The database schemata can be found in
+figure~\ref{database-schema}. These databases are referenced at all
+points of this project.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{0.3\linewidth}
+    \centering
+    \begin{tabular}{ccc}
+      \toprule
+      \underline{revid} & \underline{domain} & content\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$\\
+    \end{tabular}
+    \caption{Table: wikicontent}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.2\linewidth}
+    \centering
+    \begin{tabular}{cc}
+      \toprule
+      \underline{pageid} & \underline{domain} \\
+      \midrule
+      $\vdots$ & $\vdots$\\
+    \end{tabular}
+    \caption{Table: wikifetched}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.4\linewidth}
+    \centering
+    \begin{tabular}{cccc}
+      \toprule
+      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+    \caption{Table: wikitrajectory}
+  \end{subfigure}\\
+  \vspace{10 mm}
+  \begin{subfigure}[b!]{\linewidth}
+    \centering
+    \begin{tabular}{ccccccccc}
+      \toprule
+      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
+      comment \\ 
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
+      & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+    \caption{Table: wikirevisions}
+  \end{subfigure}
+  \vspace{30 mm}
+  \begin{subfigure}[b!]{\linewidth}
+    \centering
+    \begin{tabular}{ccccccccc}
+      \toprule
+      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
+      structure & normal & gradient\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
+      $\vdots$ & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+    \caption{Table: wikiweights} 
+  \end{subfigure}
+  \caption{Schemata for the database used to store wikipedia data}
+  \label{database-schema}
+\end{figure}
 
 %%WEIGHTING BY MARKUP
-\subsection*{Weighting contribution by markup}
-Given the extensive research regarding which features of a wikipedia
-article are most important, we may define the following features to
-have more weight than standard text from the outset:
+\subsection*{Text species}
+Using the wikimedia markup system, we may easily identify certain
+species of text. They are as follows:
 \begin{itemize}
-\item Links
+\item Internal links
+\item External links
 \item Images
-\item Equations
+\item Files
+\item Musical scores
+\item Math-formatted text (similar to Latex math environment)
+\item Section headings (of differing levels)
+\item `Citation Needed' tags
+\item `As of' tags (used for identification of age-sensitive
+  information)
+\item Block quotes
+\item Tables
 \end{itemize}
 
-We may either preprocess the text to identify the each of these
-different `flavours' of input by their Wikipedia mark-up conventions,
-or we may be able to more fluently work them into the main difference
-algorithm, raising and lowering flags during runtime.
+We then group them logically, as follows:
+\begin{description}
+  \item[Equation]\hfill\\
+    Math-formatted text
+  \item[Source validation]\hfill\\
+    Block quotes, Citations, `Citation Needed' tags, `As of' tags
+  \item[Links]\hfill\\
+    Internal Links, External Links
+  \item[Structural]\hfill\\
+    Section headings, Tables
+\end{description}
+
+We ma split the string along the boundaries of these markup tags, and
+send levenshtein distance calculator sperate strings.
+FINISH
 
 %%DENSITY
-\subsection*{Awarding the dense edits}
-We should give extra reward to the density of the changes. Perhaps we
-can propose the heuristic: A denser edit means more significant
-change. If we have a set of the indexes of an edit operation as
-$\{op_0,op_1,op_2,\dots, op_n\}$, where $op_i$ is the index of the
-$i$th operation, then we may evaluate it's density with a standard
-deviation of the edit itself, $\sigma_{ed}$, multiplied by the span of
-the edit itself in context of the wider article, and some weighting
-factor k. Something along the lines of:
-$$ed_{density} = k\bullet\frac{(op_n - op_0)\sigma_{ed}}{|v_{ed}|}$$
-where $|v_{ed}|$ is the overall length of resultant version. By
-implementing this carefully, we may achieve a gradient of weighting,
-with a lower weight values for things like spell-checks, and higher
-values for whole-paragraph changes.
-
 \subsection*{Undone and partially undone operations}
 We consider three different ways of classifying an edit as valueless,
 or partially valueless. Two ways of classifying these kinds of edit
@@ -381,192 +584,6 @@ interesting to contrast the actions of humans, and bots,\footnote{It
   submisions in a matter of seconds.\cite{wiki-bots}\cite{bbc-bots}}
 and perhaps look at the nature of edits made by different groups of
 editors.
-
-\section{Data collection and storage}
-\subsection*{The WikiMedia API}
-WikiMedia's API service provides simple access to a wiki data,
-features and meta-data over HTTP,\cite{wiki-api} and for this project,
-provides the entirety of our data. In this section we explore the
-process of collecting Wikipedia data, the peculiarities of Wikipedia
-as a data source, and the algorithmic caveats necessary to deal with
-them.
-
-Our basic request is simple: we send a HTTP request to a given wiki
-site's `/api.php' file, sending the query parameters a
-`prop=revisions', `rvprop=content', and `titles=X|Y' to get those
-page's most recent revision contents. We can prefetch a title using a
-random request (parameters `list=random\&rnlimit=1'), and in each case
-we can add the `format=json' parameter, and quite easily parse the
-results. 
-
-To trace the history of a given page, then, we need only augment the
-`rvprop' argument to include `ids' (`rvprop=content|ids') in order to
-discover the parent id and trace the history backwards from there. The
-procedure defined in algorithm~\ref{alg-data} demonstrates this
-clearly, showing the child-parent swap at line~\ref{datal2}. The
-condition on the while loop (line~\ref{datal1}), however, shows the
-first oddity with the Wikipedia histories. Most articles will
-terminate at their origin, showing parentid 0. Some, instead, enter a
-terminal cycle, with the oldest fetched revision giving its parent to
-be a much younger version of the same article. 
-
-%%%% Data fetching algorithm
-\begin{algorithm}
-  \caption{Data fetching}\label{alg-data}
-  \begin{algorithmic}
-    \Procedure{Fetch}{$pageid$}
-    \State $corrupt \gets \emptyset$
-    \State $visitedpages \gets \emptyset$
-    \State $revid \gets 0$
-    \State $parentid \gets wiki.getlatest(pageid)$
-    \While{$revid \ne 0$ AND $revid \notin visitedpages$}\label{datal1} 
-    \If{$revid$ is in the database}
-    \State $parentid \gets database.getparentid(revid)$
-    \Else
-    \State $pagedata \gets wiki.getpage(revid)$
-    \EndIf
-    \If{$pagedata$ is corrupt}\label{datal3}
-    \If{corruptness is within recoverability bounds}
-    \State $corruptpages \gets corruptpages + (revid, parentid, domain)$
-    \Else
-    \State terminate fetch
-    \EndIf
-    \Else
-    \State $database \gets page data$
-    \EndIf
-    \State $visitedpages \gets visitedpages + (revid, domain)$
-    \State $revid \gets parentid$\label{datal2}
-    \EndWhile
-    \ForAll {$(revision, parent, domain) \in corrupt$}
-    \State $CorruptClean(revision, parent, domain)$\Comment{See
-      algorithm~\ref{corrupt-clean}}
-    \EndFor
-    \State Mark $pageid$ as complete in $database$
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-We must do is keep a track of all the revisions we already know exist
-of that article, so that we may identify these cycles, and terminate
-the fetch loop early. In early tests, we find that these cycles occur
-exclusively amongst older articles (though not all old articles have
-the problem). For the purposes of this study, then, we must
-acknowledge that any `complete' history of an article in our databases
-is in fact only the complete \textit{discoverable}
-history.\footnote{We may note that the Wikipedia site warns that some
-  histories are only part-discoverable. Using our fetch algorithm we
-  have managed to often surpass the boundaries described on Wikipedia,
-  though the cycle problem does occur at a time approximate to that
-  mentioned on the Wikipedia. We may assume that some server
-  corruption occurred at around that point in Wikipedia's history.}
-
-A second notable problem was the regular corrupt values returned by
-Wikipedia. We see that we test for corruption in at line~\ref{datal3},
-storing a list of corrupt pages - often the data is returned with
-missing entries, but was often missing data that was pertinent to
-later study - namely, timestamp and revision content. For ease of
-analysis later, we choose to `circumnavigate' corrupt entries in the
-database, changing pointers between children and parents in situ. We
-may then later trace a history of incorrupt entries using these
-pointers. The procedure for this is detailed in
-algorithm~\ref{corrupt-clean}.
-
-Finally, we define some corruptness of data to constitute a fetching
-failure. With our model, we only do this when the parentid is
-missing. Though this does not happen often, to handle these cases we
-mark a pageid as having a succesful fetch by adding it to a special
-table in the database. This can also be useful for fetches that are
-interrupted in other ways, as with hardware and network problems. This
-table is found in figure~\ref{database-schema} as `wikifetch'. 
-
-\begin{algorithm}
-  \caption{Corrupt pages}\label{corrupt-clean}
-  \begin{algorithmic}
-    \Procedure{CorruptClean}{corruptrev, parent, domain}
-    \State $childrev \gets database.getchild(corruptrev)$
-    \State $database.setparent(childrev, parent)$ \Comment{Now the
-      corrupt revid is circumnavigated}
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-\subsection*{The database}
-The database is implemented in PSQL, and accessed via a python package
-leveraging the psycopg library. The package is used by all the other
-classes used in this project and provides simple inserting, changing,
-fetching and checking of data. The only more complex operation is the
-datadump function. The operation is more specific than the other
-functions, and may have been pieced together using these functions,
-but in implementation it was much quicker to correlate and fetch data
-using the SQL `JOIN' statements, rather than multiple fetches in a
-Python for loop, for example.
-
-The database relies upon the uniqueness of revision ID and domain-name
-pairs to function. The database schemata can be found in
-figure~\ref{database-schema}. These databases are referenced at all
-points of this project.
-
-\begin{figure}
-  \centering
-  \begin{subfigure}[t]{0.3\linewidth}
-    \centering
-    \begin{tabular}{ccc}
-      \toprule
-      \underline{revid} & \underline{domain} & content\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$\\
-    \end{tabular}
-    \caption{Table: wikicontent}
-  \end{subfigure}
-  \begin{subfigure}[t]{0.2\linewidth}
-    \centering
-    \begin{tabular}{cc}
-      \toprule
-      \underline{pageid} & \underline{domain} \\
-      \midrule
-      $\vdots$ & $\vdots$\\
-    \end{tabular}
-    \caption{Table: wikifetched}
-  \end{subfigure}
-  \begin{subfigure}[t]{0.4\linewidth}
-    \centering
-    \begin{tabular}{cccc}
-      \toprule
-      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{Table: wikitrajectory}
-  \end{subfigure}\\
-  \vspace{10 mm}
-  \begin{subfigure}[b!]{\linewidth}
-    \centering
-    \begin{tabular}{ccccccccc}
-      \toprule
-      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
-      comment \\ 
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
-      & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{Table: wikirevisions}
-  \end{subfigure}
-  \vspace{30 mm}
-  \begin{subfigure}[b!]{\linewidth}
-    \centering
-    \begin{tabular}{ccccccccc}
-      \toprule
-      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
-      structure & normal & gradient\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
-      $\vdots$ & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{Table: wikiweights} 
-  \end{subfigure}
-  \caption{Schemata for the database used to store wikipedia data}
-  \label{database-schema}
-\end{figure}
 
 \section{Procedures}
 The data we collect via the Wikipedia API goes through a series of

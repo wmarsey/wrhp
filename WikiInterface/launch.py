@@ -4,7 +4,7 @@ import webbrowser
 class WikiLaunch:
     tmplurl = "http://|.wikipedia.org/"
     indexf = "wiki/index.php"
-    apif = "api.php"
+    apif = "wiki/api.php"
 
     def showpage(self, pageid, domain):
         urlbase = self.tmplurl.replace("|",domain) + self.indexf
@@ -12,7 +12,7 @@ class WikiLaunch:
         self._launch(urlbase, parameters)
 
     def showtitle(self, title, domain):
-        urlbase = self.tmplurl.replace("|",domain) + 'wiki/' + title
+        urlbase = self.tmplurl.replace("|",domain) + title
         self._launch(urlbase, None)
 
     def showdiff(self, oldrevid, newrevid, domain):

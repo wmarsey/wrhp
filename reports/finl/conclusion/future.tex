@@ -1,34 +1,55 @@
 \section{Future Work}
+\subsubsection*{Updating gracefully}
+GUI? Would be nice to give people better insight to stuff. Was working
+on GUI to allow people to play with weights, click to launch
+diff. Easy but fiddly. Ran out of time.
 
-From this project, two different directions are recommended. We can
-either use the existing technique on text-history system or we can
-change the current system to make better analyses of the existing
-network. For instance, analyse other parts of Wikipedia in order to
-understand better the context of each edit, like the talk page. 
-
-\subsubsection*{Extending data}
-Current intentions are to approach the data on an article-by-article
-basis, grabbing a particular version and tracing its history
-backwards. We grab the pages using HTTP requests, via Mediawiki's
-inbuilt API. We could, however, download Wikipedia in its
-entirety. The entire site is compressed and dumped monthly, and the
-dumps are free to download (though they are 800GB
-compressed).\cite{wiki-dump}
-
-
-\subsubsection*{Further subjects}
-The project may well extend to subjects beyond Wikipedia. A git
-project history, for instance, may be of interest for further
-study. We may combine the existing research with metrics that concern
-code in particular, such as Cyclomatic Complexity, which measures code
-flow complexity according to its logical operators.\cite{McCabe1976}
-It would also be interesting to figure out a way of changing our
-algorithm in order to regard non-linear revision histories.
-
-%%COULD HAVE DONE RESTRUCTURING
 \subsection*{Awarding restructuring}
 \label{restructuring}
 It has been found that, even in the most accurate articles, that the
-structure of Wikipedia article can be weak.\cite{Giles2005} We should
-award attempts to reorganize articles, possibly looking out for lange
-block displacements. 
+structure of Wikipedia article can be weak.\cite{Giles2005} We made
+some efforts to recognise attempts at structural change, see REFERENCE
+TO REGEX DESCRIPTION. However, these attempts are limited. We really
+need to be able to identify the move of large blocks of text -- not
+only inside an article, but to another. Regarding the former, we can
+employ various tecniques WHAT ARE THEY THO. With a larger dataset and the
+necessary computing power this would just be a matter of
+crossreferencing the deletion of largeish chunks of text with
+insertions of similar text within a short time frame.
+
+\subsection*{Refinement of gradient factor}
+A limitation of gradient factor is it's reliance upon a relatively
+arbitrary measure of time. Though the measure of time has been
+consistent throughout the study, the measurement does affect the
+distribution of possible gradient factorvalues to the extremeties of
+the range. It would be recommended in further research to take this
+into account. If someone makes an edit, commits it, fixes spelling,
+and commits again, does he recieve less reward than if he had
+submitted at once? Or more? This is something we wished we would have
+had time to look into during the study.
+
+\subsubsection*{Extending data}
+Grabbing each page as we went was useful for cleaning and sometimes
+preprocessing parts of the data, but the fetches were time
+consuming. Also, when we came to look for more general data about
+individual users, and tried to find inter-article connections, we had
+to do so in the knowledge that our databases represented a very small
+selection from the wikipedia's in question.
+
+For further work on could be better off using a wikipedia dump. These
+are made monthly and represent the entirety of the site, history
+included at the point of export. They are, however, $~800$GB,
+compressed.\cite{wiki-dump} A past studies used a hadoop framework
+to enable the study of this data. In the study here we saved time by
+simply setting up the API access, but perhaps further study could
+invest time in setting up a more complete dataset.
+
+\subsubsection*{Further subjects}
+As mentioned previously, this project may easily expand beyond the
+wikipedia dataset. A git project history, for instance, may be of
+interest for further study. We may fairly combine the existing
+research with metrics that concern code in particular, such as
+Cyclomatic Complexity, which measures code flow complexity according
+to its logical operators.\cite{McCabe1976} The main challenge on
+platforms would be mining the contextual data that was so easily found
+on Wikipedia.
