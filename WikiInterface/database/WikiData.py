@@ -330,6 +330,14 @@ class Database:
                 return result
         return None
 
+    def getalltalk(self):
+        sql = "SELECT DISTINCT f1.title, f1.pageid, f2.pageid, f2.language FROM " + self.fetchedtable + " AS f1 JOIN " + self.fetchedtable + " AS f2 ON f2.title LIKE 'Talk:' || f1.title"  
+        if(self._execute(sql, ())):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
     def getallscraped(self):
         sql = "SELECT DISTINCT pageid, domain FROM " + self.revisiontable + " ORDER BY pageid;"
         if(self._execute(sql, ())):
@@ -397,6 +405,26 @@ class Database:
         if domain:
             sql += " WHERE domain= %s"
         sql += " GROUP BY w.revid, w.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient;"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    def gettrainingdata4(self, domain=None):
+        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS wsum, CASE WHEN rr.revid IS NULL THEN r.size ELSE (r.size - rr.size) END AS size, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid,domain) LEFT JOIN " + self.revisiontable + " AS rr ON rr.revid = r.parentid AND r.domain = rr.domain"
+        sql += " WHERE domain = %s;" if domain else ";"
+        data = (domain,) if domain else ()
+        if(self._execute(sql,data)):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
+    def gettrainingdata5(self, domain=None):
+        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS wsum, CASE WHEN rr.revid IS NULL THEN r.size ELSE (r.size - rr.size) END AS size, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid,domain) LEFT JOIN " + self.revisiontable + " AS rr ON rr.revid = r.parentid AND r.domain = rr.domain"
+        sql += " WHERE domain = %s;" if domain else ";"
         data = (domain,) if domain else ()
         if(self._execute(sql,data)):
             result = self._crsrsanity()
@@ -487,4 +515,5 @@ class Database:
         self.crsr = self.cn.cursor()
 
     def __del__(self):
+        self.crsr.close()
         self.cn.close()

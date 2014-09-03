@@ -77,6 +77,15 @@ class DHandler:
             
         return xlabels, ypoints
 
+    def talkpages(self):
+        dtb = db.Database()
+        
+        tiid = dtb.getalltalk()
+
+        title, id1, id2, domain = zip(*tiid)
+
+        return title, id1, id2, domain
+
     # def getweights(self, pageid, domain):
     #     wdata = []
     #     for u in self.dtb.getuserchange(pageid, domain):

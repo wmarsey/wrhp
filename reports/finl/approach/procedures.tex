@@ -21,7 +21,7 @@ tags in order to identify different `species' of text. By doing so, we
 could characterise a single revision in terms of the kinds of text
 dealt in. By characterising an edit with a series of different edit
 difference we also perhaps create the opportunity to consider some as
-more valuable than others.
+more valuable than others.\label{multiprocessing-bit}
 
 The algorithm that was settled upon left the levenshtein calculator
 itself naive of text species -- instead we simply split the text up
@@ -92,7 +92,6 @@ algorithm a little, and allows us the employ parallel or threaded
 processing in order to improve efficiency of computation.
 
 \begin{algorithm}
-  \caption{Levenshtein distance calculator}\label{lev-dist}
   \begin{algorithmic}
     \Function{LevDist}{$str1, str2$}
     \State $s1len \gets $length($str1$)
@@ -112,6 +111,8 @@ processing in order to improve efficiency of computation.
     \State return $col[s1len]$
     \EndFunction
   \end{algorithmic}
+  \caption{Levenshtein distance calculator}
+  \label{lev-dist}
 \end{algorithm}
 
 Our procedure for collecting these values is described in

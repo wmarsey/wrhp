@@ -1,138 +1,102 @@
 \section{Objectives}
 Our principal aim was to design a series of procedures for
 distributing a `share' of a collaborative article to each of that
-article's contributors. Traditionally these shares are negotiated --
-in an opera commission, for instance, various stakes in the work will
-be distributed and defined according to negotations, between
-individuals, or corporations; between a composer's and a librettist's
-agents, or between the individuals personally, also taking into
-account comissioner's rights, and other things. Our investigation
-instead looks to automatic share distribution in the environment of
-many-user online collaboration; how may we automatically define a
-individual user's stake in a collobaritive work?
+article's contributors. Traditionally these shares are negotiated on a
+case-by-case basis, through individual negotations, or according to
+balances struck in previous battles. Wee discuss this in further
+detail on page~\pageref{sec:copyright}.
+
+Our investigation instead looks to automatic share distribution in the
+environment of many-user online collaboration; how may we
+automatically define a individual user's stake in a collobaritive
+work?
 
 Wikipedia is the natural choice for the study, though defining user
-`ownership' in this particular context seems quite unnatural -- the
+`ownership' in this particular context seems quite unnatural. The
 website that bills itself as the `free encyclopedia that anyone can
 edit' can hardly have any obligation to its users to define a sense of
-individual ownership of the article, whole or otherwise. However, as
-an intellectual exercise, the question seems very important. 
+individual ownership of the article, whole or
+otherwise.\cite{wiki-copyr} However, as an intellectual exercise, the
+question is very relevant, with online platforms increasing in
+popularity in education,\cite{wiki-collab} and the
+workplace,\cite{workplace-future} and generally becoming a `necessity'
+in day-to-day life.\cite{alsurvey}
 
-The technological platforms that allow projects such as Wikipedia to
-grow also open up the opportunity for study. Using the technology, we
-may may examine how to describe the nature of an individual
-contribution amongst many -- a question that, in the context of
-growing popularity of crowd-sourcing information, seems
-pertinent. Wikipedia is, after all, one of the most popular sites on
-the internet, and certainly one the most popular reference site on the
-internet.
+Thankully, the technological platforms that allow projects such as
+Wikipedia to grow also facilitate their study. Using the technology,
+we may may examine how to describe the nature of an individual
+contribution amongst many.. Wikipedia is, after all, one of the most
+popular sites on the internet, and certainly one the most popular
+reference site on the internet (see page~\pageref{sec:popularity}}
 
-On a more general level, Wikipedia represents a free, flexible and
-(fairly) complete data set with which to experiment analysing text
+On a more pracitical level, Wikipedia represents a free, flexible and
+(fairly)\footnote{The API proved to be quite unreliable. This is
+  discussed on page~\pageref{sec:wiki-api}.} complete data set with which to experiment analysing text
 change over long periods. From this base work we can begin to approach
-analysing more specific data sets, such as source-control.
+analysing more specific data sets, such as source-control platforms
+like Github.
 
 Another benefit of analysing Wikipedia is that interactions between
-wholly mediated by the Wikipedia software, and evidenced in exactly
-the same way the actual data is, allowing us to examine a relatively
-wide range of site properties using the same tools.
+users are fairly completely mediated by the Wikipedia software, and
+evidenced in exactly the same way the actual data is, allowing us to
+examine a relatively wide range of site properties using a similar set
+of tools.
 
-In this project, we produce a system for automatically grabbing an
-article's history, along with various methods with which to
-characterise that data. We use a Levenshtein edit-distance calculating
-algorithm in order to examine the magnitude of change between edits,
-as well as to examine the context of those edits.
+For this project, we produce a system for automatically downloading an
+article's history, along with various methods with which to process
+and describe that data in a meaningful way. We use a Levenshtein
+edit-distance calculating algorithm in order to examine the magnitude
+of change between edits, as well as to examine the context of those
+edits.
 
-For each revision we calculate a set of integers that represent a
-multi-dimension characterisation of the change that edit caused in the
-article. We provide other means to express the degree to which that
-edit was significant in terms of the history of that article thus far.
-
-%% Despite early skepticism (particularly concern over the inherent chaos
-%% in the system: ``...edits, contributed in a predominantly undirected
-%% and haphazard fashion by ... unvetted
-%% volunteers.''\cite{Wilkinson2007}), Wikipedia is widely claimed to be
-%% a great success, `the best-developed attempt thus far of the enduring
-%% quest to gather all human knowledge in one
-%% place'\cite{Mesgari2014}. The website is only around a decade old, but
-%% in that time it has become a pre-eminent source of knowledge one the
-%% internet. As a highly populous, visible and accessible online space,
-%% the site is 
-
-%% It is one of the most visited sites in the world, and the
-%% most visited reference site by far. It is a huge site, with over 4.5
-%% million article, in around 300 language languages, and is completely
-%% open source and free-of-charge. It is an unparalleled data source,
-%% detailed and easy to access.
-
-%% However, one of the major factors contributing to the proliferation of
-%% academic work on wikipedia is suspicion. Investigations into the worth
-%% and quality of Wikipedia articles abound. Work in this area ranged
-%% from popular science to production software to full-blown academic
-%% theses, and until around 2010 continued to be a well-visited topic.
-
-%% In recent years, however, the research into wikipedia's extrinsic
-%% quality has waned. These studies peaked at around 2007, in the release
-%% of the Wikitrust software, which brought together much of the
-%% preceding researh on the subject, and is discussed later. Since then,
-%% though, papers on Wikipedian quality became less frequent, and
-%% Wikipedia reached real omnipresence.  In these years, while the fears
-%% that these crowd-sourced articles would supercede established
-%% reference tomes were certainly realised, so did the public seem to
-%% maintain a healthy suspicion of the site. Wikipedia is a central point
-%% of fact-checking, with even search tools such as Google's voice search
-%% and Apple's Siri taking it's content for granted, serving up
-%% Wikipedian content automatically after voice searches, but the site is
-%% still not accepted as a citable source.
-
-%% Criticisms of Wikipedia still exists, however. Though, whilst they
-%% began as investigations into external quality, now they more often
-%% than not concern Wikiepdia's internal health. We can no longer argue
-%% about whether or not the public should be reading these articles --
-%% they already are. Instead, we examine the internals of Wikipedia, and
-%% into the community that is involved in its growth. 
-
-%% This is the context for our study. We can assume that an article has
-%% worth, we don't care what that might be. We look at how this
-%% may be distributed within the article. What can we find out about the
-%% article by examining it's construction? What can we automatically
-%% measure of a revision's text?
-
-%% The objective of this project was to find a fair and concise way to
-%% analyse a Wikipedia revision, both in terms of the text operations,
-%% and in terms of an edits significance in the overall history of the
-%% article.
+For each revision we calculate a set of integers and real numbers that
+represent a multi-dimension characterisation of the change that edit
+caused in the article. We provide other means to express the degree to
+which that edit was significant in terms of the history of that
+article thus far.
 
 \section{Contributions}
 
 The major contribution here is a new way of visualising the article's
-history, and a technique for translating that into a meaningful value
-for each revision. 
+history, and a technique for translating that into a meaningful,
+real-numbered value for each revision.
 
-We also discuss using the software developed here to achieve various
-other contexts relating to the journey of each article. Our main
-technique involves calculating the similarity of every revision to the
-final version. However, using the same software we may also track the
+We also discuss using this technique describe various other contexts
+that come to bear upon journey of each article. Our main technique
+involves calculating the similarity of every revision to the final
+version. However, using the same software we may also track the
 history of the talk page for each article alongside the article
 itself, as well as test for the existence of `arbritration requests'
-and other artefacts of Wikipedian bureaucracy that come to bear on the
-circumstances that control an article's development. 
+and other artefacts of Wikipedian bureaucracy that may shape an
+article's growth.
 
-The software produced here automates the processing of the analytical
-procedures we outline later, as well as providing a modular framework
-to be modified for further study.
+The software produced here automates the analytical procedures we
+outline in chapter~\ref{chap:method}, as well as providing a modular
+framework that may be modified for further study.
 
 \section{Originality}
 There has been a lot of studies tangential to the topics we discuss
-here -- as we'll cover later, Wikipedia is a hotbed of many avenues of
-academic study -- but much of the similar work to this works to
-different ends, and therefore a lot of the work here is original work.
+here -- as we'll cover in chapter~\ref{ch:background}, Wikipedia is a
+hotbed of academic study in many disciplines -- but much of the
+similar work to this works to different ends, and therefore a lot of
+the work here is original work.
 
 The most related work is that of WikiTrust software. It was developed
 in the context of criticism's of Wikipedia's factual integrity, and
 aimed to rate the the editors of each article, transforming each
 article into a kind of heat map or trustability, highlighting words
-from more trusted editors more intensely than others. 
+from more trusted editors more intensely than
+others.\cite{adler2012wikitrust} This study has been evaluated as
+innefective, however.\cite{Lucassen2011}
+
+In this project we use wikipedia as a model for automaticaly
+discovering appropriate measures of collaborative share. We are less
+concerned about `quality' in any arbitrary, external sense. Rather we
+are interested how we may define quality using the qualities of the
+history itself. That said, a lot of the studies are very interesting
+in light of our work. One of the techniques used in WikiTrust is very
+impotant in our conception of `trajectory'. We discuss this more on
+page~\pageref{sec:wikipedia}.
 
 We offer less judgments on quality in this project, and our aims are
 more general, but some of the techniques resurface here. In

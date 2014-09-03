@@ -32,6 +32,7 @@ the article's history
 
 \section{Data collection and storage}
 \subsection*{The WikiMedia API}
+\label{sec:wiki-api}
 WikiMedia's API service provides simple access to a wiki data,
 features and meta-data over HTTP,\cite{wiki-api} and for this project,
 provides the entirety of our data. In this section we explore the
@@ -243,8 +244,13 @@ We then group them logically, as follows:
     Block quotes, Citations, `Citation Needed' tags, `As of' tags
   \item[Links]\hfill\\
     Internal Links, External Links
-  \item[Structural]\hfill\\
-    Section headings, Tables
+  \item[Structural]\hfill\\ 
+    Section headings, Tables\\
+    It was found in 2005 that this, if anything, was the clearest
+    difference between Wikipedia and commercial
+    encyclopedias,\cite{Giles2005} supporting previous
+    conjecture.\cite{Denning2005} The regexes in this group provide a
+    simple way of noticing changes that affect structure.
 \end{description}
 
 We ma split the string along the boundaries of these markup tags, and

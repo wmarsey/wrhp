@@ -70,40 +70,76 @@ class WikiCLI:
         if self.flags['dbrepair']:
             return self.dbrepair()
 
-        while True:
+        #################### NEW CODE START
+
+        import database as db
+        dtb = db.Database()
+        tpl = dtb.getallfetched()
+        
+        print "got", len(tpl)
+        
+        titles, pageids, languages = zip(*tpl)
+        
+        print titles
+
+        self.params['scrapemin'] = 1
+
+        for i in range(len(tpl)):
+            if "Talk:" in titles[i]:
+                continue
+            if not len(titles[i]):
+                continue
+            self.params['title'] = "Talk:" + titles[i]
+            self.params['domain'] = languages[i]
+
+            print self.params['title']
+            print self.params['domain']
+
+        #################### NEW CODE END
+
+        ############################## INDENTATION CHANGE START
+
             while True:
-                print "---------FETCHING WIKIPEDIA PAGE------------"
-                scraper = wk.WikiRevisionScrape(title=self.params['title'],
-                                                domain=self.params['domain'],
-                                                scrapemin=self.params['scrapemin'])
-                title, pageid, domain = scraper.scrape()
-                
-                if title and pageid and domain:
+                b = False ###DELETE
+                while True:
+                    print "---------FETCHING WIKIPEDIA PAGE------------"
+                    scraper = wk.WikiRevisionScrape(title=self.params['title'],
+                                                    domain=self.params['domain'],
+                                                    scrapemin=self.params['scrapemin'])
+                    title, pageid, domain = scraper.scrape()
+
+                    if title and pageid and domain:
+                        break
+                    elif (self.params['title'] or self.params['pageid']):
+                        #return -1 ##if you asked but didnt get. terminate
+                                 ##instead of trying again
+                        b = True ##DELETe
+                        break ## DELETE
+                if b:
                     break
-                elif (self.params['title'] or self.params['pageid']):
-                    return -1 ##if you asked but didnt get. terminate
-                             ##instead of trying again
-                
 
-            print
-            print "-----------------ANALYSING------------------"    
-            analyser = WikiAnalyser(title,pageid,domain)
-            results = analyser.analyse()
-            if not results:
-                return -1
-
-            if self.flags['plot']:
                 print
-                print "--------------------PLOT--------------------"
-                import dataplotter as dpl
-                plotter = dpl.Plotter(os.path.abspath(self.params['plotpath']) if self.params['plotpath'] else None)
-                plotted = plotter.plot(title, pageid, domain)
-                print len(plotted), "plotted"
+                print "-----------------ANALYSING------------------"    
+                analyser = WikiAnalyser(title,pageid,domain)
+                results = analyser.analyse()
+                if not results:
+                    return -1
 
-            revidLog(title, pageid, domain)
+                if self.flags['plot']:
+                    print
+                    print "--------------------PLOT--------------------"
+                    import dataplotter as dpl
+                    plotter = dpl.Plotter(os.path.abspath(self.params['plotpath']) if self.params['plotpath'] else None)
+                    plotted = plotter.plot(title, pageid, domain)
+                    print len(plotted), "plotted"
 
-            if not self.flags['trundle']:
-                break
+                revidLog(title, pageid, domain)
+
+                if not self.flags['trundle']:
+                    break
+
+        ############################## INDENTATION CHANGE END
+
         return 0
 
 

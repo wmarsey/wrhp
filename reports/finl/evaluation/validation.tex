@@ -4,17 +4,19 @@ We attempted to validate our model using machine learning. Given the
 form of the model's output -- a 1D array of numbers -- machine
 learning seemed to be a natural choice.
 
-We were most interested if we could predict gradient factor. Since
-this is a real number measurement of whether or not the edit was
-included in the final version, we were interested if a machine
+We were interested to see if we could predict gradient factor. Since
+the gradient factor relates closely to whether or not the edit was
+included in the final version, we were interested if with machine
 learning could possibly predict the gradient factor given the weights
-that we calculate. We could possibly see if the data we had collected
-would be able to similarly measure affects on the article.
+that we calculate. We could possibly see if the text analysis data we
+had collected would be able to similarly measure affects on the
+article.
 
 We used the scikit-learn python package to approach the
-problem,~\ref{scikit-learn} working with the ~80,000 test cases extant
-in the database at the time. We tried predicting gradient factor with
-the following forms of training data:
+problem,~\ref{scikit-learn} working with the ~180,000 test cases (i.e.
+complete revision records) extant in the database at the time. We
+tried predicting gradient factor with the following forms of training
+data:
 
 \begin{itemize}
   \item \textbf{Weights}\\
