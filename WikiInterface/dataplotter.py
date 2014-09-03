@@ -152,55 +152,59 @@ class Plotter:
                                          xaxisname, yaxisname, None,
                                          title, filename, width=20, height=12)
 
-    def specialplot(self):
+    def talkplots(self):
         dat = DHandler()
 
-        domain = 'en'
-        pageid1 = 3787014
-        pageid2 = 142395
-        #pageid3 = 22656812
+        titles, pids, tids, domains = dat.talkpages()
         
-        xpoints1, tpoints1, _ = dat.trajectorydata(pageid1, domain, normalise=False)
-        xpoints2, tpoints2, gpoints = dat.trajectorydata(pageid2, domain, normalise=False)
-        #xpoints3, tpoints3, _ = dat.trajectorydata(pageid3, domain, normalise=False)
-        xpoints3, tpoints3 = None, None
 
-        t1sum = max(tpoints1) 
-        for i in xrange(len(tpoints1)):
-            tpoints1[i] /= t1sum
+        for i in range(len(titles)):
+            domain = domains[i]
+            pageid = pids[i]
+            talkid = tids[i]
+            title = titles[i]
+        
+            print title, pageid
 
-        t2sum = max(tpoints2) 
-        for i in xrange(len(tpoints2)):
-            tpoints2[i] /= t2sum
+            try:
+                x1, t1, _ = dat.trajectorydata(pageid, domain, normalise=False)
+                x2, t2, growth = dat.trajectorydata(talkid, domain, normalise=False)
+            except:
+                continue
 
-        # t3sum = max(tpoints3) 
-        # for i in xrange(len(tpoints3)):
-        #     tpoints3[i] /= t3sum
+            t1sum = max(t1) 
+            if t1sum:
+                for i in xrange(len(t1)):
+                    t1[i] /= t1sum
 
-        gsum = max(gpoints) 
-        for i in xrange(len(gpoints)):
-            gpoints[i] /= gsum
+            t2sum = max(t2)
+            if t2sum:
+                for i in xrange(len(t2)):
+                    t2[i] /= t2sum
 
-        creation = min(xpoints1[0],xpoints2[0])
-        for x in (xpoints1, xpoints2):
-            for i in xrange(len(x)):
-                x[i] = (x[i]-creation).total_seconds()/3600
+            gsum = max(growth)
+            if gsum:
+                for i in xrange(len(growth)):
+                    growth[i] /= gsum
 
-        title = "Rupert Sheldrake article trajectory vs talk page trajectory"
-        xaxisname = "Hours since creation"
-        taxisname = "Change"
-        gaxisname = "Article page size"
-        filename = "RupertSheldrake Special Combo"
+            creation = min(x1[0],x2[0])
+            for x in (x1, x2):
+                for i in xrange(len(x)):
+                    x[i] = (x[i]-creation).total_seconds()/3600
 
-        print self.specialtrajectory(xpoints1, tpoints1, xpoints2,
-                                     tpoints2, xpoints3, tpoints3, gpoints,
-                                     xaxisname, taxisname, gaxisname,
-                                     title, filename, width=20, height=12)
+            title = title.decode('utf-8') + " article vs talk page trajectories"
+            xaxisname = "Hours since creation"
+            taxisname = "Change"
+            gaxisname = "Article page size"
+            filename = domain + str(pageid) + " Special Combo"
 
-    def specialtrajectory(self, xpoints1, tpoints1, xpoints2, tpoints2,
-                     xpoints3, tpoints3, gpoints, xaxisname,
-                     taxisname, gaxisname, title, filename, width=13,
-                     height=8):
+            print self.talktrajectory(x1, t1, x2, t2, growth,
+                                         xaxisname, taxisname, gaxisname,
+                                         title, filename, width=20, height=12)
+
+    def talktrajectory(self, xpoints1, tpoints1, xpoints2, tpoints2,
+                     gpoints, xaxisname, taxisname, gaxisname, title,
+                     filename, width=13, height=8):
 
          #filename = domain + str(pageid) + 'traj'
         imagefile = self.plotdir + filename + " " + title + ".png"
@@ -215,13 +219,10 @@ class Plotter:
             ax1.plot(xpoints2, gpoints, 'ko-', label='Article length')
         ax1.plot(xpoints1, tpoints1, 'ro-', label='Talk page trajectory')
         ax1.plot(xpoints2, tpoints2, 'go-', label='Article page trajectory')
-        if xpoints3:
-            ax1.plot(xpoints3, tpoints3, 'ro-', label='Arbitration trajectory')
         ax1.set_xlabel(xaxisname)
         ax1.set_ylabel(taxisname)
         ax1.get_yaxis().set_ticks([])
-        #ax1.get_xaxis().set_ticks([])
-       
+        
         ax1.legend(loc='upper left')
 
         for tl in ax1.get_yticklabels():
@@ -434,8 +435,8 @@ def main():
             p.dumpplot()
     if "--metrics" in sys.argv:
         p.metricplots()
-    if "--special" in sys.argv:
-        p.specialplot()
+    if "--talk" in sys.argv:
+        p.talkplots()
     if "--weight" in sys.argv:
         if "--clip" in sys.argv:
             p.weightplot(int(sys.argv[sys.argv.index("--clip") + 1]))

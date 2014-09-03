@@ -4,25 +4,83 @@
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Wikipedia}
-\subsection*{In academia}
+\label{sec:wikipedia}
+
+IBM SOFTWARE PLEASE
+
+%% Despite early skepticism (particularly concern over the inherent chaos
+%% in the system: ``...edits, contributed in a predominantly undirected
+%% and haphazard fashion by ... unvetted
+%% volunteers.''\cite{Wilkinson2007}), Wikipedia is widely claimed to be
+%% a great success, `the best-developed attempt thus far of the enduring
+%% quest to gather all human knowledge in one
+%% place'\cite{Mesgari2014}. The website is only around a decade old, but
+%% in that time it has become a pre-eminent source of knowledge one the
+%% internet. As a highly populous, visible and accessible online space,
+%% the site is 
+
+%% It is one of the most visited sites in the world, and the
+%% most visited reference site by far. It is a huge site, with over 4.5
+%% million article, in around 300 language languages, and is completely
+%% open source and free-of-charge. It is an unparalleled data source,
+%% detailed and easy to access.
+
+%% However, one of the major factors contributing to the proliferation of
+%% academic work on wikipedia is suspicion. Investigations into the worth
+%% and quality of Wikipedia articles abound. Work in this area ranged
+%% from popular science to production software to full-blown academic
+%% theses, and until around 2010 continued to be a well-visited topic.
+
+%% In recent years, however, the research into wikipedia's extrinsic
+%% quality has waned. These studies peaked at around 2007, in the release
+%% of the Wikitrust software, which brought together much of the
+%% preceding researh on the subject, and is discussed later. Since then,
+%% though, papers on Wikipedian quality became less frequent, and
+%% Wikipedia reached real omnipresence.  In these years, while the fears
+%% that these crowd-sourced articles would supercede established
+%% reference tomes were certainly realised, so did the public seem to
+%% maintain a healthy suspicion of the site. Wikipedia is a central point
+%% of fact-checking, with even search tools such as Google's voice search
+%% and Apple's Siri taking it's content for granted, serving up
+%% Wikipedian content automatically after voice searches, but the site is
+%% still not accepted as a citable source.
+
+%% Criticisms of Wikipedia still exists, however. Though, whilst they
+%% began as investigations into external quality, now they more often
+%% than not concern Wikiepdia's internal health. We can no longer argue
+%% about whether or not the public should be reading these articles --
+%% they already are. Instead, we examine the internals of Wikipedia, and
+%% into the community that is involved in its growth. 
+
+%% This is the context for our study. We can assume that an article has
+%% worth, we don't care what that might be. We look at how this
+%% may be distributed within the article. What can we find out about the
+%% article by examining it's construction? What can we automatically
+%% measure of a revision's text?
+
+%% The objective of this project was to find a fair and concise way to
+%% analyse a Wikipedia revision, both in terms of the text operations,
+%% and in terms of an edits significance in the overall history of the
+%% article.
+
 Wikipedia is a free, open-source, publicly-editable online
-knowledge-base. The software is runs upon, PHP-based MediaWiki, is
+knowledge-base. The software is runs upon, the PHP-based MediaWiki, is
 also open-source, powering countless other online encyclopedias. The
 website is ranked 6\super{th} globally in terms of website traffic,
 and is the highest-ranked reference website by far - most of the sites
-it shares the top spots with are portals, search engines, shopping
-mega-sites, and social media websites.\footnote{According to `Alexa',
-  an website ranking company.\cite{Alexa-about2014} Though, this may
-  be an underestimation. Alexa may well be biased towards English
-  speakers and Internet Explorer users, underestimating
+it shares the top spots with are commercial portals, search engines,
+shopping mega-sites, and social media websites.\footnote{According to
+  `Alexa', an website ranking company.\cite{Alexa-about2014} Though,
+  this may be an underestimation. Alexa may well be biased towards
+  English speakers and Internet Explorer users, underestimating
   Wikipedia.org's popularity, since `two thirds of all Wikipedia
   articles are in languages other than
-  English'\cite{wikimedia-noteonalexa}} Despite early skepticism
-(particularly concern over the inherent chaos in the system:
-``...edits, contributed in a predominantly undirected and haphazard
-fashion by ... unvetted volunteers.''\cite{Wilkinson2007}), it is
-widely claimed to be a success, `the best-developed attempt thus far
-of the enduring quest to gather all human knowledge in one
+  English'\cite{wikimedia-noteonalexa}}\label{sec:popularity} Despite
+early skepticism (particularly concern over the inherent chaos in the
+system: ``...edits, contributed in a predominantly undirected and
+haphazard fashion by ... unvetted volunteers.''\cite{Wilkinson2007}),
+it is widely claimed to be a success, `the best-developed attempt thus
+far of the enduring quest to gather all human knowledge in one
 place'\cite{Mesgari2014}.
 
 That Wikipedia has become a hub of research in many fields is also
@@ -34,13 +92,12 @@ to his observation that Wikipedia has been `irresistable point of
 unquiry for researchers from various fields of knowledge'. It will be
 a useful touching stone for this study, finding 82 out of the 110
 surveyed articles to concern Wikipedia quality. Some of these are also
-referenced here, and many of the others will come to bear on the study
-as it progresses.
+referenced here.
 
-Other important general sources will be WikiLit,\cite{wikilit}
+Other important general sources have been WikiLit,\cite{wikilit}
 AcaWiki\cite{acawiki} and WikiPapers\cite{wikipapers}, all of which
 are online repositories of academic research into Wikipedia and other
-Wikis.
+Wikis, and from which many of the studies mentioned here were found.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -48,41 +105,51 @@ Wikis.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection*{Studies of Wikipedia revision history}
+\subsection*{Existing studies of Wikipedia revision history}
 Tangentialy related studies fall into two major groups: studies of
 Wikipedia article quality and studies of edit behaviour.  It is from
 the first group that we find the most pertinent work --- it is also
 one of the most fruitful areas of research.
 
 It is the metrics used to measure quality in these studies that are of
-most use to us here. We don't concern ourselves with the quality of
-the article on the whole, but many studies have endeavoured to find
-out what kind of article content can be automatically recognised. High
-numbers of Links, internal links, images and formulas have been found
-to indicate percieved quality,\cite{Lucassen2010}\cite{mcguinness2006}
-and these are easy to identify using Wikipedia's markup
-language. Other useful meterics have been the age of the
-word,\cite{Cross2006} the age and rate of change of the article in
-comparison to other articles,\cite{Zeng2006} and the recent activity
-of the article (an article undergoing a peak in edit changes may be
-`unstable').\cite{Adler2006} Another study of particular interest is
-that of Stvilia et al, which found metrics of article quality through
-factor analysis,\cite{Stvilia2005} confirming much of the ideas
-already mentioned.
+most use to us here. We don't concern ourselves with the external
+quality rather how succesful the article is in its own context of
+Wikipedia, but many studies have endeavoured to find out what kind of
+article content can be automatically recognised. We can also assume
+that editors may well appraise an article in a similar way to the
+passive, Wikipedia-innocent reader-agents these studies concern
+themselves with.
+
+High numbers of Links, internal links, images and formulas have been
+found to indicate percieved
+quality,\cite{Lucassen2010}\cite{mcguinness2006} and these are easy to
+identify using Wikipedia's markup language. Other useful metrics have
+been the age of the word,\cite{Cross2006} the age and rate of change
+of the article in comparison to other articles,\cite{Zeng2006} and the
+recent activity of the article (an article undergoing a peak in edit
+changes may be `unstable').\cite{Adler2006} Another study of
+particular interest is that of Stvilia et al, which found metrics of
+article quality through factor analysis,\cite{Stvilia2005} confirming
+much of the ideas already mentioned. A particularly interesting study
+found simply that word count maps well to success within Wikipedia,
+with longer articles recieving `featured article'
+status.\cite{blumenstock2008size}
 
 A landmark piece of work is the Wikitrust software.\cite{Adler2007}
 Wikitrust was\footnote{Defunct as of author's checks, Apr 2014} a
 firefox plugin, designed to highlight the words of a Wikipedia article
-with different colors. The gradations of these colors relate to levels
-of trust, and the computations made to derive them were based upon the
-metrics mentioned above, with particular emphasis on a word's age. A
-screenshot can be seen in figure \ref{fig:wikitrust}. The program was
-reviewed as recently as 2011,\cite{Lucassen2011} and it was found to
-be basically flawed, with users not really seeing the use for it (it
-was found that, having read Wikipedia before, they already had a good
-idea of how to rate an article). However, the Wikitrust team's
-implementation of the quality measures described above will prove to
-be very useful study.
+with different colors, building upon the writing of Cross,
+2006.\cite{Cross2006} The gradations of these colors relate to levels
+of `trust', and in turn on both the word's age, and the trust rating
+of the editor that contributed that word. A screenshot can be seen in
+figure \ref{fig:wikitrust}. 
+
+The program was reviewed as recently as 2011,\cite{Lucassen2011} and
+it was found to be basically flawed, with users not really seeing the
+use for it. In fact, as a foil to the `na\ddot{i}ve reader' paradigm
+assumed by many of these studies, it was found that, having used
+Wikipedia before, readers already had personal methods for deciding
+whether to trust of not trust a Wikipedia article. 
 
 \begin{figure}
   \centering
@@ -91,21 +158,16 @@ be very useful study.
   \label{fig:wikitrust}
 \end{figure}
 
-Another metric which may also affect the quality of an article as a
-resource, is logical structure. It was found in 2005 that this, if
-anything, was the clearest difference between Wikipedia and commercial
-encyclopedias,\cite{Giles2005} supporting previous
-conjecture.\cite{Denning2005} Not many studies have concerned
-themselves with structure, but later we will discuss how we may
-automatically recognise structural change.
+A few other studies present us with useful analyses of edit
+behaviour. These studies turn to Wikipedia in order to study user
+network interaction, and these analyses of conflict between editors
+show the possible reversion cases we will have to automatically
+recognise. 
 
-A few other key studies present us with useful analyses of edit
-behaviour. Analyses of conflict between authors shows the possible
-reversion cases we will have to recognise. They reveal the high number
-of immediate `undo'-type revisions, and also that malicious or
-unnecessary input may survive several versions before being
-undone. Some study these conflicts as a characterisation of normal
-editing
+They reveal the high number of immediate `undo'-type revisions, and
+also that malicious or unnecessary input may survive several versions
+before being undone. Some study these conflicts as a characterisation
+of normal editing
 behaviour,\cite{Kittur2007}\cite{Kittur2009}\cite{Kittur2010}\cite{Potthast2008}
 while others look to controversial articles,\cite{Iba2010} or articles
 recently cited in the press.\cite{Lih2004} We find from these same
@@ -114,24 +176,4 @@ articles of better quality than those with a more homogeneous
 contribution group, that a small group of editors contribute to most
 of Wikipedia, and that conflict and bureaucracy (increasing over time)
 are the major limiting factors in the growth of an
-article.\cite{Suh2009} Knowledge of this context is vital in
-evaluating the edits we will eventually analyse.
-
-\subsection*{Wikipedian copyright and consensus}
-We at first look towards how wikipedia natively decides on two things:
-WHO OWNS what, and HOW tey decide what to put in an article.
-
-Joint copyright. Interdependent work. When authors agree they are
-contributing to one thing.
-
-Two problems -- international is one. Main one is the fact that the
-thing is always changing.
-
-WHO OWNS WHAT
-\url{http://en.wikipedia.org/wiki/Wikipedia:FAQ/Overview#Who_is_responsible_for_the_articles_on_Wikipedia.3F}
-
-WIKIPEDIA copyright
-\url{http://en.wikipedia.org/wiki/Wikipedia:Copyrights}
-
-WIKIPEDIA consensus
-\url{http://en.wikipedia.org/wiki/Wikipedia:Consensus}
+article.\cite{Suh2009} 

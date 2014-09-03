@@ -1,10 +1,9 @@
 \section{Edit difference algorithms}
-To measure difference between different text revisions, we will refer
-edit distance. Edit distance between two texts, first defined by
+To measure difference between different text revisions, we refer to
+edit distance. The edit distance between two texts, first defined by
 Vladimir Levenshtein in the 1960s,\cite{Levenshtein1966} can be
 defined as the minimum amount of insert, delete and substitutions
-operations needed to transform one text into another. We use this as
-our basis for measuring differences between revisions. We find a
+operations needed to transform one text into another. We find a
 trivial illustration of the edit distance primitives in
 figure~\ref{fig:fork-spork}
 
@@ -58,24 +57,25 @@ figure~\ref{fig:fork-spork}
   \label{fig:levdef}
 \end{figure}
 
-Levenshtein's characterisation of this distance is given in
+Levenshtein's own characterisation of this distance is given in
 figure~\ref{fig:levdef}. It defines that the distance between two
 strings is characterised the minimum distance between three different
-pair-combinations of its substrings. A 'text-book' implementation of
-this algorithm can be represented by the pseudo-code below. (We
-present the dynamic-programming-style algorithm here, and will
-generally be working with dynamic programming implementations
-throughout the study.)
+pair-combinations of its substrings. A `text-book' implementation of
+this algorithm can be represented by the pseudo-code in
+figure~\ref{ref:levenshtein-dynamic}. We present the
+dynamic-programming-style algorithm here, and will generally be
+working with dynamic programming implementations throughout the study.
 
 \begin{figure}
+  REDO AS ALGORTHM?!
   \centering
   \begin{lstlisting}
     ed(x,y):
-    #end base cases
+    #base cases
     if |x| = 0: return |y|
     if |y| = 0: return |x|    
 
-    #end table initialisation
+    #table initialisation
     d is a table [0..|x|][0..|y|]
     for i = 1 to |m|:
     d[i,0] = i
@@ -98,9 +98,7 @@ throughout the study.)
   \label{fig:levenshtein-dynamic}
 \end{figure}
 
-In figure~\ref{levenshtein-dynamic} we find a dynamic programming
-implementation of Levenshtein - the basic 'textbook'
-implementation. We can see that on comparing strings $x$ and $y$, a
+We can see that on comparing strings $x$ and $y$, a
 $|x|$ by $|y|$ table is created, and then filled with values. For this
 reason both the time and space complexity of the algorithm is $\theta
 (|x||y|)$.
@@ -111,13 +109,14 @@ parts of the table already computed. We can see that, on each
 computation of $d[i,j]$ (as it appears above), we require only a small
 part of the matrix: $d[i-1,j-1]$, $d[i-1,j]$ and $d[i,j-1]$. At any
 iteration $i$, where is great than $1$, we may disregard rows $0 \dots
-(i-2)$ inclusive.
+(i-2)$ inclusive. We eventually implement this version, implementing
+the algorithm~\ref{lev-dist}, on page~\pageref{lev-dist}.
 
 There are more complicated techniques that allow us to also disregard
 unneccesary computation --- a few implementations employ strategies
 that allow them to trace the table space diagonally, rather than
 iteratively, achieving a time complexities as low as $O(ed(x, y)^2)$
-(though they sacrifice some accuracy).\cite{Chang1992} Another
+(though they sacrifice some accuracy).\cite{Chang1992} Others
 harnesses the speed of bit operations to achieve a time complexity of
 $O(nm/w)$ or $O(nm log {\Sigma}/w)$ time where $w$ the bit-word size
 of the machine, and $\Sigma$ is the alphabet
@@ -126,9 +125,9 @@ size.\cite{Myers1999}\cite{Hyyro2003}
 In this project, however, it was suffice to simply reduce the space
 needed for the computation, as the texts were relatively small, and
 speed not an issue. However, we were able to speed up the program
-somewhat by implementing some simple multiprocessing.  Both these
-procedures are discussed in chapter REFERENCE. In chapter REFERENCE we
-also discuss  
+somewhat by implementing some simple multiprocessing. Both these
+procedures, and their limitations, are discussed in more detail on
+page~\pageref{multiprocessing-bit}.
 
 %% \subsection*{Varieties of edit distance}
 %% Modifications can be made to the nature of the distance itself, in
@@ -193,9 +192,9 @@ However it could also conceivably have been:
   \end{tabular}
 \end{center}
 
-Here, the left-hand version results in an equivalent
-Levenshtein distance, but we can see how the distance for the
-right-hand example would be sub-optimal.
+Here, the left-hand version results in an equivalent Levenshtein
+distance, but we can see how the distance for the right-hand example
+would be sub-optimal, requiring 8 edit operations.
 
 \begin{figure}[h]
   \centering   
@@ -221,27 +220,29 @@ right-hand example would be sub-optimal.
 \end{figure}
 
 The Smith-Waterman algorithm calculates optimal alignment by
-populating two tables --- one like that in the pseudocode
-above, and also as a table of arrows. These arrows define a
-path from one corner of the table space to the other. The
-shape of this path defines how to align the two
-strings.\cite{Smith1981} See figure
-\ref{fig:smith-waterman-traceback} for an example.
+populating two tables -- one like that in the pseudocode above, and
+also as a table of directions.\cite{smithwaterman} These directions describe paths from
+one corner of the table space to the other; the shape of this path
+can define how to align the two strings.\cite{Smith1981}
 
 This path may also be read as an edit operation. An arrow at the
 position $[i,j]$ in the table defines edit operations for $x[i]$
-and/or $y[j]$ thus:
-\begin{itemize}
-\item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$} \\ Denotes a
-  'swap' between $x[i]$ and $y[j]$ (if $x[i] = y[j]$ then it denotes
-  the lack of an operation).
-\item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion of $x[i]$
-\item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the insertion of
-  $y[j]$
-\end{itemize}
+and/or $y[j]$, as described in figure
+\ref{fig:smith-waterman-traceback}.
 
 \begin{figure}[h]
-  \centering $\left\{
+  \centering 
+  \begin{itemize}
+  \item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$} \\ Denotes a
+    'swap' between $x[i]$ and $y[j]$ (if $x[i] = y[j]$ then it denotes
+    the lack of an operation).
+  \item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion of $x[i]$
+  \item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the insertion of
+    $y[j]$
+  \end{itemize}
+  \vspace{10mm}
+
+  $\left\{
   \begin{array}{ccccccc}
     & & S & P & O & R & K \\ & \color{red}{0} & \color{red}{0} & 0 & 0
     & 0 & 0 \\ F & 0 & \nwarrow & \color{red}{\nwarrow} & \nwarrow &
@@ -260,7 +261,17 @@ and/or $y[j]$ thus:
   \label{fig:smith-waterman-traceback}
 \end{figure}
 
+Our early implementations of the Levenshtein algorithm implemented
+various ways of computing this alignment data, including creating a
+separate matrix as here, and implementing a struct which would accrue
+this path data as it was passed along in the $min(a,b,c)$ function of
+the Levenshtein algorithm. However, these implementations were very
+slow, and we decided that evidencing alignment was not a priority. 
 
+We did, however, find that splitting the string caused some
+sub-optimal alignment, and discrepancies in plain levenshtein vs split
+levenshtein distance. We discuss this in detail on
+page~\pageref{split-distance-eval}.
 
 %% \subsection*{Delta encoding}
 %% Finally, we may also look into Delta encoding algorithms. These

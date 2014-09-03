@@ -52,7 +52,7 @@ def revidLog(title, pageid, domain):
     import database as db
     d = db.Database()
     
-    ilogger.info("CALC SUMMARY FOR " + ", ".join([title.encode('utf-8'),str(pageid),str(domain)]))
+    ilogger.info("CALC SUMMARY FOR " + ", ".join([str(pageid),str(domain)]))
     weights = d.getrevidlog(pageid, domain)
     for w in weights:
         ilogger.info(" ")

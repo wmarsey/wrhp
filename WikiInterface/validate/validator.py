@@ -54,6 +54,9 @@ def fetchdatadump(flags, classnum):
     if classnum == 3:
         print "Test: can we predict gradient from weights and username edit count over the whole english wiki?"
         alldata = dtb.gettrainingdata3(flags['limit'], domain='en')
+    if classnum == 4:
+        print "Test: can we predict gradient from weights and username edit count over the whole english wiki?"
+        alldata = dtb.gettrainingdata4(flags['limit'], domain='en')
     print "recieved", len(alldata), "cases"
 
     ##pick a random subgroup if asked
@@ -86,12 +89,12 @@ def preparedata(weights, classifications):
 ##feed into sklearn
 def train(data, target, foldnum):
 
-    model = linear_model.SGDRegressor(penalty='elasticnet', 
-                                      shuffle=True, 
-                                      fit_intercept=False) 
-    model.fit(data, target)
-    print model
-    scores = cross_validation.cross_val_score(model, data, target, cv=foldnum)  
+    model = svm.SVC(kernel='rbf', 
+                    shrinking=False, 
+                    verbose=True) 
+    #model.fit(data, target)
+    #print model
+    scores = cross_validation.cross_val_score(model, data, target, cv=foldnum,verbose=1,n_jobs=-1)  
     
     return sum(scores) / len(scores)
 
