@@ -1,0 +1,66 @@
+\section{Debug log excerpt}
+Showing the reporting of spawned processes, their workload, and their
+return time.
+
+\begin{verbatim}
+2014-09-04 17:57:43,594 analyse:('getting weights, pair parentid:', 49618798, 'childid:', 52943690)
+2014-09-04 17:57:43,596 analyse:('in database',)
+2014-09-04 17:57:43,597 analyse:('getting weights, pair parentid:', 0, 'childid:', 49618798)
+2014-09-04 17:57:43,706 calcdists:('spawned', 2)
+2014-09-04 17:57:43,709 calcdistworker:('worker process 5 string1 length: 0 string2 length: 130',)
+2014-09-04 17:57:43,712 calcdistworker:('process 5 returning 130',)
+2014-09-04 17:57:43,711 calcdistworker:('process 3 returning 69',)
+2014-09-04 17:57:43,715 calcdists:('recieved', 2, 'results')
+2014-09-04 17:57:43,715 makeweight:('calculated gradient as 1',)
+analyse:('in database',)
+\end{verbatim}
+
+\section{Info log excerpt}
+The end of a report on the weight and gradient factor calculations
+made for each revision. The bottom entry shows the reporting of the
+above calculation.
+
+\begin{verbatim}
+
+-----[69639596] / 2006-08-14 19:14:11-----
+[0, 0, 0, 10, 0, 17, 0.503424]
+ TOTAL 13.592448
+ 
+-----[67378284] / 2006-08-03 04:23:27-----
+[15, 0, 0, 0, 0, 29, 0.514538]
+ TOTAL 22.639672
+ 
+-----[65177530] / 2006-07-22 07:56:50-----
+[0, 0, 0, 57, 0, 44, 0.504509]
+ TOTAL 50.955409
+ 
+-----[55399013] / 2006-05-27 10:51:49-----
+[0, 0, 0, 17, 0, 0, 0.999917]
+ TOTAL 16.998589
+ 
+-----[55398992] / 2006-05-27 10:51:33-----
+[0, 0, 0, 17, 0, 1, 0.500929]
+ TOTAL 9.016722
+ 
+-----[52951347] / 2006-05-13 04:12:12-----
+[0, 0, 0, 2, 0, 0, 0.968231]
+ TOTAL 1.936462
+ 
+-----[52949980] / 2006-05-13 04:00:11-----
+[0, 0, 0, 72, 0, 104, 0.99954]
+ TOTAL 175.91904
+ 
+-----[52948570] / 2006-05-13 03:46:24-----
+[15, 0, 0, 789, 0, 571, 0.999799]
+ TOTAL 1374.723625
+ 
+-----[52943690] / 2006-05-13 03:02:53-----
+[0, 0, 0, 0, 0, 0, 0.5]
+ TOTAL 0.0
+ 
+-----[49618798] / 2006-04-22 17:29:01-----
+[0, 0, 0, 69, 0, 130, 1.0]
+ TOTAL 199.0
+ 
+END-----------------------------------
+\end{verbatim}

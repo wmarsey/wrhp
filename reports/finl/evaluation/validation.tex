@@ -39,39 +39,68 @@ data:
     domain}\\ We take the generic weight and combine it with the
     user's activity over the whole wikipedia domain.
     
-
   \item \textbf{Summed weights and user edit count over
     article}\\ Similar to above, but only counts user activity in the
     same article.
 
 \end{itemize}
 
-We experimented with various types of learning, including the blah and
-blah. Appendix --> typical  output script
-
-Results not good. The regression models failed to fit to the data.
+We experimented with various types of regression techniques, but our
+results were not very good, with the regression function rarely
+fitting to the data with any accuracy. The validation scripts can be
+run from validator.py, in the validation subfolder.
 
 Since the gradient factor is sensitive to time, and the scale of that
 time, we also tried seperating the data into two categories,
 'towards-final' as 1 and 'away-from-final' as 0, by simply rounding
 the gradient factor to it's nearest integer, and repeated the same
-tests as detailed above.
+tests as detailed above, but similarly the classification was not very
+accurate.
 
-Not good.
+We identify two problems that may have effected this. 
 
-Two problems. The way we collect our data, or text doesn't matter
+Our first is perhaps the incompleteness of our data. In particular,
+the incompleteness of outr understanding of the text itself. It was a
+central premise of this study that we were to make no attempt at
+understanding the actual content of the text.
 
-Why data collection could be a problem. talk about lack of talk-page
-data, refer to analysis. Please see appendix of plots of page to
-talk-page. But slowness of stuff, sad. 
+But perhaps the actual fact content of the text is quite important,
+particularly on an encyclopedia, to its survival --- perhaps Wikipedia
+is predictable in this regard, that facts have an innate discoverable
+quality. Perhaps in this case we would be in a better place to predict
+success if we could measure the factual accuracy of new text, run a
+spell checks on it, etc.
 
-But then talk about all the research that says uknown edits are
-undone. 
+Our second problem may be that, perhaps, much of the data we analysed
+actually doesn't greatly effect the survival rate of the edit. Much of
+the information lost from and gained by pages like Rupert Sheldrake's,
+or Derek Smart's was factually correct, and not necessarily
+malformed. The reason for the exclusion of content was to quell a
+conflict in the case of the former text, whereas in the latter page it
+was the personal opinions of individual Wikipedia editors about which
+facts actually \text{were} facts that caused (and continue to cause)
+complications.
 
-Talk about how editors are down since 2007.
+Talk page data is one thing, and we looked briefly at how the talk
+page data can correlate with article data, but external context is
+relevant too. Rupert Sheldrake's interview on the BBC coincides with
+changes in his article, and we can refer to Lih's 2004 article on
+edits made immediately after celebrity deaths.
 
-Talk about how this is trying to be undone by WikiMedia, but for the
-moment, more contextual.
+We note that there are less regular editors on Wikipedia now than
+there was in 2007, user-count `has shrunk by more than a third since
+[then] and is still shrinking'.\cite{wiki-decline} Wikipedia's `formal
+mechanisms for normal articulation are shown to have calcified against
+changes –-- especially changes proposed by newer
+editors'.\cite{wiki-decline-2} The study identifies, amongst other
+things, a number of tools, bots and policies that have often tended to
+revert entries regardless of their content.
 
-ALSO, complicating the wikipedia case. like the things in analyses,
-talk about completely external things. Like celebrity deaths.
+But Wikipedia's internal problems are of not real issue with this
+study, they only give us reason to doubt whether we could use a simple
+dataset in order to characterise the complex conditions that conduce a
+successful contribution to Wikipedia.
+
+Rather, the lesson we learn here is simply that a wide context is
+neccesary for understanding and characterising real-world human
+collaboration.
