@@ -334,8 +334,11 @@ class Plotter:
         pages = dtb.getallfetched()
         shuffle(pages)
         for r in pages[:clip]:
-            self.plot(*r)
- 
+            try:
+                self.plot(*r)
+            except:
+                pass
+
     def metricplots(self):
         dtb = db.Database()
         y = dtb.gettexttypedistribution('en')[0]
