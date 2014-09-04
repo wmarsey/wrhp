@@ -1,4 +1,4 @@
-usepackage{graphicx}
+\usepackage{graphicx}
 \DeclareGraphicsExtensions{.pdf,.jpeg,.jpg}
 
 \usepackage{verbatim}
@@ -273,3 +273,51 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 \definecolor{redi}{RGB}{255,38,0}
 \definecolor{yellowi}{HTML}{D1DBBD}
 \definecolor{greeni}{HTML}{91AA9D}
+
+\newenvironment{itemize*}%
+               {\begin{itemize}%
+                   \setlength{\itemsep}{0pt}%
+                   \setlength{\parskip}{0pt}}%
+               {\end{itemize}}
+\newenvironment{description*}%
+               {\begin{description}%
+                   \setlength{\itemsep}{0pt}%
+                   \setlength{\parskip}{0pt}}%
+               {\end{description}}
+
+
+
+\def \mheight {1cm}
+\def \mwidth {1cm}
+\definecolor{col2}{HTML}{C7BA9B}
+\definecolor{col1}{HTML}{8B7C6D}
+\definecolor{col3}{HTML}{F0EAB3}
+\definecolor{col4}{HTML}{626072}
+\definecolor{col5}{HTML}{40415B}
+
+\tikzstyle{bx}=[
+  fill, 
+  minimum height=\mheight, 
+  minimum width=\mwidth, 
+  shape border rotate=90, 
+  shape aspect=0.1,
+  rounded corners=2mm
+]
+
+\tikzstyle{cld}=[
+  cloud, 
+  cloud puffs=15.7, 
+  cloud ignores aspect, 
+  minimum height=\mheight,
+  minimum width=\mwidth, 
+  align=center
+]
+
+\tikzstyle{dtb}=[
+  fill,
+  chamfered rectangle,
+  chamfered rectangle xsep=2cm,
+  minimum height=\mheight, 
+  minimum width=\mwidth,
+  rounded corners=1mm
+]

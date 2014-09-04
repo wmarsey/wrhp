@@ -14,13 +14,13 @@ logging.basicConfig(filename=DEBUGFILE,
 logging.basicConfig(filename=INFOFILE,
                     level=logging.INFO, format="%(asctime)-15s %(message)s")
 
-# dhandler = logging.handlers.RotatingFileHandler(
-#               DEBUGFILE, maxBytes=1000000, backupCount=5)
-# ihandler = logging.handlers.RotatingFileHandler(
-#               INFOFILE, maxBytes=1000000, backupCount=5)
+dhandler = logging.handlers.RotatingFileHandler(
+              DEBUGFILE, maxBytes=1000000, backupCount=5)
+ihandler = logging.handlers.RotatingFileHandler(
+              INFOFILE, maxBytes=1000000, backupCount=5)
 
-# dlogger.addHandler(dhandler)
-# ilogger.addHandler(ihandler)
+dlogger.addHandler(dhandler)
+ilogger.addHandler(ihandler)
 
 dlogger.setLevel(logging.DEBUG) 
 ilogger.setLevel(logging.DEBUG)

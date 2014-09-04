@@ -1,37 +1,28 @@
-\section{Methods}
-From our background work, we take a three step method of analysing the
-article.
+Our basic method for acquiring and analysing data can be broken down
+into three steps:
 
-Firstly, we must take the most recent version of an article and take
-it as a static, `finished' version of the collaboration. We will
-discuss later the possibility of predicting future versions of the
-article.
+\begin{description}
+\item[Firstly] we send HTTP requests to the Wikipedia API, tracing
+  history back from the most recent version to the least. We store the
+  content of each revision, as well as data pertaining to the user,
+  the time of the edit, it's size, and so forth. We store these in a
+  PostgreSQL database.
+\item[Secondly] we take the mos recent revision, and compare it to all
+  previous revisions in turn. We do this using a plain Levenshtein
+  distance. It gives us an idea of how close the article was to its
+  final version at each point in its history. We translate this into a
+  real number for each revision which takes into account the change in
+  time between each revision and the next, as well as the difference
+  in their distance-from-final.
+\item[Thirdly] we measure the Levenshtein distance between each
+  child-parent revision pair, splitting the text into various
+  different species, and measuring them separately. This results
+\end{description}
 
-Secondly, we measure the distance between each article version using a
-levenshtein distance, but splitting the text up into text species.
+The rest of this chapter is an elaboration of this three-step plan.
 
-Thirdly, we measure the levenshtein distance between each revision in
-the article's history
-
-%% \begin{itemize}
-%% \item \textbf{We assume that the final, or `target' article is of
-%%   `good' quality.} There are many studies which concern themselves
-%%   with verifying the accuracy and quality of Wikipedia articles --- In
-%%   this study we are specifically concerned with the quality of
-%%   contribution, i.e. the quality of text within the article, relative
-%%   to the domain of the article. Here, the quality of the article
-%%   itself is a moot point.
-%% \item \textbf{We assume the article is well-formed.} As much as we do
-%%   not concern ourselves with article accuracy, we also assume that the
-%%   Wikipedia markup is also well-formed. We may also eventually check
-%%   whether links are invalid, but for the moment we assume that they
-%%   are.
-%% \item \textbf{We make no distinction between humans, bots and
-%%   anonymous editors.}
-%% \end{itemize}
-
-\section{Data collection and storage}
-\subsection*{The WikiMedia API}
+\section{Procedures}
+\subsection*{Data collection and storage}
 \label{sec:wiki-api}
 WikiMedia's API service provides simple access to a wiki data,
 features and meta-data over HTTP,\cite{wiki-api} and for this project,
@@ -41,23 +32,30 @@ as a data source, and the algorithmic caveats necessary to deal with
 them.
 
 Our basic request is simple: we send a HTTP request to a given wiki
-site's `/api.php' file, sending the query parameters a
-`prop=revisions', `rvprop=content', and `titles=X|Y' to get those
-page's most recent revision contents. We can prefetch a title using a
-random request (parameters `list=random\&rnlimit=1'), and in each case
-we can add the `format=json' parameter, and quite easily parse the
-results. 
+site's `wiki/api.php' file, sending the query parameters a
+`prop=revisions', `rvprop=content', and `titles=X{\textbar}Y' to get those
+page's most recent revision contents. We can also prefetch a title
+using a random request (parameters `list=random\&rnlimit=1'), and in
+each case we can add the `format=json' parameter, and quite easily
+parse the results. These simple techniques form the basis of our data
+collection -- the more complex operations of the API caused various
+problems, discussed below.
 
-To trace the history of a given page, then, we need only augment the
-`rvprop' argument to include `ids' (`rvprop=content|ids') in order to
-discover the parent id and trace the history backwards from there. The
-procedure defined in algorithm~\ref{alg-data} demonstrates this
-clearly, showing the child-parent swap at line~\ref{datal2}. The
-condition on the while loop (line~\ref{datal1}), however, shows the
-first oddity with the Wikipedia histories. Most articles will
-terminate at their origin, showing parentid 0. Some, instead, enter a
-terminal cycle, with the oldest fetched revision giving its parent to
-be a much younger version of the same article. 
+To trace the history of a given page, we need only augment the
+aformentioned `rvprop' argument to include `ids'
+(`rvprop=content{\textbar}ids') in order to discover the parent id and, from
+there, we may trace the history backwards. The procedure defined in
+algorithm~\ref{alg-data} demonstrates this clearly, showing the
+child-parent swap at line~\ref{datal2}. 
+
+However, the API, even in these simple operations, is not toally
+reliable. The condition on the while loop (line~\ref{datal1}),
+however, shows the first oddity with the Wikipedia histories. Most
+articles will terminate at their origin, showing parentid 0. Some,
+instead, enter a terminal cycle, with the oldest fetched revision
+giving its parent to be a much younger version of the same article. We
+found this to occur consistently with some articles, to imply that the
+problem is not just a temporary glitch in the delivery of the data.
 
 %%%% Data fetching algorithm
 \begin{algorithm}
@@ -78,7 +76,7 @@ be a much younger version of the same article.
     \If{corruptness is within recoverability bounds}
     \State $corruptpages \gets corruptpages + (revid, parentid, domain)$
     \Else
-    \State terminate fetch
+    \State terminate fetch\label{data14}
     \EndIf
     \Else
     \State $database \gets page data$
@@ -95,174 +93,156 @@ be a much younger version of the same article.
   \end{algorithmic}
 \end{algorithm}
 
-We must do is keep a track of all the revisions we already know exist
-of that article, so that we may identify these cycles, and terminate
-the fetch loop early. In early tests, we find that these cycles occur
+So, we keep a track of all the revisions we already know exist of that
+article, so that we may identify these cycles, and terminate the fetch
+loop early. In early tests, we find that these cycles occur
 exclusively amongst older articles (though not all old articles have
 the problem). For the purposes of this study, then, we must
 acknowledge that any `complete' history of an article in our databases
-is in fact only the complete \textit{discoverable}
-history.\footnote{We may note that the Wikipedia site warns that some
-  histories are only part-discoverable. Using our fetch algorithm we
-  have managed to often surpass the boundaries described on Wikipedia,
-  though the cycle problem does occur at a time approximate to that
-  mentioned on the Wikipedia. We may assume that some server
-  corruption occurred at around that point in Wikipedia's history.}
+is in fact only the complete \textit{discoverable}\footnote{We may
+  note here that, using our fetch algorithm, we have often managed to
+  trace histories beyond the oldest listed on the site itself. That
+  these older revisions are not available on the normal site implies a
+  compromise, perhaps an early server problem.}  history. We were
+unable to find an explanation for this problem online.
 
-A second notable problem was the regular corrupt values returned by
-Wikipedia. We see that we test for corruption in at line~\ref{datal3},
-storing a list of corrupt pages - often the data is returned with
-missing entries, but was often missing data that was pertinent to
-later study - namely, timestamp and revision content. For ease of
-analysis later, we choose to `circumnavigate' corrupt entries in the
-database, changing pointers between children and parents in situ. We
-may then later trace a history of incorrupt entries using these
-pointers. The procedure for this is detailed in
-algorithm~\ref{corrupt-clean}.
+A second notable problem was the corrupt data regularly returned by
+the Wikipedia API. We test for `corruption' at line~\ref{datal3} in
+algorithm~\ref{alg-1}, storing a list of corrupt pages. Here we test
+for problems that do not effect the fetch overall, but would cuase
+problems during the analysis, such as missing timestamps, or user
+data. In these cases `circumnavigate' corrupt entries in the database,
+using the procedure in algorithm~\ref{corrupt-clean}. The database
+changing pointers between children and parents so as to remove the
+corrupt revisions from the chain. We may then later trace a history of
+incorrupt entries using only these pointers.
 
-Finally, we define some corruptness of data to constitute a fetching
-failure. With our model, we only do this when the parentid is
-missing. Though this does not happen often, to handle these cases we
-mark a pageid as having a succesful fetch by adding it to a special
-table in the database. This can also be useful for fetches that are
-interrupted in other ways, as with hardware and network problems. This
-table is found in figure~\ref{database-schema} as `wikifetch'. 
+In line~\ref{data-14} of algorithm~\ref{alg-1} we define some
+corruptness of data to constitute a fetching failure, and terminate
+the fetch altogether. With our model, we only do this when parentid
+information is missing. Terminating the loop early, in practice, means
+either discarding all fetched data, or terminating the history at that
+point, depending on whether we have fetched enough revisions to
+satisfy our `scrape minimum' limit.
+
+On exiting procedure mark a pageid as having a succesful fetch in the
+database. This is useful for fetches that are interrupted
+unexpectedly, by hardware or connection problems. It allows us to
+clean or repair the database further down the line.
 
 \begin{algorithm}
   \caption{Corrupt pages}\label{corrupt-clean}
   \begin{algorithmic}
     \Procedure{CorruptClean}{corruptrev, parent, domain}
+    \State $parentrev \gets database.getparent(corruptrev)$
     \State $childrev \gets database.getchild(corruptrev)$
-    \State $database.setparent(childrev, parent)$ \Comment{Now the
-      corrupt revid is circumnavigated}
+    \State $database.setparent(childrev, parentrev)$ 
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
 
-\subsection*{The database}
-The database is implemented in PSQL, and accessed via a python package
-leveraging the psycopg library. The package is used by all the other
-classes used in this project and provides simple inserting, changing,
-fetching and checking of data. The only more complex operation is the
-datadump function. The operation is more specific than the other
-functions, and may have been pieced together using these functions,
-but in implementation it was much quicker to correlate and fetch data
-using the SQL `JOIN' statements, rather than multiple fetches in a
-Python for loop, for example.
-
-The database relies upon the uniqueness of revision ID and domain-name
-pairs to function. The database schemata can be found in
-figure~\ref{database-schema}. These databases are referenced at all
-points of this project.
-
-\begin{figure}
-  \centering
-  \begin{subfigure}[t]{0.3\linewidth}
-    \centering
-    \begin{tabular}{ccc}
-      \toprule
-      \underline{revid} & \underline{domain} & content\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$\\
-    \end{tabular}
-    \caption{Table: wikicontent}
-  \end{subfigure}
-  \begin{subfigure}[t]{0.2\linewidth}
-    \centering
-    \begin{tabular}{cc}
-      \toprule
-      \underline{pageid} & \underline{domain} \\
-      \midrule
-      $\vdots$ & $\vdots$\\
-    \end{tabular}
-    \caption{Table: wikifetched}
-  \end{subfigure}
-  \begin{subfigure}[t]{0.4\linewidth}
-    \centering
-    \begin{tabular}{cccc}
-      \toprule
-      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{Table: wikitrajectory}
-  \end{subfigure}\\
-  \vspace{10 mm}
-  \begin{subfigure}[b!]{\linewidth}
-    \centering
-    \begin{tabular}{ccccccccc}
-      \toprule
-      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
-      comment \\ 
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
-      & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{Table: wikirevisions}
-  \end{subfigure}
-  \vspace{30 mm}
-  \begin{subfigure}[b!]{\linewidth}
-    \centering
-    \begin{tabular}{ccccccccc}
-      \toprule
-      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
-      structure & normal & gradient\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
-      $\vdots$ & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{Table: wikiweights} 
-  \end{subfigure}
-  \caption{Schemata for the database used to store wikipedia data}
-  \label{database-schema}
-\end{figure}
-
-%%WEIGHTING BY MARKUP
-\subsection*{Text species}
-Using the wikimedia markup system, we may easily identify certain
-species of text. They are as follows:
-\begin{itemize}
-\item Internal links
-\item External links
-\item Images
-\item Files
-\item Musical scores
-\item Math-formatted text (similar to Latex math environment)
-\item Section headings (of differing levels)
-\item `Citation Needed' tags
-\item `As of' tags (used for identification of age-sensitive
-  information)
-\item Block quotes
-\item Tables
-\end{itemize}
-
-We then group them logically, as follows:
-\begin{description}
-  \item[Equation]\hfill\\
-    Math-formatted text
-  \item[Source validation]\hfill\\
-    Block quotes, Citations, `Citation Needed' tags, `As of' tags
-  \item[Links]\hfill\\
-    Internal Links, External Links
-  \item[Structural]\hfill\\ 
-    Section headings, Tables\\
-    It was found in 2005 that this, if anything, was the clearest
-    difference between Wikipedia and commercial
-    encyclopedias,\cite{Giles2005} supporting previous
-    conjecture.\cite{Denning2005} The regexes in this group provide a
-    simple way of noticing changes that affect structure.
-\end{description}
-
-We ma split the string along the boundaries of these markup tags, and
-send levenshtein distance calculator sperate strings.
-FINISH
+%% \begin{figure}
+%%   \centering
+%%   \begin{tikzpicture}
+%%     \matrix(a)[matrix of nodes,row sep=0.2cm]{
+%%       \textbullet\\
+%%       $\times$\\
+%%       \textbullet\\
+%%       \textbullet\\
+%%     };
+%%     {[start chain,every on chain/.style={join}, every
+%%         join/.style={line width=1pt}]
+%%       \chainin (a-1-1);
+%%       \chainin (a-2-1);
+%%       \chainin (a-3-1);
+%%       \chainin (a-4-1);
+%%     };
+%%     \matrix(b)[matrix of nodes,row sep=0.2cm,below=2cm of a]{
+%%       \textbullet\\
+%%       $\times$\\
+%%       \textbullet\\
+%%       \textbullet\\
+%%     };
+%%     \matrix(c)[matrix of nodes,row sep=0.2cm,right=2cm of a]{
+%%       \textbullet\\
+%%       $\times$\\
+%%       $\times$\\
+%%       \textbullet\\
+%%     };
+%%     {[start chain,every on chain/.style={join}, every
+%%         join/.style={line width=1pt}]
+%%       \chainin (c-1-1);
+%%       \chainin (c-2-1);
+%%       \chainin (c-3-1);
+%%       \chainin (c-4-1);
+%%     };
+%%     \matrix(d)[matrix of nodes,row sep=0.2cm,below=2cm of c]{
+%%       \textbullet\\
+%%       $\times$\\
+%%       $\times$\\
+%%       \textbullet\\
+%%     };
+%%     \matrix(d2)[matrix of nodes,row sep=0.2cm,below=2cm of d]{
+%%       \textbullet\\
+%%       $\times$\\
+%%       $\times$\\
+%%       \textbullet\\
+%%     };
+%%     {[start chain,every on chain/.style={join}, every
+%%         join/.style={line width=1pt}]
+%%       \chainin (d2-1-1);
+%%       \chainin (d2-2-1);
+%%       \chainin (d2-3-1);
+%%       \chainin (d2-4-1);
+%%     };
+%%     \matrix(e)[matrix of nodes,row sep=0.2cm,right=2cm of c]{
+%%       \textbullet\\
+%%       \textbullet\\
+%%       $\times$\\
+%%       $\times$\\
+%%     };
+%%     {[start chain,every on chain/.style={join}, every
+%%         join/.style={line width=1pt}]
+%%       \chainin (e-1-1);
+%%       \chainin (e-2-1);
+%%       \chainin (e-3-1);
+%%       \chainin (e-4-1);
+%%     };
+%%     \matrix(f)[matrix of nodes,row sep=0.2cm,below=2cm of e]{
+%%       \textbullet\\
+%%       \textbullet\\
+%%       $\times$\\
+%%       $\times$\\
+%%     };
+%%     {[start chain,every on chain/.style={join}, every
+%%         join/.style={line width=1pt}]
+%%       \chainin (f-1-1);
+%%       \chainin (f-2-1);
+%%       \chainin (f-4-1);
+%%     };
+%%     \matrix(f2)[matrix of nodes,row sep=0.2cm,below=2cm of f]{
+%%       \textbullet\\
+%%       \textbullet\\
+%%       $\times$\\
+%%       $\times$\\
+%%     };
+%%     {[start chain,every on chain/.style={join}, every
+%%         join/.style={line width=1pt}]
+%%       \chainin (f2-1-1);
+%%       \chainin (f2-2-1);
+%%     };
+%%   \end{tikzpicture}
+%%   \caption{Circumnavigating corrupt history entries in the database --
+%%   three cases.}
+%% \end{figure}
 
 %%DENSITY
 \subsection*{Undone and partially undone operations}
 We consider three different ways of classifying an edit as valueless,
 or partially valueless. Two ways of classifying these kinds of edit
 are found in previous research, and are covered in figure
-\ref{fig:undo}.
+\ref{fig:undo}, taken (modified) from the Wikitrust
+work by Adler, et al.\cite{Adler2007}.
 
 \begin{figure}[h]
   \centering
@@ -270,15 +250,17 @@ are found in previous research, and are covered in figure
     \matrix (m) [matrix of math nodes, row sep=4em, column
       sep=4em]{ & v_i & \\ v_{i-1} & & v_{i+1}\\ };
     \path[-stealth] (m-2-1) edge node [left]
-         {$ed(v_{i-1},v_i)$} (m-1-2) edge node [below]
-         {$ed(v_{i-1},v_{i+1})$} (m-2-3) (m-1-2) edge node
-         [right] {$ed(v_i,v_{i+1})$} (m-2-3); 
-  \end{tikzpicture}\\
-  \textit{case a)} if $ed(v_{i-1},v_i) < ed(v_{i-1},v_i) +
-  ed(v_{i},v_{i+1})$, then $ed(v_{i-1},v_i)$ has been
-  partially undone.\\ 
-  \textit{case b)} if $ed(v_{i-1},v_{i+1}) = 0$
-  ($v_{i-1} = v_{i+1}$), then $ed(v_{i-1},v_i)$ has been
+         {$ed(rev_{i-1},rev_i)$} (m-1-2) edge node [below]
+         {$ed(rev_{i-1},rev_{i+1})$} (m-2-3) (m-1-2) edge node
+         [right] {$ed(rev_i,rev_{i+1})$} (m-2-3); 
+  \end{tikzpicture}\\ 
+  \vspace{10mm}
+  \textit{case a)} if $ed(rev_{i-1},rev_i) < ed(rev_{i-1},rev_i) +
+  ed(rev_{i},rev_{i+1})$, then $ed(rev_{i-1},rev_i)$ has been
+  partially undone.\\
+  \vspace{5mm}
+  \textit{case b)} if $ed(rev_{i-1},rev_{i+1}) = 0$
+  ($rev_{i-1} = rev_{i+1}$), then $ed(rev_{i-1},rev_i)$ has been
   completely undone.
   \caption{Diagram showing identification of a partially or
     completely undone edit}
@@ -290,44 +272,29 @@ undone edits, when they are undone immediately, as layed out in Adler
 et al.\cite{Adler2007} The triangle represents three consecutive
 revisions, and the arrows are the edit operations that transform one
 to another. By calculating the edit distance between the distance
-versions $v_{i-1}$ and $v_{i+1}$ we may characterise a longer history
+versions $rev_{i-1}$ and $rev_{i+1}$ we may characterise a longer history
 of revisions than usual, and use that context in order to
 re-characterise the edits it encompasses. In the figure above, case
-$a$ describes $v_i$ as a 'diversion'. If $v_{i-1}$ can be transformed
-into $v_{i+1}$ with less operations than the two edits that actually
-bridged that gap, then perhaps some of the edits in $v_{i-1}
-\rightarrow v_i$ were unnecessary, and undone by $v_{i+1}$. In this
-case, we may punish the edit $v_{i-1} \rightarrow v_i$ (for the
-diversion), reward $v_{i} \rightarrow v_{i+1}$, or both. Case $b$ is
-an extreme version of $a$ --- the texts $v_{i-1}$ and $v_{i+1}$ are
-identical, so the changes in $v_i$ must have been completely
+$a$ describes $rev_i$ as a 'diversion'. If $rev_{i-1}$ can be transformed
+into $rev_{i+1}$ with less operations than the two edits that actually
+bridged that gap, then perhaps some of the edits in $rev_{i-1}
+\rightarrow rev_i$ were unnecessary, and undone by $rev_{i+1}$. In this
+case, we may punish the edit $rev_{i-1} \rightarrow rev_i$ (for the
+diversion), reward $rev_{i} \rightarrow rev_{i+1}$, or both. Case $b$ is
+an extreme version of $a$ --- the texts $rev_{i-1}$ and $rev_{i+1}$ are
+identical, so the changes in $rev_i$ must have been completely
 undone. These reverts are common in normal Wikipedia edit
 practice.\cite{wiki-revert}
 
-\begin{floatingfigure}[p]{0.4\textwidth}
-  \centering
-  \pgfplotsset{width=0.4\textwidth}
-  \begin{tikzpicture}
-    \begin{axis}[
-        title={Dummy revision history},
-        ylabel={Ed. distance from final},
-        xlabel={revision ID},
-      ]
-      \addplot table {dat/dummy_history.dat};
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Graph showing a `trajectory plot'}
-  \label{fig:dummy-history}
-\end{floatingfigure}
+This algorithm, however, is limited in its scope, and we may come
+across situations where reversions occur over a series of
+edits. Although the system may easily be extended to cover larger
+spans of history, to consider many nodes would require the
+edit-distance computation of very many different node pair
+($0.5n(n-1)$ combinations for n entries, the edit distance relation
+between pairs is symmetric).
 
-This algorithm, however, is limited in its scope, and we may
-come across situations where reversions occur over a series of
-edits. Although the system may easily be extended to cover
-larger spans of history, to consider many nodes would require
-the edit-distance computation of very many different node
-pairs. 
-
-Let us propose a more efficient way of characterising redundant
+We propose a more efficient way of characterising redundant
 entries in terms of longer history spans. We must utilise the fact
 that we have take one article to be the ultimate destination of all
 previous edits in order to do so. Let us graph the entirety of a
@@ -343,7 +310,7 @@ in figure~\ref{fig:traj-preen-1} as lines with a negative gradient
 (blue); those with a positive gradient take us further away from the
 final version (red).
 
-\begin{floatingfigure}[p]{0.4\textwidth}
+\begin{wrapfigure}{i}{0.4\textwidth}
   \centering
   \pgfplotsset{width=0.4\textwidth}
   \begin{tikzpicture}
@@ -352,15 +319,12 @@ final version (red).
         ylabel={Ed. distance from final},
         xlabel={revision ID},
       ]
-      \addplot [blue] table {dat/dummy1.dat};
-      \addplot [red] table {dat/dummy2.dat};
-      \addplot [blue] table {dat/dummy3.dat};
-      \addplot [blue, only marks] table {dat/dummy4.dat};
+      \addplot [blue] table {dat/dummy_history.dat};
     \end{axis}
   \end{tikzpicture}
-  \caption{Trajectory plotting: a technique for preening results}
-  \label{fig:traj-preen-1}
-\end{floatingfigure}
+  \caption{Graph showing a `trajectory plot'}
+  \label{fig:dummy-history}
+\end{wrapfigure}
 
 We need not compute edit distances with a positive gradient (the two
 red lines). This is simple to implement. Given a version $rev_i$, having
@@ -374,31 +338,6 @@ Another possible strategy would be to disregard all edit distances
 that, at any point, lie between two versions that are further away
 from final version than the version currently being considered.
 
-\begin{floatingfigure}[p]{0.4\textwidth}
-  \centering
-  \pgfplotsset{width=0.4\textwidth}
-  \begin{tikzpicture}
-    \begin{axis}[
-        title={Dummy revision history},
-        ylabel={Ed. distance from final},
-        xlabel={revision ID},
-      ]
-      \addplot [blue] table {dat/dummy1.dat};
-      \addplot [red] table {dat/dummy5.dat};
-      \addplot [blue] table {dat/dummy6.dat};
-      \addplot [blue, only marks] table {dat/dummy4.dat};
-      \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
-      cs:1,0);
-      \addplot[red,dashed,update limits=false] 
-      coordinates {(-2,13) (14,13)};
-      \addplot[red,dashed,update limits=false] 
-      coordinates {(4,-2) (4,23)};
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Trajectory plotting: a more lossy approach}
-  \label{fig:traj-preen-2}
-\end{floatingfigure}
-
 In figure~\ref{fig:traj-preen-2}, $rev_i$, the currently considered
 version, is represented by the node at (4,13). The green rectangle
 shows the area in which we look to find $rev_j$, and the blue lines
@@ -411,91 +350,37 @@ It is worth stating here that, in both these strategies, after
 discovering $rev_j$, we always compute $ed(rev_{j-1}, rev_j)$ rather
 than $ed(rev_i,rev_j)$. 
 
-\begin{floatingfigure}[p]{0.4\textwidth}
-  \centering
-  \pgfplotsset{width=0.4\textwidth}
-  \begin{tikzpicture}
-    \begin{axis}[
-        title={Dummy revision history},
-        ylabel={Ed. distance from final},
-        xlabel={revision ID},
-      ]
-      \addplot [blue] table {dat/dummy1.dat};
-      \addplot [red] table {dat/dummy7.dat};
-      \addplot [blue] table {dat/dummy6.dat};
-      \addplot [blue, only marks] table {dat/dummy8.dat};
-      \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
-      cs:1,0);
-      \addplot[red,dashed,update limits=false] 
-      coordinates {(-2,13) (14,13)};
-      \addplot[red,dashed,update limits=false] 
-      coordinates {(4,-2) (4,23)};
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Trajectory plotting}
-  \label{fig:traj-preen-3}
-\end{floatingfigure}
-
 However, with this technique we find some limitations -- we may find a
-history such as the one found in
-figure~\ref{fig:traj-preen-3}. Between time-points 5 and 6, we find a
-downward trajectory, and we may infer here that the editor has altered
-the article so as to more closely approximate the final
-version. Perhaps we should not simply disregard this edit simply
-because it is undone in the next revision. 
+history such as the one in figure~\ref{fig:traj-preen-3}. Between
+time-points 5 and 6, we find a downward trajectory, and we may infer
+that the editor has altered the article so as to more closely
+approximate the final version. Perhaps we should not simply disregard
+this edit simply because it is undone in the next revision.
 
 Also, perhaps we may give some lessened reward to edits that move away
 from the final version, rather than disregarding them altogether. We
 may imagine quite easily that the work done here may have inspired
 `correction', or at least be part of an ongoing discussion which moves
-devlopment of the article on if not towards its final version. %%LESS
-%%                                                                %%BULSHIT
-%% \begin{floatingfigure}[p]{0.4\textwidth}
-%%   \centering
-%%   \pgfplotsset{width=0.4\textwidth}
-%%   \begin{tikzpicture}
-%%     \begin{axis}[
-%%         title={Dummy revision history},
-%%         ylabel={Ed. distance from final},
-%%         xlabel={revision ID},
-%%       ]
-%%       \addplot [blue] table {dat/dummy1.dat};
-%%       \addplot [red] table {dat/dummy7.dat};
-%%       \addplot [blue] table {dat/dummy6.dat};
-%%       \addplot [blue, only marks] table {dat/dummy8.dat};
-%%       \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
-%%       cs:1,0);
-%%       \addplot[red,dashed,update limits=false] 
-%%       coordinates {(-2,13) (14,13)};
-%%       \addplot[red,dashed,update limits=false] 
-%%       coordinates {(4,-2) (4,23)};
-%%     \end{axis}
-%%   \end{tikzpicture}
-%%   \caption{Trajectory plotting: An unfair example}
-%%   \label{fig:traj-preen-3}
-%% \end{floatingfigure}
+devlopment of the article on if not towards its final version.
 
+So, rather than discarding the revision altogether, we calculate a
+`gradient factor', which we may use to modify the reward given to an
+edit. Taking the trajectory distance as $\Delta y$, and the time
+difference between that revision and it's predecessor as $\Delta x$,
+we calculate a real number between 0 and 1 using the function
+in~\ref{fig:circle-map}. We map every point on a the shown arc to a
+our gradient factor. 
 
-So, we calculate a `gradient factor', which we may use to modify the
-reward given to an edit. Taking the trajectory distance as $\Delta y$,
-and the time difference between that revision and it's predecessor as
-$\Delta x$, we calculate a real number between 0 and 1 using the
-function in~\ref{fig:circle-map}. We map every point on a the shown
-arc to a our gradient factor. The real number increases the more
-acutely the article approaches it's final version: inserting a lot of
-text that is eventually deleted results in a small gradient factor,
-and including a lot of text that is also in the final text results in
-a number closer to one. The time frame of this change alters the
-number also -- the sooner an edit is made after the previous one, the
-closer the gradient factor will be towards either 0 or 1, depending on
-the sign of $\Delta y$. (Note that the gradient factor a negative
-$\Delta x$ is undefined, as a revision cannot occur before it's
-predecessor.)
+The real number increases the more acutely the article approaches it's
+final version: inserting a lot of text that is eventually deleted
+results in a small gradient factor, and including a lot of text that
+is also in the final text results in a number closer to 1. By taking
+time frame into account, we define that the sooner an edit is made
+after the previous one, the closer the gradient factor will be towards
+either 0 or 1, depending on the sign of $\Delta y$. (Note that the
+gradient factor a negative $\Delta x$ is undefined, as a revision
+cannot occur before it's predecessor.)
 
-%% Our most important algorithm, however, is the trajectory calculation
-%% algorithm. With this algorithm we allow ourselves to automatically
-%% identify some of the context of the revision history, using the same
-%% tools with which we analyse pair distance.
 
 %% We consider that, although Wikipedia articles have no endpoint as a
 %% rule -- we refer to page~\ref{quote-page} -- we must take the most
@@ -506,7 +391,155 @@ predecessor.)
 %% the time difference between that revision and it's predecessor as
 %% $\Delta x$.
 
-\begin{figure}
+
+\begin{wrapfigure}{i}{0.4\textwidth}
+  \centering
+  \begin{subfigure}[t]{0.4\textwidth}
+    \centering
+    \pgfplotsset{width=1\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+          title={Dummy revision history},
+          ylabel={Ed. distance from final},
+          xlabel={revision ID},
+        ]
+        \addplot [blue] table {dat/dummy1.dat};
+        \addplot [red] table {dat/dummy2.dat};
+        \addplot [blue] table {dat/dummy3.dat};
+        \addplot [blue, only marks] table {dat/dummy4.dat};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Identifying discarded revisions}
+    \label{fig:traj-preen-1}
+  \end{subfigure}\\
+  \begin{subfigure}[t]{0.4\textwidth}
+    \centering
+    \pgfplotsset{width=1\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+          title={Dummy revision history},
+          ylabel={Ed. distance from final},
+          xlabel={revision ID},
+        ]
+        \addplot [blue] table {dat/dummy1.dat};
+        \addplot [red] table {dat/dummy5.dat};
+        \addplot [blue] table {dat/dummy6.dat};
+        \addplot [blue, only marks] table {dat/dummy4.dat};
+        \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
+        cs:1,0);
+        \addplot[red,dashed,update limits=false] 
+        coordinates {(-2,13) (14,13)};
+        \addplot[red,dashed,update limits=false] 
+        coordinates {(4,-2) (4,23)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{A more `lossy' approach}
+    \label{fig:traj-preen-2}
+  \end{subfigure}\\
+  \begin{subfigure}[t]{0.4\textwidth}
+    \centering
+    \pgfplotsset{width=1\textwidth}
+    \begin{tikzpicture}
+      \begin{axis}[
+          title={Dummy revision history},
+          ylabel={Ed. distance from final},
+          xlabel={revision ID},
+        ]
+        \addplot [blue] table {dat/dummy1.dat};
+        \addplot [red] table {dat/dummy7.dat};
+        \addplot [blue] table {dat/dummy6.dat};
+        \addplot [blue, only marks] table {dat/dummy8.dat};
+        \fill [green!25,fill opacity=0.5] (axis cs:4,13) rectangle (rel axis
+        cs:1,0);
+        \addplot[red,dashed,update limits=false] 
+        coordinates {(-2,13) (14,13)};
+        \addplot[red,dashed,update limits=false] 
+        coordinates {(4,-2) (4,23)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{A more complicated example}
+    \label{fig:traj-preen-3}
+  \end{subfigure}
+  \caption{Trajectory plots with different features}
+\end{wrapfigure}
+
+The significance of this number is two-fold -- it at once describes
+the amount of change created in the history in terms of the target of
+that history, and the longevity of the article's previous state,
+(i.e. it's stability). For an edit to approach 1, it needs not only to
+contribute a large proportion of the text's final form, but also to do
+so very quickly after the previous revision. Later we will discuss
+what we can understand from these values in isolation, and how they
+relate to one another as a set. 
+
+We can also note that a repeated insertion may accrue an reward
+multiple times. In the dummy history found in figre~\ref{dummy-argument}
+
+\begin{wrapfigure}{i}{0.4\textwidth}
+  \centering
+  \pgfplotsset{width=0.4\textwidth}
+  \begin{tikzpicture}
+    \begin{axis}[
+        title={Dummy revision history},
+        ylabel={Ed. distance from final},
+        xlabel={revision ID},
+      ]
+      \addplot [blue] table {dat/dummy9.dat};
+      \addplot [blue, only marks] table {dat/dummy9.dat};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Graph showing a `trajectory plot'}
+  \label{fig:dummy-history}
+\end{wrapfigure}
+
+We can imagine the simple case of two editors warring against one
+another -- one inserts ``fork'' at time point 3, the other changes it
+to ``spork'' immediately afterwards. Then the original editor changes
+it back to ``fork'', and so on. We see that ``spork'' was the favoured
+choice overall, as it receives a downward trajectory throughout. The
+``spork'' user is awarded more that the ``fork'' user throughout,
+recieving a higher gradient factor for the downward-trajectory that
+the spork edits incurred in the trajectory. Both users are rewarded
+for having taken part in the discussing, though the `winner' is
+rewarded more overall.
+
+The trajectory-plotting technique gives us a simple and powerful way
+of visualising the history of these articles. Several good attempts
+have been made to visualise Wikipedia history data, with varying
+levels of
+success.\cite{Chi2008}\cite{Sabel2007}\cite{Suh2007}\cite{Wu2013}\cite{Viegas2004}
+The most successful was the Wikipedia History Flow
+software,\cite{iphylo-history}\cite{wiki-history-flow} which used line
+diff to keep a track of who inserted which lines. We believe the
+technique used here is more appropriate for the task at hand.
+
+We can also use these techniques to widen our analytical scope. Past
+studies have used revision histories in order to figure out a variety
+of different things, including a 2012 study which used it to predict
+box-office success,\cite{Mestyan2012} a 2009 study that was able to
+geo-locate editors by their edits.\cite{Lieberman2009} We see that we
+can combine edit histories of different pages to visualise and analyse
+a more complete context for each article.
+
+We will see later that we can use the same visualisations to identify
+some bot-work,\footnote{It has been noted that there are around 700
+  bots registered on Wikipedia (as of 2014). Though not all of them
+  make edits, those that do are very prolific, and are known to
+  reverse malicious submisions in a matter of
+  seconds.\cite{wiki-bots}\cite{bbc-bots}} as well as other strange
+history features.
+
+%% The data we collect via the Wikipedia API goes through a series of
+%% procedures in order to extract measurements of it.
+
+%% %pair comparison / weighted distance
+%% First we compare the difference between the child-parent pairs of
+%% revisions. This process is fairly simple, and is described in
+%% algorithm~\ref{pair-comp}. The only special condition we introduce
+%% here is comparing the oldest revision with an empty string.
+
+
+\begin{figure}[p]
   \centering
   \begin{subfigure}[b]{\linewidth}
     \centering
@@ -514,16 +547,15 @@ predecessor.)
     \begin{array}{l l l}
       1 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y < 0$ }\\
       0 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y >= 0$ }\\
-      \frac{arctan({\Delta}y/{\Delta}x)}{\pi}\quad\text{if ${\Delta}x > 0$}
+      \frac{arctan({\Delta}y/{\Delta}x)}{\pi}&\quad\text{if ${\Delta}x > 0$}
     \end{array} \right.\]
     \caption{Gradient factor definition}
-  \end{subfigure}
-
+    \label{fig:gfactor-def}
+  \end{subfigure}\\
   \vspace{10mm}
-
   \begin{subfigure}[b]{\linewidth}
     \centering
-    \begin{tikzpicture}[x=1.25cm,y=1.25cm]
+    \begin{tikzpicture}[x=1cm,y=1cm]
 
       \draw[thick,red,dashed] (4,0) -- (4,1);
       \draw[thick,red,dashed] (4,7) -- (4,8);
@@ -547,56 +579,8 @@ predecessor.)
       \draw [thick, blue, ->] (o) -- (4,7) node[midway, right]{$0$};
     \end{tikzpicture}
     \caption{Gradient factor definition: a visual representation}
+    \label{fig:circle-map}
   \end{subfigure}
   \caption{Mapping of trajectory angle from a single revision point to
-    gradient factor}
-  \label{fig:circle-map}
+    gradient factor: definition and visual representation}
 \end{figure}
-
-The significance of this number is two-fold -- it at once describes
-the amount of change created in the history in terms of the target of
-that history, and the longevity of the article's previous state,
-(i.e. it's stability). For an edit to approach 1, it needs not only to
-contribute a large proportion of the text's final form, but also to do
-so very quickly after the previous revision. Later we will discuss
-what we can understand from these values in isolation, and how they
-relate to one another as a set. 
-
-\subsection*{Visualisation}
-Given that we are distributing wealth according to a series of weight
-factors, it may be useful to devise a system that visualises how these
-weight factors affect distribution. This would simplybe a matter of
-expressing the final `score' in terms of these variables, and
-producing some interactive graphs. Several good attempts have been
-made to visualise Wikipedia history data, with varying levels of
-success,\cite{Chi2008}\cite{Sabel2007}\cite{Suh2007}\cite{Wu2013}\cite{Viegas2004}
-so the work would be well supported. We will look into the viability
-of this extension further into the project.
-
-\subsection*{Further analysis}
-Given the over-arching nature of Wikis, it may be possible to derive
-other information about the articles we study. Past studies have used
-revision histories in order to figure out a variety of different
-things, including a 2012 study which used it to predict box-office
-success,\cite{Mestyan2012} a 2009 study that was able to geo-locate
-editors by their edits.\cite{Lieberman2009}
-
-Given the by-products of our study, we may be able compare and
-contrast different categories of article, or editor. It would be
-interesting to contrast the actions of humans, and bots,\footnote{It
-  has been noted that there are around 700 bots registered on
-  Wikipedia (as of 2014). Though not all of them make edits, those
-  that do are very prolific, and are known to reverse malicious
-  submisions in a matter of seconds.\cite{wiki-bots}\cite{bbc-bots}}
-and perhaps look at the nature of edits made by different groups of
-editors.
-
-\section{Procedures}
-The data we collect via the Wikipedia API goes through a series of
-procedures in order to extract measurements of it.
-
-%pair comparison / weighted distance
-First we compare the difference between the child-parent pairs of
-revisions. This process is fairly simple, and is described in
-algorithm~\ref{pair-comp}. The only special condition we introduce
-here is comparing the oldest revision with an empty string.
