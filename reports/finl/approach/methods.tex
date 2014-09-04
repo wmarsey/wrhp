@@ -350,48 +350,6 @@ It is worth stating here that, in both these strategies, after
 discovering $rev_j$, we always compute $ed(rev_{j-1}, rev_j)$ rather
 than $ed(rev_i,rev_j)$. 
 
-However, with this technique we find some limitations -- we may find a
-history such as the one in figure~\ref{fig:traj-preen-3}. Between
-time-points 5 and 6, we find a downward trajectory, and we may infer
-that the editor has altered the article so as to more closely
-approximate the final version. Perhaps we should not simply disregard
-this edit simply because it is undone in the next revision.
-
-Also, perhaps we may give some lessened reward to edits that move away
-from the final version, rather than disregarding them altogether. We
-may imagine quite easily that the work done here may have inspired
-`correction', or at least be part of an ongoing discussion which moves
-devlopment of the article on if not towards its final version.
-
-So, rather than discarding the revision altogether, we calculate a
-`gradient factor', which we may use to modify the reward given to an
-edit. Taking the trajectory distance as $\Delta y$, and the time
-difference between that revision and it's predecessor as $\Delta x$,
-we calculate a real number between 0 and 1 using the function
-in~\ref{fig:circle-map}. We map every point on a the shown arc to a
-our gradient factor. 
-
-The real number increases the more acutely the article approaches it's
-final version: inserting a lot of text that is eventually deleted
-results in a small gradient factor, and including a lot of text that
-is also in the final text results in a number closer to 1. By taking
-time frame into account, we define that the sooner an edit is made
-after the previous one, the closer the gradient factor will be towards
-either 0 or 1, depending on the sign of $\Delta y$. (Note that the
-gradient factor a negative $\Delta x$ is undefined, as a revision
-cannot occur before it's predecessor.)
-
-
-%% We consider that, although Wikipedia articles have no endpoint as a
-%% rule -- we refer to page~\ref{quote-page} -- we must take the most
-%% recent page in our history sample as a kind of `goal'. We measure
-%% every revision's levenshtein distance from the final version, giving
-%% us an idea of how close to `finished' it is, at least in terms of this
-%% history. We then, taking that levenshtein distance as $\Delta y$, and
-%% the time difference between that revision and it's predecessor as
-%% $\Delta x$.
-
-
 \begin{wrapfigure}{i}{0.4\textwidth}
   \centering
   \begin{subfigure}[t]{0.4\textwidth}
@@ -463,6 +421,47 @@ cannot occur before it's predecessor.)
   \caption{Trajectory plots with different features}
 \end{wrapfigure}
 
+However, with this technique we find some limitations -- we may find a
+history such as the one in figure~\ref{fig:traj-preen-3}. Between
+time-points 5 and 6, we find a downward trajectory, and we may infer
+that the editor has altered the article so as to more closely
+approximate the final version. Perhaps we should not simply disregard
+this edit simply because it is undone in the next revision.
+
+Also, perhaps we may give some lessened reward to edits that move away
+from the final version, rather than disregarding them altogether. We
+may imagine quite easily that the work done here may have inspired
+`correction', or at least be part of an ongoing discussion which moves
+devlopment of the article on if not towards its final version.
+
+So, rather than discarding the revision altogether, we calculate a
+`gradient factor', which we may use to modify the reward given to an
+edit. Taking the trajectory distance as $\Delta y$, and the time
+difference between that revision and it's predecessor as $\Delta x$,
+we calculate a real number between 0 and 1 using the function
+in~\ref{fig:circle-map}. We map every point on a the shown arc to a
+our gradient factor. 
+
+The real number increases the more acutely the article approaches it's
+final version: inserting a lot of text that is eventually deleted
+results in a small gradient factor, and including a lot of text that
+is also in the final text results in a number closer to 1. By taking
+time frame into account, we define that the sooner an edit is made
+after the previous one, the closer the gradient factor will be towards
+either 0 or 1, depending on the sign of $\Delta y$. (Note that the
+gradient factor a negative $\Delta x$ is undefined, as a revision
+cannot occur before it's predecessor.)
+
+
+%% We consider that, although Wikipedia articles have no endpoint as a
+%% rule -- we refer to page~\ref{quote-page} -- we must take the most
+%% recent page in our history sample as a kind of `goal'. We measure
+%% every revision's levenshtein distance from the final version, giving
+%% us an idea of how close to `finished' it is, at least in terms of this
+%% history. We then, taking that levenshtein distance as $\Delta y$, and
+%% the time difference between that revision and it's predecessor as
+%% $\Delta x$.
+
 The significance of this number is two-fold -- it at once describes
 the amount of change created in the history in terms of the target of
 that history, and the longevity of the article's previous state,
@@ -503,6 +502,11 @@ the spork edits incurred in the trajectory. Both users are rewarded
 for having taken part in the discussing, though the `winner' is
 rewarded more overall.
 
+We can also imagine a very low value as a punishment for not allowing
+the final version, which was closer to the final state, to exist for
+very long. The same edit made much later allows the preferable state a
+longer existence, and the gradient factor would be accordingly higher. 
+
 The trajectory-plotting technique gives us a simple and powerful way
 of visualising the history of these articles. Several good attempts
 have been made to visualise Wikipedia history data, with varying
@@ -539,7 +543,7 @@ history features.
 %% here is comparing the oldest revision with an empty string.
 
 
-\begin{figure}[p]
+\begin{figure}[h]
   \centering
   \begin{subfigure}[b]{\linewidth}
     \centering

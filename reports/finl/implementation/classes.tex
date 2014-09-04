@@ -176,7 +176,7 @@ separate cores. We use a 'core number' variable to that end.
 
 \subsection*{The Database}
 The database is implemented in PSQL, and accessed via our python
-package, `wikiDatabase'. The package leverages the psycopg library,
+classe, `wikiDatabase'. The package leverages the psycopg library,
 which allows simple access to the SQL database via
 python.\cite{psycopg2} The package is used by all the other classes
 used in this project and provides simple inserting, changing, fetching
@@ -196,7 +196,7 @@ function. The existing database schemata can be found in
 figure~\ref{database-schema}. We talk about improving this schemata in
 the evaluation chapter.
 
-\begin{figure}
+\begin{figure}[b]
   \centering
   \begin{subfigure}[t]{0.3\linewidth}
     \centering
@@ -228,7 +228,6 @@ the evaluation chapter.
     \end{tabular}
     \caption{Table: wikitrajectory}
   \end{subfigure}\\
-  \vspace{10 mm}
   \begin{subfigure}[b!]{\linewidth}
     \centering
     \begin{tabular}{ccccccccc}
@@ -241,7 +240,6 @@ the evaluation chapter.
     \end{tabular}
     \caption{Table: wikirevisions}
   \end{subfigure}
-  \vspace{30 mm}
   \begin{subfigure}[b!]{\linewidth}
     \centering
     \begin{tabular}{ccccccccc}

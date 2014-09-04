@@ -67,24 +67,32 @@
 \input{conclusion/future}
 \input{conclusion/achievements}
 
+
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+\printbibliography    
+
 \appendix
 
 \begin{appendices}
 \chapter{Guide to code base}
+\label{sec:dirtree}
 \input{appendices/filetree}
 \chapter{Edit and shore plot selection}
 \label{sec:edit-share}
 \input{appendices/editshare}
 \chapter{Trajectory plot selection}
 \input{appendices/trajplots}
+\label{sec:traj-article-talk}
 \chapter{Trajectory plots - articles vs talk pages}
 \input{appendices/talkplots}
 \chapter{SQL snippets, and results}
+\label{sec:sql-things}
 \input{appendices/sql}
+\chapter{Log examples}
+\label{sec:appendix-debug}
+\input{appendices/logs}
 \end{appendices}
-
-\phantomsection
-\addcontentsline{toc}{chapter}{Bibliography}
-\printbibliography        
+ 
 
 \end{document}

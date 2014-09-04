@@ -16,7 +16,7 @@ species of text. They are as follows:
 \item Block quotes
 \item Tables
 \end{itemize*}
-
+\clearpage
 We then group them logically, as follows:
 \begin{description*}
   \item[Equation]\hfill\\
@@ -102,9 +102,7 @@ multiplied many thousands of time in one operation. Instead we were
 able to use a fairly simply algorithm for calculating levenshtein
 distance, found in algorithm~\ref{lev-dist}.
 
-
 \def\HS{\hspace{\fontdimen2\font}}\the\fontdimen2\font
-\newcommand{\hilight}[1]{\colorbox{bluegreen}{#1}}
 
 \begin{figure}[p]
   \centering
@@ -141,7 +139,7 @@ distance, found in algorithm~\ref{lev-dist}.
 
     \node (g) [block2,right=1cm of f] {\hilight{[[forks]]}};
     
-    \node (h) [block2,right=1cm of g] {We can use\HS\HS to eat spaghetti.};
+    \node (h) [block2,right=1cm of g] {We can use\HS\HS to eat lovely spaghetti.};
 
     \node (i) [block2,below=1cm of e] {\hilight{[[spork]]}}; 
         
@@ -150,11 +148,11 @@ distance, found in algorithm~\ref{lev-dist}.
     \node (k) [block2,below =1cm of g] {We can use a\HS\HS to eat
       spaghetti.};
 
-    \node (l) [block2,below =1cm of h] {We can use\HS\HS to eat spaghetti.};
+    \node (l) [block2,below =1cm of h] {We can use\HS\HS to eat lovely spaghetti.};
 
     \node (m) [block2,below= 1cm of i] {$ed_{links} = 3$};
 
-    \node (n) [block2,below =1cm of k] {$ed_{normal} = 2$};
+    \node (n) [block2,below =1cm of k] {$ed_{normal} = 9$};
 
     \draw [->] (a) -- (c);
     \draw [->] (b) -- (d);
@@ -233,7 +231,8 @@ algorithm~\ref{traj-calc}.
 
 %%%%% Trace trajectory algorithm
 \begin{algorithm}
-\caption{Page trajectory calculation}\label{traj-calc}
+  \caption{Page trajectory calculation}
+  \label{traj-calc}
   \begin{algorithmic}
     \Procedure{TrajectoryCalculation}{$revids, domain$}
     \State $target \gets $database.gettext($revids[-1]$)\Comment{Last revision in list is most recent}
@@ -247,8 +246,7 @@ algorithm~\ref{traj-calc}.
     \For{$i \gets 0, length(revids)$}
     \State $dist2 \gets $database.gettrajectory($revids[i],domain$)
     \State $dist1 \gets$
-        \LineIf{database.gettrajectory($revid[i-1],domain$)}{$i \neq 0$}{$2
-          \times disty$}
+        \LineIf{database.gettrajectory($revid[i-1],domain$)}{$i \neq 0$}{$2 \times disty$}
     \State $time2 \gets $database.gettimestamp($revid[i],domain$)
     \State $time1 \gets $
         \LineIf{database.gettimestamp($revid[i-1],domain$)}{$i \neq 0$}{$timex$} 

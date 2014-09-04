@@ -1,102 +1,186 @@
 \section{Evaluation of methods}
 Our methods 
+\subsection{Possible optimisations and extensions}
+\subsection*{Alignment of levenshtein distance}
+\label{split-distance-eval}
+As we began to realise that the details of the content were somewhat
+secondary to the context in which those edits were made, we began to
+wonder if we could make the data analysis more effecient by doing away
+with the text splitting.
 
-EVALUATE METHODS YO \label{split-distance-eval}
+Further than that, however, we wondered whether we could find the
+distance between each revision by just taking the absolute distance
+between each trajectory distance -- i.e. the distance-from-final at
+each point. We saw no theoretic problem with the measure, and set out
+to see if the theory that
 
-We may consider other ways of looking at the data we have
-computed. The gradient factor that we calculate describes how much a
-given revision changes in terms of the final state -- it is a real
-number from 0 to 1, 0 being a `perfect' move away from the final
-version, 1 being a `perfect' move towards. On the trajectory graphs
-discussed these two values are represented by a vertical line between
-two points, going upwards and downwards, respectively. 
+\[
+  |(ed(rev_i,rev_x) - ed(rev_j,rev_x))| = ed(rev_j,rev_i)
+\]
+
+(i.e. that an edit distance relation is transitive) could be observed
+in the edits. 
+
+Running the SQL statements found in appendix~\ref{sec:sql-things}, we
+found evidence contrary to our theory. We found that only around 30\%
+of our different measures matched up, with a high average mis-match of
+22,181. The mismatch is, on average, around 40\% of the distance
+larger distance. 
+
+We propose two theories for this. We can identify a problem with our
+string splitting -- it may mis-align two strings, creating non-minimum
+calculations, such as in the diagram on page~\pageref{fig:sub-opt}. We
+illustrate the problem in figure~\ref{fig:split-string-problem}.
+
+Whilst innacurate, doing away with pair-distance calculations may be
+acceptable as a rough measure, and if pair-distance, as we suspect, is
+not a very effective measure of survival.
+
+\begin{figure}[p]
+  \centering
+  \begin{subfigure}[t]{\linewidth}
+    \begin{tikzpicture}[
+        block1/.style={
+          text width=3cm, 
+          minimum height=2cm,
+          align=center,
+          anchor=north,
+        },
+        block2/.style={
+          text width=3cm, 
+          minimum height=1.5cm,
+          align=center,
+          anchor=north,
+        },
+        font=\small
+      ]
+      \node (a) [block1] {We can use a [[spork]] to eat spaghetti.};
+
+      \node (b) [block1, right=1cm of a]{We can use forks to eat lovely
+        spaghetti.};
+
+      \node (c) [block1,below=1cm of a]{We can use a \hilight{[[spork]]} to eat
+        spaghetti.};
+
+      \node (d) [block1,below=1cm of b]{We can use forks to eat lovely
+        spaghetti.};
+
+      \node (e) [block2,below left=1.5cm and 1.5cm of c] {\hilight{[[spork]]}};
+      
+      \node (f) [block2,right=1cm of e] {We can use a\HS\HS to eat spaghetti.};
+
+      \node (g) [block2,right=1cm of f] {$\emptyset$};
+      
+      \node (h) [block2,right=1cm of g] {We can use forks to eat lovely
+        spaghetti.};
+
+      \node (i) [block2,below=1cm of e] {\hilight{[[spork]]}}; 
+      
+      \node (j) [block2,below=1cm of f] {$\emptyset$}; 
+      
+      \node (k) [block2,below =1cm of g] {We can use a\HS\HS to eat
+        spaghetti.};
+
+      \node (l) [block2,below =1cm of h] {We can use forks to eat lovely
+        spaghetti.};
+
+      \node (m) [block2,below= 1cm of i] {$ed_{links} = 9$};
+
+      \node (n) [block2,below =1cm of k] {$ed_{normal} = 18$};
+      
+      \node (o) [block2,below left=1.5cm and 1.5cm of n] {$ed_{total} = 27$};
+
+      \draw [->] (a) -- (c);
+      \draw [->] (b) -- (d);
+      \draw [->] (c) -- (e);
+      \draw [->] (c) -- (f);
+      \draw [->] (d) -- (g);
+      \draw [->] (d) -- (h);
+      \draw [->] (e) -- (i);
+      \draw [->] (g) -- (j);
+      \draw [->] (f) -- (k);
+      \draw [->] (h) -- (l);
+      \draw [->] (i) -- (m);
+      \draw [->] (j) -- (m);
+      \draw [->] (k) -- (n);
+      \draw [->] (l) -- (n);
+      \draw [->] (m) -- (o);
+      \draw [->] (n) -- (o);
+
+    \end{tikzpicture}
+    \caption{Split string edit distance}
+  \end{subfigure}\\
+  \vspace{30mm}
+  \begin{subfigure}[t]{\linewidth}
+    $ed($``We can use a [[spork]] to eat spaghetti.''$,$``We can use forks
+    to eat lovely spaghetti.''$) = 6$
+    \caption{Whole-string edit distance}
+  \end{subfigure}
+  \caption{Showing alignment alignment inefficiency in split-string
+    Levenshtein distance processing.}
+\label{fig:split-string-problem}
+\end{figure}
+
+\subsection*{Calculating turbulence}
+The gradient factor that we calculate describes how much a given
+revision changes in terms of the final state -- it is a real number
+from 0 to 1, 0 being a `perfect' move away from the final version, 1
+being a `perfect' move towards. On the trajectory graphs discussed
+these two values are represented by a vertical line between two
+points, going upwards and downwards, respectively.
 
 We consider that we could perhaps use it to characterise a 'perfect
-edit' -- one that approaches the final edit most efficiently; in a
+edit factor' -- one that approaches the final edit most efficiently; in a
 linear fashion. An optimum revision history may be considered as a
 straight path from origin to destination. No edit inserted text that
 was later removed, and the approach to the final version was as
 efficient as possible over time. We may characterise such an optimum
 gradient as follows:
 
-
 \[
   gfactor_{optimum} = gfactor(ed(rev_{0_{content}},
   rev_{n_{content}}), rev_{n_{tstamp}} - v_{0_{tstamp}})
 \]
 
+This equation gives a gradient that, if the same for every edit, would
+describe the most stable accumulation of data, with no peaks or
+fluctuations in activity. The average deviation from this number can
+measure the turbulence of an article's path. 
 
-\textbf{Reversals.} The Damerau-Levenshtein distance defines an `swap'
-operation, which is the reversal of two adjacent characters. It is
-particularly suited to spell-checking, and for analysing DNA-sequence
-variations. In this case:\\ $ed_{damerau}(\text{``ab''},\text{``ba''})
-= 1$
-
-\textbf{Block distance.} This allows for displacements of entire
-blocks to count as one operation. For
-example:\\ $ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$ \\ One
-move of the block `cde', one substitution of `b' for
-`x'.\cite{Tichy1984}
-
-\subsection*{Density of edit}
-
-If we have a set of the indexes of an edit operation as
-$\{op_0,op_1,op_2,\dots, op_n\}$, where $op_i$ is the index of the
-$i$th operation, then we may evaluate it's density with a standard
-deviation of the edit itself, $\sigma_{ed}$, multiplied by the span of
-the edit itself in context of the wider article, and some weighting
-factor k. Something along the lines of:
+We may also look to density of edit. If we have a set of the indexes
+of an edit operation as $\{op_0,op_1,op_2,\dots, op_n\}$, where $op_i$
+is the index of the $i$th operation, then we may evaluate it's density
+with a standard deviation of the edit itself, $\sigma_{ed}$,
+multiplied by the span of the edit itself in context of the wider
+article, and some weighting factor k. Something along the lines of:
 $$ed_{density} = k\bullet\frac{(op_n - op_0)\sigma_{ed}}{|v_{ed}|}$$
 where $|v_{ed}|$ is the overall length of resultant version. By
 implementing this carefully, we may achieve a gradient of weighting,
 with a lower weight values for things like spell-checks, and higher
 values for whole-paragraph changes.
 
-\textbf{\textit{q}-grams distance.} \textit{q}-grams are simply
-sub-strings, and this measure describes the similarity of two strings
-in terms of \textit{q}-grams they
-share.\cite{Ukkonen1992}\\ $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma
-  ^q}|G(x)[v]-G(y)[v]|$\\ where $G(x)[v]$ returns the number of
-occurrences of \textit{q}-gram v in string x, and $\Sigma ^q$ is all
-the possible \textit{q}-grams in the alphabet (capped by string
-length). $|G(x)[v]-G(y)[v]|$ a large positive number every time a
-\textit{q}-gram appears a large amount of times in one string, but not
-the other; it returns 0 if the substring apears the same number of
-times. So, the whole function measures this difference for all
-possible substrings, and sums them, returning a high number for
-difference, and a low number for similarity.
+Though density is somewhat reflected in the gradient factor measure,
+as discussed before.
 
+\subsection*{Algorithmic changes}
+The Damerau-Levenshtein distance defines an `swap' operation, which is
+the reversal of two adjacent characters. It is particularly suited to
+spell-checking, and for analysing DNA-sequence variations. In this
+case:
 
-Other algorithms we may look at are those that, like the
-\textit{q}-gram distance, principally concern themselves with finding
-common subsequences between the strings. The common subsequence
-problem relates to the editdistance problem by way of the
-heuristic that two similar strings will have similar subsequences ---
-the \textit{q}-gram algorithm, for instance, relies on this heuristic,
-and works well for most texts, it does not agree with all distance
-measures. For example, two strings that are very different according
-to this heuristic may be quite similar according to the
-Damrau-Levenshtein measure.
+$ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
 
+Implementing this could more accurately define spellcheck operations.
 
-\subsection*{Delta encoding}
-Finally, we may also look into Delta encoding algorithms. These
-describe ways of compressing the storage of a document's history --- a
-format in which only the differences between each text is stored, not
-the entire version. These algorithms are of the same family of
-algorithms discussed above. In fact, we find that one of the fastest
-known algorithms,\footnote{According to Hunt's 1998
-  study\cite{Hunt1998}} \textit{VDelta}, is a refinement of the block
-distance algorithm mentioned above. For a given version $n$ of a
-document $doc$ is defined as:
+Block distance operation would allow us to recognise displacements of
+entire blocks to count as one operation. For
+example:
 
-$$v_n = v_0 \cup {\Delta}(v_0,v_1) \cup {\Delta}(v_1,v_2) \cup \dots
-\cup {\Delta}(v_{n-1},v_n) $$
+$ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$
 
-where ${\Delta}(v_i,v_j)$ is the difference between version $i$ and
-version $j$ of the document, and the union operation $\cup$ combines
-each version in a manner particular to the $\Delta$ data-type. Storing
-data in this way can be very efficient, resulting in a compression
-factors of five or ten on typical data.\cite{Macdonald2000} It may
-also be relatively easy to maintain in our case, due to the linear
-nature of Wikipedia revision histories.
+One move of the block `cde', one substitution of `b' for
+`x'.\cite{Tichy1984} We could implement this in order to better
+diagnose large movements of text --- perhaps between documents. (The
+Harry Potter history in appendix~\ref{sec:traj-article-talk} shows
+frequent migrations of text to book-, character- and film-specific
+pages.)
