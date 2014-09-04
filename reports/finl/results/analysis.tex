@@ -1,33 +1,135 @@
 \section{Analysis}
-Our basic analysis is based on the following three measures:
-\begin{itemize}[]
-\item \textbf{Trajectory graph.} This plots the change of the article
-  over time. By measuring a levenshtein distance between each revision
-  text against the final version (see algorithm~\ref{traj-calc}), we
-  see the article in terms of its growth from an empty article, and
-  the approach to its final version. We also plot the size of the
-  article at each point of this graph for greater context.
-\item \textbf{User by share.} We sum up each user's 'share' of the
-  article using the calculations made during analysis, and order them
-  here by user.
-\item \textbf{User by edit count.} Our understanding of the previous
-  graph can be made greater if we understand how many edits each user
-  has made.
-\end{itemize}
-
-\subsection*{Trajectory plots}
-We noticed a number of notable things using these plots. But, on
-average, they follow a similar pattern: the levnshtein distance of the
-article begins at a high value at $x=0$, it's creation date, and
-approaches the final article state at $y=0$ and a high value of $x$
-(with the final article having a levenshtein distance of $0$ to
-itself). In this simplest case, the growth of the article is a rough
-mirror-image of the distance-to-final, beginning at the origin and
-rising. A few of these `classic' examples can be found in
-figure~\ref{fig:traj-classic}.
+%% Our basic analysis is based on the following three measures:
+%% \begin{itemize}[]
+%% \item \textbf{Trajectory graph.} This plots the change of the article
+%%   over time. By measuring a levenshtein distance between each revision
+%%   text against the final version (see algorithm~\ref{traj-calc}), we
+%%   see the article in terms of its growth from an empty article, and
+%%   the approach to its final version. We also plot the size of the
+%%   article at each point of this graph for greater context.
+%% \item \textbf{User by share.} We sum up each user's 'share' of the
+%%   article using the calculations made during analysis, and order them
+%%   here by user.
+%% \item \textbf{User by edit count.} Our understanding of the previous
+%%   graph can be made greater if we understand how many edits each user
+%%   has made.
+%% \end{itemize}
+\subsection*{Share and edit count plots}
+We find two typical, unweighted edit graphs in
+figure~\ref{fig:average-share}.
 
 \begin{figure}
-  \label{fig:traj-classic}
+  \centering
+  \includegraphics[width=1\linewidth]{img/editshare/pc8801count.png}
+  \newline
+  \includegraphics[width=1\linewidth]{img/editshare/pc8801share.png}
+  \caption{English Wikipedia, Page ID 948317 (PC-8801), user graphs}
+  \label{fig:average-share}
+\end{figure}
+
+These two graphs are typical of the data set on the whole, showing
+many one-time editors, with a small amount of repeat editors. More
+similar graphs are found in appendix~\ref{sec:edit-share}.
+
+We can note here that a lot of the single-time entries are anonymous,
+showing an IP address rather than a username. Since IP addresses are
+likely to change (it is standard practice for a ISP to provide a new
+IP address for their customers on each new connection), we cannot know
+how many separate agents these IP addresses represent. We can't
+necessarily be sure that the 10-edit user is one person either, but
+for the purposes of this study this isn't an issue.
+
+We can also find our first bots on these graphs, with many making
+small numbers of edits. EmausBot towards the left of the edit count
+graph, BattyBot next -- it is common practice to name the bot account
+with an obvious bot-name. Emausbot comes up a lot in our analyses, in
+fact. It maintain's interwiki links.
+
+From our first graphs we found that many articles, particularly in
+smaller Wikipedias have little-to-no edits, and would result in graphs
+like the one in figure~\ref{fig:useless-share}. For this reason, when
+fetching random articles, we automatically discard a revision if it
+falls below a certain threshold revision-count.
+
+\begin{wrapfigure}{i}{0.4\linewidth}
+  \includegraphics[width=1\linewidth]{img/useless/Talk:DouglasClayton.png}
+  \caption{English Wikipedia, Page ID 35864087 (Talk:Douglas
+    Clayton), share}
+  \label{fig:useless-share}
+\end{wrapfigure}
+
+We also experimented with automatic, arbitrary weight setting to see
+how the graph would be effected. We see one such example in
+figure~\ref{fig:one-weight}, where we contrast an unweighted data set,
+with one where we double the weight of the `links' weight.
+
+In this case, in fact, it was doubling the links value that created
+the most dramatic change. Changing maths, files/images, structure and
+normal text weights created the least change -- all the graphs can be
+found in appendix~\ref{sec:LudvidFadeev} for comparison.
+
+\begin{figure}
+  \makebox[\linewidth][c]{
+    \begin{subfigure}[b!]{0.6\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevUnweighted.png}
+      \caption{Unweighted share}
+      \label{fig:japanese-tax}
+    \end{subfigure}
+    \begin{subfigure}[b!]{0.6\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevLinks.png}
+      \caption{}
+      \label{fig:variable-light}
+    \end{subfigure}
+  }
+  \caption{English Wikipedia, Page ID 4854639 (Ludvig Faddeev)}
+  \label{fig:one-weight}
+\end{figure}
+
+All the graphs we have looked at so far do not take our gradient
+factor into account. The effect is interesting when we activate the
+gradient factor. Multiplying each summed weights by the gradient
+factor as we calculate share, the two graphs in
+figure~\ref{fig:one-weight} are transformed into those in
+figure~\ref{fig:one-weight-gradient}. The graphs are notably skewed
+towards those with the most reward already.
+
+\begin{figure}
+  \makebox[\linewidth][c]{
+    \begin{subfigure}[b!]{0.6\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevUnweightedGradient.png}
+      \caption{Unweighted share}
+      \label{fig:japanese-tax}
+    \end{subfigure}
+    \begin{subfigure}[b!]{0.6\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevLinksGradient.png}
+      \caption{}
+      \label{fig:variable-light}
+    \end{subfigure}
+  }
+  \caption{English Wikipedia, Page ID 4854639 (Ludvig Faddeev)}
+  \label{fig:one-weight}
+\end{figure}
+
+\subsection*{Trajectory plots}
+On average, these plots follow a similar pattern: the levnshtein
+distance of the article begins at a high value at $x=0$, it's creation
+date, and approaches the final article state at $y=0$ and a high value
+of $x$. The article begins in a near-empty state, and as it grows,
+becomes more and more similar to the final version, before finally
+reaching $0$ distance-from-final. 
+
+In the simplest cases, the growth of the article is a rough
+mirror-image of the distance-to-final, beginning at the origin and
+rising. A few of these `classic' examples can be found in
+figure~\ref{fig:traj-classic}. These graphs show a reasonably steady
+approach of the final state, increasing in size in a fairly simple
+way.
+
+\begin{figure}
   \centering
   \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{0.6\linewidth}
@@ -58,7 +160,7 @@ figure~\ref{fig:traj-classic}.
       \includegraphics[width=\linewidth]{img/traj-classic/tl62286traj.png}
       \caption{\href{http://tl.wikipedia.org/wiki/index.php?curid=62286}{Tagalog
           Wikipedia, Page ID 62286 (The Nicene Creed)}}
-      \label{fig:nicine-creed}
+      \label{fig:nicene-creed}
     \end{subfigure}
   }\\
   \makebox[\linewidth][c]{
@@ -78,6 +180,7 @@ figure~\ref{fig:traj-classic}.
     \end{subfigure}
   }
   \caption{Simple trajectory graphs.}
+  \label{fig:traj-classic}
 \end{figure}
 
 In the last of these simple trajectory graphs we find the first of our
@@ -123,19 +226,17 @@ years. The Tagalog and Polish articles (respectively the smallest and
 largest articles discussed so far) gained most their content over just
 a few days. 
 
-However, many of the trajectories we trace bely a much stranger
-history. Those in figure~\ref{fig:traj-bot} show a particular feature
-a slow climb in both distance-from-final and size, before a sharp
-drop. The shape is very common, and seems to describe an article which
-becomes slowly bigger, before having the majority of it's content
-deleted. In plotting the histories it seemed to occur very often, and
-on further inspection we find each article to share two
-characteristics -- they come from small Wikipedias, and the majority
-of the edits are made by bots.\footnote{We can see from the usernames on the
-right-hand side graphs in figure~\ref{fig:traj-bot} that they are bots
+Stranger history can be found in the plots in
+figure~\ref{fig:traj-bot}. These show another common shape: a slow
+climb in both distance-from-final and size, before a sharp drop. The
+shape seems to describe an article which engorged with content, before
+having the majority of it deleted. On further inspection we found that
+the articles generally share two characteristics -- they come from
+small Wikipedias, and the majority of the edits are made by bots. We
+can see from the usernames on the right-hand side that they are bots
 -- there is a special bot `flag' to be raised in the user profile of
 bots, but it is also traditional for the bot to be also be given an
-identifying name.\cite{wiki-bot-policy}}
+identifying name.\cite{wiki-bot-policy}
  
 \begin{figure}
   \centering
@@ -148,6 +249,7 @@ identifying name.\cite{wiki-bot-policy}}
           Wikipedia, Page ID 7120 (Persia)}}
     \end{subfigure}
   }\\
+  \vspace{5mm}
   \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
       \centering
@@ -157,6 +259,7 @@ identifying name.\cite{wiki-bot-policy}}
           Wikipedia, Page ID 726 (United Kingdom)}}
     \end{subfigure}
   }\\
+  \vspace{5mm}
   \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
       \centering
@@ -176,16 +279,16 @@ a little digging, we find the origin of the act to be a Wikimedia
 project that aims to `migrating interlanguage wiki links from
 individual articles into a central database to ease
 maintenance',\cite{wiki-interwikilinks} see
-figure~\ref{traj-bot-explanation} for evidence of just one of these
-events. Each wikipedia article is rendered to the right of a language
-bar that links that article to its counterpart in various
-languages. Once coded into each article manually, that data is now
-stored in and served from a central source.\cite{wiki-blog-onwikidata}
-The move gives us strange results for this project -- for small
-articles, the loss of these hard-coded links constitutes a gutting of
-its majority content. By our measurements, in these circumstances,
-this act of housekeeping is a momentous event in the history of small
-articles.
+figure~\ref{fig:traj-bot-explanation} for the native wiki diff of just
+one of these events. Each wikipedia article is rendered to the right
+of a language bar that links that article to its counterpart in
+various languages. Once coded into each article manually, these links
+are now stored in and served dynamically from a central
+source.\cite{wiki-blog-onwikidata} The move gives us strange results
+for this project -- for small articles, the loss of these hard-coded
+links constitutes a gutting of its majority content. By our
+measurements, in these circumstances, this act of housekeeping is a
+momentous event in the history of small articles.
 
 \begin{figure}
   \centering \makebox[\linewidth][c]{
@@ -194,7 +297,9 @@ articles.
       \caption{Migration event in article history (16:35, 7 March
         2013)}
     \end{subfigure}
-  }\\ \makebox[\linewidth][c]{
+  }\\ 
+  \vspace{8mm}
+  \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
       \includegraphics[width=1\linewidth]{img/traj-bot/botdiff.png}
       \caption{The Wikipedia diff for the migration event}
@@ -208,7 +313,7 @@ articles.
 How do we characterise this? In this case the `article', as such, is
 unchanged. Indeed the rendered page is identical before and after the
 link cull. We may think to ignore bot edits to a page, but how do we
-distinguish between the adding and deletion of these language links
+distinguish between the addition and deletion of these language links
 from meaningful changes to content? We may distinguish from, say,
 useful spell-checking bots by means of a simple text regex (inter-wiki
 links always have the same form), but we may not as easily distinguish
@@ -217,52 +322,36 @@ articles, rather than mirror articles, widening knowledge rather than
 offering what may merely be a translation of the original
 article. We discuss this later.
 
-We may consider other ways of looking at the data we have
-computed. The gradient factor that we calculate describes how much a
-given revision changes in terms of the final state -- it is a real
-number from 0 to 1, 0 being a `perfect' move away from the final
-version, 1 being a `perfect' move towards. On the trajectory graphs
-discussed these two values are represented by a vertical line between
-two points, going upwards and downwards, respectively. 
-
-We consider that we could perhaps use it to characterise a 'perfect
-edit' -- one that approaches the final edit most efficiently; in a
-linear fashion. An optimum revision history may be considered as a
-straight path from origin to destination. No edit inserted text that
-was later removed, and the approach to the final version was as
-efficient as possible over time. We may characterise such an optimum
-gradient as follows:
-
-
-\[
-  gfactor_{optimum} = gfactor(ed(rev_{0_{content}},
-  rev_{n_{content}}), rev_{n_{tstamp}} - v_{0_{tstamp}})
-\]
-
 \subsection*{Combining trajectory plots}
 Derek Smart's wikipedia page has been named as the battleground of one
 of the `lamest WikiWars' -- it is the place where a very long argument
 about whether or not to include criticisms of his work on his page.
 We use it here as a case study for how derive more information about
-the context of a page given the tools developed here.
+the context of a page with our tools.
 
 In figure~\ref{fig:dsmart-case} we see the combination of trajectory
 plots on three different pages -- the green and black lines represent
 the same article trajectory / article size we've looked at previously,
-but accomanying those we have plots of the talkpage for that article,
-and the page detailing the arbitration request made for that page. We
-see clearly page's activity density is relative to the density on the
-respective talk page.
+but accompanying those we have plots of the talkpage for that article,
+and the page detailing the arbitration request raised for that page. 
+
+We see clearly page's activity density is relative to the density on
+the respective talk page. We also see that a large part of the
+article's history follows the same large-unecessary-growth pattern we
+recognised in the small, bot-dominated pages analysed previously. By
+the end of the densest period, the page is much smaller, and is
+quite dissimilar from the article state at the height of activity.
 
 But perhaps the most interesting part of this graph is the plot of the
 request for arbitration page -- the blue line. We see it created at
-the height of the page's size and from-final distance, and during a
-particularly turbulent patch of the talk page history. We also see
-that as the arbitration page reaches it's final versions (the
-decision on the dispute), the edit warring begins to cease, and the
-page shortens, and is edited less frequently.
+the height of the page's size and from-final dissimilarity, and during
+a particularly turbulent patch of the talk page history. We also see
+that as the arbitration page reaches it's final versions (the decision
+on the dispute), the commotion begins to cease, the page
+shortens, is edited less frequently, and approaches it's final version
+quite quickly.
 
-\begin{figure}
+\begin{figure}[p]
   \centering
   \makebox[\linewidth][c]{
     \begin{subfigure}[b!]{1.2\linewidth}
@@ -285,129 +374,70 @@ page shortens, and is edited less frequently.
   \label{fig:dsmart-case}
 \end{figure}
 
-We can take many interesting things away from this combination
-graph. That the page-edit density increases with the talk page shows a
-correlation between those who make dits and those who participate in
-the bearocracy is high. The persistence of the correlation, seems to
-indicate a tolerance for unconstructive editing when users participate
-in the beaurocracy of the page -- similar edits made by anonymous
-editors would be undone. but most importantly, we see that the
-arbitration request really controls this page. It is the features in
-this history that really help bring the page to it final version.
+In this particular case, a small handful of members were arguing about
+whether or not to include criticisms on Derek Smart and his work in
+his article. At the height of the argument, they involved parties
+called for an arbitration committee to help resolve the issue. The
+article was ``urgently referred to the Wikipedia editing community at
+large for cleanup, evaluation of sources, and adherence to
+[Neutral Point of View]'', as well as restrictions on who could edit
+the article, and how.
 
 So perhaps it would be important for us to reward editors who
-participate in these discussions accordingly. With simple aithmentic
-operations we can see when an argument has harmed a page -- we see
-that this one involved the addition of a lot of eventually removed
-text -- and perhaps penalise the key editors involved by
-corss-referencing their edits between the pages. We can also see when
-the opposite occurs. The downward trajectory of the graph in
-figure~\ref{fig:dsmart-case} perhaps shows a reconciliation, and
-efforts to change the article according to the conclusions of the
-article. We may see if the arguin editors are involved in this
-`tidying', and reqard them accordingly.
+participate in these discussions accordingly. With simple arithmetic
+operations we can see when an argument has turned out to be eventually
+irrelevant to a document's final version -- we see that this one
+involved the addition of a lot of eventually removed text -- and
+perhaps penalise the key editors involved by corss-referencing their
+edits between the pages. We can also see when the opposite occurs. The
+downward slope of the graph in figure~\ref{fig:dsmart-case}
+perhaps shows a reconciliation, and efforts to change the article
+according to the conclusions of the article. We may see if the arguin
+editors are involved in this `tidying', and reqard them accordingly.
 
-Another interesting case show these pages can also be a battleground
-for fights going outside of wikipedia. We examine the english
-Wikipedia page on biologist Rupert Sheldrake. Rupert Sheldrake is a
-biologist, who, with his `astonishingly visionary' early work in plant
-science had him described as `one of the brightest Darwinians of his
+In any case we see that the immediate context of a page can have great
+effects on the path nature of the collaboration, as well as the final
+product.
+
+We find a similar case in the biographical article for English
+biologist Rupert Sheldrake. Rupert Sheldrake is a biologist, who, with
+his `astonishingly visionary' early work in plant science had him
+described as `one of the brightest Darwinians of his
 generation',\cite{odyssey-auxin}\cite{guardian-shel}, came under heavy
 criticism for his later work in psychical research, and `mysterious
 telepathy-type interconnections between organisms and collective
 memories within species'.\cite{sheldrake-biog}
-Figure~\ref{fig:sheldrake-plots} shows WHAT DOES IT EVEN SHOW
 
-\begin{figure}
+\begin{figure}[p]
   \centering
-  \makebox[\linewidth][c]{
-    \begin{subfigure}[b!]{0.6\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{img/traj-classic/bg90882traj.png}
-      \caption{\href{http://bg.wikipedia.org/wiki/index.php?curid=90882}{Bulgarian
-          Wikipedia, Page ID 90882 (History of South Georgia and the South Sandwich Islands)}}
-    \end{subfigure}
-    \begin{subfigure}[b!]{0.6\linewidth}
-      \centering
-      \includegraphics[width=\linewidth]{img/traj-classic/fr572796traj.png}
-      \caption{\href{http://fr.wikipedia.org/wiki/index.php?curid=572796}{French
-          Wikipedia, Page ID 572796 (Agatha of Catania)}}
-    \end{subfigure}
-  }\\
-  \caption{Simple trajectory graphs.}
-  \label{fig:sheldrake-plots}
+  \centering
+  \includegraphics[width=\linewidth]{img/rsheldrake/RupertSheldrakecombo.png}
+  \caption{English Wikipedia, page ID 142395, article vs talk page
+    trajectory graph}
+  \label{fig:sheldrake-plot}
 \end{figure}
 
-\subsection*{Summary}
-With these latter cases we see the effects of things external to the
-articles affecting their content, and how we may bring these things to
-bear on the calculation of share. 
+Figure~\ref{fig:sheldrake-plot} shows a graph similar to the Derek
+Smart plot, though a request for arbitration has not yet been made. In
+fact, though it's history is already quite dense, it has only been in
+the last year-or-so that the activity has really started, and we can
+expect this graph to look quite different if recalculated in a few
+months.
 
-It is perhaps one of the most interesting parts of Wiki analysis that
-evidence such interpersonal acts is so readily available. Due to the
-nature of the WikiMedia software, these interactions are as publicly
-available as the article's themselves, all utilising the same text
-revision framework. 
+This spike in activity is a result of direct publicity. Rupert
+Sheldrake has been controversial for years (in 1981, Nature wrote of
+one of his works that it was `a book for burning'), so it is not
+surprising to see arguments surface here. 
 
-Though, we are concious that in other forms of collaboration -- for
-which the Wiki dataset is standing in for proof-of-concept study --
-these interactions are less readily available. In cases of multi-user
-source control, these interactions may occur over personal emails, on
-private forums, or in the physical space of a shared workspace.
+But here, the conflict arises from questioning the possibly
+overpowering predelictions Wikipedia's editors. November 2013, Rupert
+Sheldrake accused `geurilla' editors of ``distorting hundreds of pages
+on Wikipedia''\cite{sheldrake-bbc-interview}, and the argument started
+from there. One of the key players in the argument began his own
+website about the possible problem, called `Wikipedia, we have a
+problem'.\cite{wiki-problem}
 
-In this way then, the Wikipedia dataset is almost too complete. By
-tunnelling all activity through a common system, we are able to
-discover all organisation that surround the creation of the
-collaborative works. And while we see that these interactions give
-much greater context to collaborative contributions, we must
-understand that this kind of data is unavailable on some platforms.
-
-Our findings corroborate with existing research on individual user
-activity in large-scale collaboration platforms. 
-
-It has been found that the population and dynamics of an online space
-may affect individual user behaviour. Jones, Ravid, Rafaeli find that
-Newsgroups users publish shorter posts in more populous threads.
-
-INSERT THING ABOUT GOOGLE POPULAR THING
-
-%% In the world of physical collaboration these kind of interpersonal
-%% artefacts of cooperation are apparent. With wikipedia we get a clearly
-%% traceable stuff.
-
-%% PLOT DISTRIBUTION OF EDIT NUMBER ON EN, DE, IT
-
-%% PLOT DISTRIBUTION OF SPECIES OF TEXT 
-
-%% THE CASE FOR STUDYING NETWORK 
-
-%% --Frederick Chopin + talk
-%% --Rupert Sheldrak + talk
-%% --Derek Smart + talk
-%% --Aluminium + talk
-
-\url{https://en.wikipedia.org/wiki/Wikipedia:Harassment#User_space_harassment}
-\url{https://en.wikipedia.org/wiki/Wikipedia:Wikipedia_is_in_the_real_world}
-\url{https://en.wikipedia.org/wiki/Wikipedia:Wikipedia_is_anonymous}
-\url{https://en.wikipedia.org/wiki/Wikipedia:Harassment#Wikihounding}
-
-\begin{figure}
-  \begin{subfigure}[t]{0.45\linewidth}
-    \lstinputlisting[
-      language=SQL,
-      basicstyle=0.8\footnotesize,
-      firstline=44,
-      lastline=70,
-    ]{results/sqlsnippet1.sql}
-  \end{subfigure}
-  \begin{subfigure}[t]{0.45\linewidth}
-    \lstinputlisting[
-      language=SQL,
-      basicstyle=0.8\footnotesize,
-      firstline=71,
-      lastline=97,
-    ]{results/sqlsnippet1.sql}
-  \end{subfigure}
-  \caption{SQL snippet used to measure discrepancy between Trajectory
-    calculations and distance calculations}
-\end{figure}
+We consider, then, that the context of these edits may not simply be
+edit count, density of talk, but a page may also be greatly affected
+the unpredictable whims of editors, lead by part-unknowable and
+changeable opinions.
