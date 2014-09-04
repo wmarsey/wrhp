@@ -102,7 +102,9 @@
   \caption{Diagram showing the connections between entities in python implementation}
 \end{figure}
 
-\section{The classes - a modular approach}
+\section{Guide to the code}
+Appendix
+
 The project was implemented in Python, with a C++ core for the
 Levenshtein distance implementation. The code runs reasonably quikly,
 with it's speed mainly limited by the speed of the HTTP requests, and
@@ -171,3 +173,89 @@ separate cores. We use a 'core number' variable to that end.
   \end{tikzpicture}
   \caption{Diagram showing multi-processing in pair distance calculation}
 \end{figure}
+
+\subsection*{The Database}
+The database is implemented in PSQL, and accessed via our python
+package, `wikiDatabase'. The package leverages the psycopg library,
+which allows simple access to the SQL database via
+python.\cite{psycopg2} The package is used by all the other classes
+used in this project and provides simple inserting, changing, fetching
+and checking of data.
+
+Some more complex operations are undertaken by the class, mainly
+preparing large `data-dumps' for mass-plotting (inpreparation for this
+report) and validation exercises. These functions were written for
+performance purpose (the data they deliver could eaily have been
+fetched using the other functions, but would have taken much longer),
+and are clearly marked in the code as seperate from the basic fetch,
+get and insert functions. 
+
+The database relies upon the uniqueness of revision ID and
+domain-name, and page ID and domain-name pairs.  pairs to
+function. The existing database schemata can be found in
+figure~\ref{database-schema}. We talk about improving this schemata in
+the evaluation chapter.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{0.3\linewidth}
+    \centering
+    \begin{tabular}{ccc}
+      \toprule
+      \underline{revid} & \underline{domain} & content\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$\\
+    \end{tabular}
+    \caption{Table: wikicontent}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.2\linewidth}
+    \centering
+    \begin{tabular}{cc}
+      \toprule
+      \underline{pageid} & \underline{domain} \\
+      \midrule
+      $\vdots$ & $\vdots$\\
+    \end{tabular}
+    \caption{Table: wikifetched}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.4\linewidth}
+    \centering
+    \begin{tabular}{cccc}
+      \toprule
+      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+    \caption{Table: wikitrajectory}
+  \end{subfigure}\\
+  \vspace{10 mm}
+  \begin{subfigure}[b!]{\linewidth}
+    \centering
+    \begin{tabular}{ccccccccc}
+      \toprule
+      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
+      comment \\ 
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
+      & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+    \caption{Table: wikirevisions}
+  \end{subfigure}
+  \vspace{30 mm}
+  \begin{subfigure}[b!]{\linewidth}
+    \centering
+    \begin{tabular}{ccccccccc}
+      \toprule
+      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
+      structure & normal & gradient\\
+      \midrule
+      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
+      $\vdots$ & $\vdots$ & $\vdots$ \\
+    \end{tabular}
+    \caption{Table: wikiweights} 
+  \end{subfigure}
+  \caption{Schemata for the database used to store wikipedia data}
+  \label{database-schema}
+\end{figure}
+
+TALK ABOUT schema.sql, dump.sql

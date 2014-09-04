@@ -192,7 +192,7 @@ class Plotter:
                 for i in xrange(len(x)):
                     x[i] = (x[i]-creation).total_seconds()/3600
 
-            title = title.decode('utf-8') + " article vs talk page trajectories"
+            title = title.decode('utf-8').replace('/','') + " article vs talk page trajectories"
             xaxisname = "Hours since creation"
             taxisname = "Change"
             gaxisname = "Article page size"

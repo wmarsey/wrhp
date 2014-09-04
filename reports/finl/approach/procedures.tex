@@ -1,27 +1,47 @@
-%%%%% Pair comparison algorithm
-\begin{algorithm}
-\caption{Pair comparison}\label{pair-comp}
-  \begin{algorithmic}
-    \Procedure{PairComparison}{$revids$}
-    \For {$ i \gets 0, $length($revids$)}
-    \If{pair distance not already in database}
-    \State $str1 \gets $\LineIf{``"}{$i=0$}{database.gettext($revs[i-1]$)}
-    \State $str2 \gets $database.gettext($revs[i]$)
-    \State $dist \gets $PairDistance($str1, str2$)\Comment{See algorithm~\ref{dist-calc}}
-    \State databaseinsert.pairdistanceinsert($dist$)  
-    \EndIf
-    \EndFor
-  \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
+%%WEIGHTING BY MARKUP
+\subsection*{Identifying and splitting by text species}
+Using the wikimedia markup system, we may easily identify certain
+species of text. They are as follows:
+\begin{itemize*}
+\item Internal links
+\item External links
+\item Images
+\item Files
+\item Musical scores
+\item Math-formatted text (similar to Latex math environment)
+\item Section headings (of differing levels)
+\item `Citation Needed' tags
+\item `As of' tags (used for identification of age-sensitive
+  information)
+\item Block quotes
+\item Tables
+\end{itemize*}
 
-The interest, instead, is in exactly how we calculate this
-distance. We discussed earlier that we would use native WikiMarkup
-tags in order to identify different `species' of text. By doing so, we
-could characterise a single revision in terms of the kinds of text
-dealt in. By characterising an edit with a series of different edit
-difference we also perhaps create the opportunity to consider some as
-more valuable than others.\label{multiprocessing-bit}
+We then group them logically, as follows:
+\begin{description*}
+  \item[Equation]\hfill\\
+    Math-formatted text
+  \item[Source validation]\hfill\\
+    Block quotes, Citations, `Citation Needed' tags, `As of' tags
+  \item[Links]\hfill\\
+    Internal Links, External Links
+  \item[Structural]\hfill\\ 
+    Section headings, Tables\\
+    It was found in 2005 that this, if anything, was the clearest
+    difference between Wikipedia and commercial
+    encyclopedias,\cite{Giles2005} supporting previous
+    conjecture.\cite{Denning2005} The regexes in this group provide a
+    simple way of noticing changes that affect structure.
+\end{description*}
+
+We may split the string along the boundaries of these markup tags, and
+send levenshtein distance calculator sperate strings, as shown in
+figure~\ref{fig:split-diff}.
+
+With these text species grouped, we m. By characterising an edit with
+a series of different edit difference we also perhaps create the
+opportunity to consider some as more valuable than
+others.\label{multiprocessing-bit}
 
 The algorithm that was settled upon left the levenshtein calculator
 itself naive of text species -- instead we simply split the text up
@@ -58,14 +78,14 @@ algorithm~\ref{dist-calc}.
     \EndFor
     \EndFor
     \If {length($comparestr[0]$)$ > 0$ OR length($comparestr[1]$)$ > 0$}
-    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \Comment{See algorithm~\ref{lev-dist}}
+    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \Comment{See algorithm~\ref{lev-dist}}\label{mprocess-spawn}
     \Else
     \State $distances[key] \gets 0$
     \EndIf
     \EndFor
     \State $distances[$`$norm$'$] \gets LevDist(strs[0], strs[1])$
     \Comment{Process the remainder}
-    \State return $distances$
+    \State return $distances$\label{mprocess-return}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
@@ -81,6 +101,99 @@ operations of flagging and identifying areas of text were inevitably
 multiplied many thousands of time in one operation. Instead we were
 able to use a fairly simply algorithm for calculating levenshtein
 distance, found in algorithm~\ref{lev-dist}.
+
+
+\def\HS{\hspace{\fontdimen2\font}}\the\fontdimen2\font
+\newcommand{\hilight}[1]{\colorbox{bluegreen}{#1}}
+
+\begin{figure}[p]
+  \centering
+
+  \begin{tikzpicture}[
+      block1/.style={
+        text width=3cm, 
+        minimum height=2cm,
+        align=center,
+        anchor=north,
+      },
+      block2/.style={
+        text width=3cm, 
+        minimum height=1.5cm,
+        align=center,
+        anchor=north,
+      },
+      font=\small
+    ]
+    \node (a) [block1] {We can use a [[spork]] to eat spaghetti.};
+
+    \node (b) [block1, right=1cm of a]{We can use [[forks]] to eat lovely
+      spaghetti.};
+
+    \node (c) [block1,below=1cm of a]{We can use a \hilight{[[spork]]} to eat
+      spaghetti.};
+
+    \node (d) [block1,below=1cm of b]{We can use \hilight{[[forks]]} to eat lovely
+      spaghetti.};
+
+    \node (e) [block2,below left=1.5cm and 1.5cm of c] {\hilight{[[spork]]}};
+    
+    \node (f) [block2,right=1cm of e] {We can use a\HS\HS to eat spaghetti.};
+
+    \node (g) [block2,right=1cm of f] {\hilight{[[forks]]}};
+    
+    \node (h) [block2,right=1cm of g] {We can use\HS\HS to eat spaghetti.};
+
+    \node (i) [block2,below=1cm of e] {\hilight{[[spork]]}}; 
+        
+    \node (j) [block2,below=1cm of f] {\hilight{[[forks]]}}; 
+    
+    \node (k) [block2,below =1cm of g] {We can use a\HS\HS to eat
+      spaghetti.};
+
+    \node (l) [block2,below =1cm of h] {We can use\HS\HS to eat spaghetti.};
+
+    \node (m) [block2,below= 1cm of i] {$ed_{links} = 3$};
+
+    \node (n) [block2,below =1cm of k] {$ed_{normal} = 2$};
+
+    \draw [->] (a) -- (c);
+    \draw [->] (b) -- (d);
+    \draw [->] (c) -- (e);
+    \draw [->] (c) -- (f);
+    \draw [->] (d) -- (g);
+    \draw [->] (d) -- (h);
+    \draw [->] (e) -- (i);
+    \draw [->] (g) -- (j);
+    \draw [->] (f) -- (k);
+    \draw [->] (h) -- (l);
+    \draw [->] (i) -- (m);
+    \draw [->] (j) -- (m);
+    \draw [->] (k) -- (n);
+    \draw [->] (l) -- (n);
+
+  \end{tikzpicture}
+  \caption{Diagram identification of link text, splitting text into
+    normal and link segments, and performing separate levenshtein
+    distance calculations}
+\label{fig:split-diff}
+\end{figure}
+
+%%%%% Pair comparison algorithm
+\begin{algorithm}[p]
+\caption{Pair comparison}\label{pair-comp}
+  \begin{algorithmic}
+    \Procedure{PairComparison}{$revids$}
+    \For {$ i \gets 0, $length($revids$)}
+    \If{pair distance not already in database}
+    \State $str1 \gets $\LineIf{``"}{$i=0$}{database.gettext($revs[i-1]$)}
+    \State $str2 \gets $database.gettext($revs[i]$)
+    \State $dist \gets $PairDistance($str1, str2$)\Comment{See algorithm~\ref{dist-calc}}
+    \State databaseinsert.pairdistanceinsert($dist$)  
+    \EndIf
+    \EndFor
+  \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
 
 We will discuss different levenshtein-related algorithms further on
 this thesis, but for now we can say that the one we reference here is
