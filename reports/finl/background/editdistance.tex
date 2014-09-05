@@ -35,6 +35,7 @@ figure~\ref{fig:fork-spork}
 \end{figure}
 
 \begin{figure}
+  \vspace{5mm}
   \centering
   for the function $\mbox{lev}_{a,b}(|a|,|b|)$:\\
   $$\mbox{lev}_{a,b}(i,j) = 
@@ -99,8 +100,8 @@ working with dynamic programming implementations throughout the study.
 %% \end{figure}
 
 \begin{algorithm}
-  \begin{algorithmic}
-    \Function{ed}{$x, y$}
+  \begin{algorithmic}[5]
+    \Function{ed}{$str1, str2$}
     \State $s1len \gets $length($str1$)
     \State $s2len \gets $length($str2$)    
     \If{$s1len = 0$}
@@ -129,24 +130,24 @@ working with dynamic programming implementations throughout the study.
     \State return $d[s1en][s2len]$
     \EndFunction
   \end{algorithmic}
-  \caption{`Textbook' dynamic implementation of Levenshtein distance calculator}
+  \caption{`Textbook' dynamic algorithm for computing Levenshtein distance}
   \label{fig:levenshtein-dynamic}
 \end{algorithm}
 
 
-We can see that on comparing strings $x$ and $y$, a
-$|x|$ by $|y|$ table is created, and then filled with values. For this
-reason both the time and space complexity of the algorithm is $\theta
-(|x||y|)$.
+We can see that on comparing strings $x$ and $y$, a $|x|$ by $|y|$
+(length of $x$, length of $y$) table is created, and then filled with
+values. For this reason both the time and space complexity of the
+algorithm is $\theta (|x||y|)$.
 
 Reducing the space needed for this computation is relatively easy, and
 can be done in a few different ways. One way is to simply disregard
 parts of the table already computed. We can see that, on each
-computation of $d[i,j]$ (as it appears above), we require only a small
-part of the matrix: $d[i-1,j-1]$, $d[i-1,j]$ and $d[i,j-1]$. At any
-iteration $i$, where is great than $1$, we may disregard rows $0 \dots
-(i-2)$ inclusive. We eventually implement this version, implementing
-the algorithm~\ref{lev-dist}, on page~\pageref{lev-dist}.
+computation of $d[i,j]$, we require only a small part of the matrix:
+$d[i-1,j-1]$, $d[i-1,j]$ and $d[i,j-1]$. At any iteration $i$, where
+is great than $1$, we may disregard rows $0 \dots (i-2)$ inclusive. We
+eventually implement this version, implementing the
+algorithm~\ref{lev-dist}, on page~\pageref{lev-dist}.
 
 There are more complicated techniques that allow us to also disregard
 unnecessary computation --- a few implementations employ strategies
@@ -223,7 +224,7 @@ However it could also conceivably have been:
 
 \begin{center}
   \begin{tabular}{ccccccccccccccccc}
-    s & p & o & r & k & - & & or even & & - & s & p & o & - & r & k - &\\
+    s & p & o & r & k & - & & or even & & - & s & p & o & - & r & k & -\\
     f & - & o & r & k & s & &         & & f & - & o & - & r & - & k & s    
   \end{tabular}
 \end{center}\label{fig:sub-opt}
@@ -280,7 +281,7 @@ and/or $y[j]$, as described in figure
     \uparrow & \color{red}{\uparrow} \\
   \end{array}\right\} $\\
   \vspace{2mm}
-  (If the arrow reaches an edge before the left-hand corner, we trace
+  (If the arrow path reaches an edge before the left-hand corner, we trace
   along that edge, reading each shift as an arrow in the direction of
   the trace.)
   \vspace{5mm}
