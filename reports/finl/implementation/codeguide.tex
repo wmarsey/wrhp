@@ -70,10 +70,10 @@ Levenshtein distance implementation. The different classes are fairly
 independent, but share the WikiData class, and are coordinated by the
 CLI classes. 
 
-To compute Levenshtein distance we employ a short C++ script that
-returns Python-variables, and is compiled into a shared object library
-for use in Python. The Levenshtein distance calculations can be quite
-slow with long strings, particularly when calculating trajectory as the
+To compute Levenshtein distance we employ a C++ script that returns
+Python-variables, and is compiled into a shared object library for use
+in Python. The Levenshtein distance calculations can be quite slow
+with long strings, particularly when calculating trajectory as the
 most recent revision can often be the largest, and we run the
 algorithm on that each time. Pair-distance can be a little quicker
 generally, and we are able to implement some multi-processing because
@@ -173,6 +173,10 @@ multiprocessing.
     \draw[step=.1cm,gray,very thin] (0,2) grid (30,1);
     \draw[step=.1cm,gray,very thin] (0,0) grid (30,-1);
       
+    \draw[dashed, navyblue] (2,1) -- (2,0);
+    \draw[dashed, navyblue] (5,3) -- (5,0);
+    \draw[dashed, navyblue] (8,5) -- (8,0);
+
     \draw[fill, red] (0,0) rectangle (2,-1);
     \draw[fill, red] (3,0) rectangle (5,-1);
     \draw[fill, red] (6,0) rectangle (8,-1);
@@ -227,6 +231,7 @@ figure~\ref{database-schema}. We talk about improving this schemata in
 the evaluation chapter.
 
 \begin{figure}
+  \vspace{10mm}
   \centering
   \begin{subfigure}[t]{0.3\linewidth}
     \centering
@@ -246,7 +251,7 @@ the evaluation chapter.
       \midrule
       $\vdots$ & $\vdots$\\
     \end{tabular}
-    \caption{Table: wikifetched}
+    \caption{Table:\newline wikifetched}
   \end{subfigure}
   \begin{subfigure}[t]{0.4\linewidth}
     \centering
@@ -270,7 +275,8 @@ the evaluation chapter.
       & $\vdots$ & $\vdots$ \\
     \end{tabular}
     \caption{Table: wikirevisions}
-  \end{subfigure}\\
+  \end{subfigure}\
+  \vspace{10mm}
   \begin{subfigure}[b!]{\linewidth}
     \centering
     \begin{tabular}{ccccccccc}
@@ -298,8 +304,8 @@ Portal), and offers a limited, automated coordinating and run of
 the above classes. It can be manipulated using the arguments as follows:
 
 \begin{itemize}[label={}]
-  \item \textbf{Default behaviour.} Attempts to fetch a new page to
-    the database, and analyse it.
+  \item \textbf{Default behaviour.} Fetches a random page from a
+    random Wikipedia to the database, and analyses it.
   \item \textbf{-s} Scrape only. 
   \item \textbf{-p} Plot data. Saves png files to location given by
     the --plotpath argument.
