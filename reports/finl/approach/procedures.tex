@@ -17,7 +17,6 @@ species of text. They are as follows:
 \item Block quotes
 \item Tables
 \end{itemize*}
-\clearpage
 We then group them logically, as follows:
 \begin{description*}
   \item[Equation]\hfill\\
@@ -55,7 +54,7 @@ algorithm~\ref{dist-calc}.
 %%%%% Distance calculation procedure
 \begin{algorithm}
   \caption{Revision pair distance calculation}\label{dist-calc}
-  \begin{algorithmic}
+  \begin{algorithmic}[5]
     \State $regexes \gets $\{
     \Statex \tab`math1': `$<$math$>$((?!$<${\textbackslash}/math$>$).)*$<${\textbackslash}/math$>${\textbackslash}S',
     \Statex \tab`math2': `\{\{math((?!\}\}).)*\}\}',
@@ -178,7 +177,7 @@ distance, found in algorithm~\ref{lev-dist}.
 %%%%% Pair comparison algorithm
 \begin{algorithm}[p]
 \caption{Pair comparison}\label{pair-comp}
-  \begin{algorithmic}
+  \begin{algorithmic}[5]
     \Procedure{PairComparison}{$revids$}
     \For {$ i \gets 0, $length($revids$)}
     \If{pair distance not already in database}
@@ -202,7 +201,7 @@ algorithm a little, and allows us the employ parallel or threaded
 processing in order to improve efficiency of computation.
 
 \begin{algorithm}
-  \begin{algorithmic}
+  \begin{algorithmic}[5]
     \Function{LevDist}{$str1, str2$}
     \State $s1len \gets $length($str1$)
     \State $s2len \gets $length($str2$)
@@ -232,7 +231,7 @@ algorithm~\ref{traj-calc}.
 \begin{algorithm}
   \caption{Page trajectory calculation}
   \label{traj-calc}
-  \begin{algorithmic}
+  \begin{algorithmic}[5]
     \Procedure{TrajectoryCalculation}{$revids, domain$}
     \State $target \gets $database.gettext($revids[-1]$)\Comment{Last revision in list is most recent}
     \For {$i \gets length(revids), 0$}

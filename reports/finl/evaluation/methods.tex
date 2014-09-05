@@ -1,10 +1,10 @@
-\section{Possible optimisations and extensions}
+\section{Limitations, optimisations and extensions}
 \subsection*{Alignment of levenshtein distance}
 \label{split-distance-eval}
-As we began to realise that the details of the content were somewhat
-secondary to the context in which those edits were made, we began to
-wonder if we could make the data analysis more efficient by doing away
-with the text splitting.
+As we began to realise that, in terms of survival rate, the details of
+the content were somewhat secondary to the context in which those
+edits were made, we began to wonder if we could make the data analysis
+more efficient by doing away with the pair distance calculation.
 
 Further than that, however, we wondered whether we could find the
 distance between each revision by just taking the absolute distance
@@ -22,13 +22,18 @@ in the edits.
 Running the SQL statements found in appendix~\ref{sec:sql-things}, we
 found evidence contrary to our theory. We found that only around 30\%
 of our different measures matched up, with a high average mis-match of
-22,181. The mismatch is, on average, around 40\% of the distance
-larger distance. 
+22,181. The mismatch is, on average, around 40\% of the larger
+distance.
 
 We propose two theories for this. We can identify a problem with our
 string splitting -- it may mis-align two strings, creating non-minimum
 calculations, such as in the diagram on page~\pageref{fig:sub-opt}. We
 illustrate the problem in figure~\ref{fig:split-string-problem}.
+
+We can also imagine that it may be more efficient to swap some
+characters between a and c, rather than delete to them to get from a
+to b, and reinsert from b to c. This may also be described as an
+alignment problem.
 
 Whilst inaccurate, doing away with pair-distance calculations may be
 acceptable as a rough measure, and if pair-distance, as we suspect, is
@@ -108,18 +113,19 @@ not a very effective measure of survival.
     \end{tikzpicture}
     \caption{Split string edit distance}
   \end{subfigure}\\
-  \vspace{30mm}
+  \vspace{20mm}
   \begin{subfigure}[t]{\linewidth}
     $ed($``We can use a [[spork]] to eat spaghetti.''$,$``We can use forks
     to eat lovely spaghetti.''$) = 6$
     \caption{Whole-string edit distance}
-  \end{subfigure}
+  \end{subfigure}\\
+  \vspace{20mm}
   \caption{Showing alignment alignment inefficiency in split-string
     Levenshtein distance processing.}
 \label{fig:split-string-problem}
 \end{figure}
 
-\subsection*{Calculating turbulence}
+\subsection*{Calculating `turbulence'}
 The gradient factor that we calculate describes how much a given
 revision changes in terms of the final state -- it is a real number
 from 0 to 1, 0 being a `perfect' move away from the final version, 1
@@ -157,10 +163,10 @@ this carefully, we may achieve a gradient of weighting, with a lower
 weight values for things like spell-checks, and higher values for
 whole-paragraph changes.
 
-Though density is somewhat reflected in the gradient factor measure,
-as discussed before.
+However, this density is somewhat reflected in the gradient factor
+measure, as discussed before.
 
-\subsection*{Algorithmic changes}
+\subsection*{Levenshtein algorithm changes}
 The Damerau-Levenshtein distance defines an `swap' operation, which is
 the reversal of two adjacent characters. It is particularly suited to
 spell-checking, and for analysing DNA-sequence variations. In this
@@ -182,11 +188,6 @@ diagnose large movements of text --- perhaps between documents. (The
 Harry Potter history in appendix~\ref{sec:traj-article-talk} shows
 frequent migrations of text to book-, character- and film-specific
 pages.)
-
-\subsubsection*{Updating gracefully}
-GUI? Would be nice to give people better insight to stuff. Was working
-on GUI to allow people to play with weights, click to launch
-diff. Easy but fiddly. Ran out of time.
 
 \subsection*{Awarding restructuring}
 \label{restructuring}
@@ -229,7 +230,7 @@ invest time in setting up a more complete dataset.
 \subsubsection*{Further subjects}
 As mentioned previously, this project may easily expand beyond the
 wikipedia dataset. A git project history, for instance, may be of
-interest for further study. We may fairly combine the existing
+interest for further study. We may fairly easily combine the existing
 research with metrics that concern code in particular, such as
 Cyclomatic Complexity, which measures code flow complexity according
 to its logical operators.\cite{McCabe1976} The main challenge on

@@ -59,7 +59,7 @@ problem is not just a temporary glitch in the delivery of the data.
 %%%% Data fetching algorithm
 \begin{algorithm}
   \caption{Data fetching}\label{alg-data}
-  \begin{algorithmic}
+  \begin{algorithmic}[5]
     \Procedure{Fetch}{$pageid$}
     \State $corrupt \gets \emptyset$
     \State $visitedpages \gets \emptyset$
@@ -131,7 +131,7 @@ clean or repair the database further down the line.
 
 \begin{algorithm}
   \caption{Corrupt pages}\label{corrupt-clean}
-  \begin{algorithmic}
+  \begin{algorithmic}[5]
     \Procedure{CorruptClean}{corruptrev, parent, domain}
     \State $childrev \gets database.getchildof(corruptrev)$
     \State $database.setparent(childrev, parent)$ 
@@ -287,9 +287,9 @@ practice.\cite{wiki-revert}
 This algorithm, however, is limited in its scope, and we may come
 across situations where reversions occur over a series of
 edits. Although the system may easily be extended to cover larger
-spans of history, to consider many nodes would require the
-edit-distance computation of very many different node pair
-($0.5n(n-1)$ combinations for n entries, the edit distance relation
+spans of history, to consider many nodes like this would require the
+edit-distance calculation of very many different node pairs
+($0.5n(n-1)$ combinations for n entries; the edit distance relation
 between pairs is symmetric).
 
 We propose a more efficient way of characterising redundant
@@ -343,11 +343,10 @@ shows the area in which we look to find $rev_j$, and the blue lines
 are those edit distances we both to compute. In this case, after
 considering $rev_i$, we move to the $rev_j$ such that $j$ is the
 smallest number that satisfies to qualities $j > i$ and $ed_{final_j}
-< ed_{final_i}$. In this graph above we move from (4,13) to (8,12).
-
-It is worth stating here that, in both these strategies, after
-discovering $rev_j$, we always compute $ed(rev_{j-1}, rev_j)$ rather
-than $ed(rev_i,rev_j)$. 
+< ed_{final_i}$. In this graph above we move from (4,13) to
+(8,12).\footnote{It is worth stating here that, in both these
+  strategies, after discovering $rev_j$, we always compute
+  $ed(rev_{j-1}, rev_j)$ rather than $ed(rev_i,rev_j)$.}
 
 \begin{wrapfigure}{i}{0.4\textwidth}
   \centering
@@ -471,7 +470,8 @@ what we can understand from these values in isolation, and how they
 relate to one another as a set. 
 
 We can also note that a repeated insertion may accrue an reward
-multiple times. In the dummy history found in figure~\ref{dummy-argument}
+multiple times. We examine dummy history found in
+figure~\ref{fig:dummy-argument}.
 
 \begin{wrapfigure}{i}{0.4\textwidth}
   \centering
@@ -502,9 +502,10 @@ for having taken part in the discussing, though the `winner' is
 rewarded more overall.
 
 We can also imagine a very low value as a punishment for not allowing
-the final version, which was closer to the final state, to exist for
-very long. The same edit made much later allows the preferable state a
-longer existence, and the gradient factor would be accordingly higher. 
+the previous version, which was closer to the final state, to exist
+for very long. The same edit made much later allows the preferable
+state a longer existence, and the gradient factor would be accordingly
+higher.
 
 The trajectory-plotting technique gives us a simple and powerful way
 of visualising the history of these articles. Several good attempts

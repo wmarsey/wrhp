@@ -1,1 +1,1 @@
-from WikiData import *
+from wikiData import *
