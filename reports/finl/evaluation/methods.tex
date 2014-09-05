@@ -137,7 +137,7 @@ gradient as follows:
 
 \[
   gfactor_{optimum} = gfactor(ed(rev_{0_{content}},
-  rev_{n_{content}}), rev_{n_{tstamp}} - v_{0_{tstamp}})
+  rev_{n_{content}}), rev_{n_{tstamp}} - rev_{0_{tstamp}})
 \]
 
 This equation gives a gradient that, if the same for every edit, would
@@ -150,12 +150,12 @@ of an edit operation as $\{op_0,op_1,op_2,\dots, op_n\}$, where $op_i$
 is the index of the $i$th operation, then we may evaluate it's density
 with a standard deviation of the edit itself, $\sigma_{ed}$,
 multiplied by the span of the edit itself in context of the wider
-article, and some weighting factor k. Something along the lines of:
-$$ed_{density} = k\bullet\frac{(op_n - op_0)\sigma_{ed}}{|v_{ed}|}$$
-where $|v_{ed}|$ is the overall length of resultant version. By
-implementing this carefully, we may achieve a gradient of weighting,
-with a lower weight values for things like spell-checks, and higher
-values for whole-paragraph changes.
+article. Something along the lines of:
+$$ed_{density} = \frac{(op_n - op_0)\sigma_{ed}}{|v_{ed}|}$$ where
+$|v_{ed}|$ is the overall length of resultant version. By implementing
+this carefully, we may achieve a gradient of weighting, with a lower
+weight values for things like spell-checks, and higher values for
+whole-paragraph changes.
 
 Though density is somewhat reflected in the gradient factor measure,
 as discussed before.

@@ -301,12 +301,12 @@ final version (see figure~\ref{fig:dummy-history}).
 
 Each point represents a different version, it's coordinates being its
 timestamp, and the edit distance from that revision to the final
-revision. A line between two points represents the edit-distance
-between each version. Given this information, we may consider only
-those revisions that bring us closer to the final version. They appear
-in figure~\ref{fig:traj-preen-1} as lines with a negative gradient
-(blue); those with a positive gradient take us further away from the
-final version (red).
+revision. A line between two points represents the difference in
+to-final edit-distance between each version. Given this information,
+we may consider only those revisions that bring us closer to the final
+version. They appear in figure~\ref{fig:traj-preen-1} as lines with a
+negative gradient (blue); those with a positive gradient take us
+further away from the final version (red).
 
 \begin{wrapfigure}{i}{0.4\textwidth}
   \centering
@@ -558,7 +558,7 @@ history features.
   \vspace{10mm}
   \begin{subfigure}[b]{\linewidth}
     \centering
-    \begin{tikzpicture}[x=1cm,y=1cm]
+    \begin{tikzpicture}[x=1.2cm,y=1.2cm]
 
       \draw[thick,red,dashed] (4,0) -- (4,1);
       \draw[thick,red,dashed] (4,7) -- (4,8);
