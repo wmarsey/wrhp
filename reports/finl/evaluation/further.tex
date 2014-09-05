@@ -49,51 +49,51 @@ implementing this carefully, we may achieve a gradient of weighting,
 with a lower weight values for things like spell-checks, and higher
 values for whole-paragraph changes.
 
-\textbf{\textit{q}-grams distance.} \textit{q}-grams are simply
-sub-strings, and this measure describes the similarity of two strings
-in terms of \textit{q}-grams they
-share.\cite{Ukkonen1992}\\ $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma
-  ^q}|G(x)[v]-G(y)[v]|$\\ where $G(x)[v]$ returns the number of
-occurrences of \textit{q}-gram v in string x, and $\Sigma ^q$ is all
-the possible \textit{q}-grams in the alphabet (capped by string
-length). $|G(x)[v]-G(y)[v]|$ a large positive number every time a
-\textit{q}-gram appears a large amount of times in one string, but not
-the other; it returns 0 if the substring apears the same number of
-times. So, the whole function measures this difference for all
-possible substrings, and sums them, returning a high number for
-difference, and a low number for similarity.
+%% \textbf{\textit{q}-grams distance.} \textit{q}-grams are simply
+%% sub-strings, and this measure describes the similarity of two strings
+%% in terms of \textit{q}-grams they
+%% share.\cite{Ukkonen1992}\\ $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma
+%%   ^q}|G(x)[v]-G(y)[v]|$\\ where $G(x)[v]$ returns the number of
+%% occurrences of \textit{q}-gram v in string x, and $\Sigma ^q$ is all
+%% the possible \textit{q}-grams in the alphabet (capped by string
+%% length). $|G(x)[v]-G(y)[v]|$ a large positive number every time a
+%% \textit{q}-gram appears a large amount of times in one string, but not
+%% the other; it returns 0 if the substring apears the same number of
+%% times. So, the whole function measures this difference for all
+%% possible substrings, and sums them, returning a high number for
+%% difference, and a low number for similarity.
 
 
-Other algorithms we may look at are those that, like the
-\textit{q}-gram distance, principally concern themselves with finding
-common subsequences between the strings. The common subsequence
-problem relates to the editdistance problem by way of the
-heuristic that two similar strings will have similar subsequences ---
-the \textit{q}-gram algorithm, for instance, relies on this heuristic,
-and works well for most texts, it does not agree with all distance
-measures. For example, two strings that are very different according
-to this heuristic may be quite similar according to the
-Damrau-Levenshtein measure.
+%% Other algorithms we may look at are those that, like the
+%% \textit{q}-gram distance, principally concern themselves with finding
+%% common subsequences between the strings. The common subsequence
+%% problem relates to the editdistance problem by way of the
+%% heuristic that two similar strings will have similar subsequences ---
+%% the \textit{q}-gram algorithm, for instance, relies on this heuristic,
+%% and works well for most texts, it does not agree with all distance
+%% measures. For example, two strings that are very different according
+%% to this heuristic may be quite similar according to the
+%% Damrau-Levenshtein measure.
 
 
-\subsection*{Delta encoding}
-Finally, we may also look into Delta encoding algorithms. These
-describe ways of compressing the storage of a document's history --- a
-format in which only the differences between each text is stored, not
-the entire version. These algorithms are of the same family of
-algorithms discussed above. In fact, we find that one of the fastest
-known algorithms,\footnote{According to Hunt's 1998
-  study\cite{Hunt1998}} \textit{VDelta}, is a refinement of the block
-distance algorithm mentioned above. For a given version $n$ of a
-document $doc$ is defined as:
+%% \subsection*{Delta encoding}
+%% Finally, we may also look into Delta encoding algorithms. These
+%% describe ways of compressing the storage of a document's history --- a
+%% format in which only the differences between each text is stored, not
+%% the entire version. These algorithms are of the same family of
+%% algorithms discussed above. In fact, we find that one of the fastest
+%% known algorithms,\footnote{According to Hunt's 1998
+%%   study\cite{Hunt1998}} \textit{VDelta}, is a refinement of the block
+%% distance algorithm mentioned above. For a given version $n$ of a
+%% document $doc$ is defined as:
 
-$$v_n = v_0 \cup {\Delta}(v_0,v_1) \cup {\Delta}(v_1,v_2) \cup \dots
-\cup {\Delta}(v_{n-1},v_n) $$
+%% $$v_n = v_0 \cup {\Delta}(v_0,v_1) \cup {\Delta}(v_1,v_2) \cup \dots
+%% \cup {\Delta}(v_{n-1},v_n) $$
 
-where ${\Delta}(v_i,v_j)$ is the difference between version $i$ and
-version $j$ of the document, and the union operation $\cup$ combines
-each version in a manner particular to the $\Delta$ data-type. Storing
-data in this way can be very efficient, resulting in a compression
-factors of five or ten on typical data.\cite{Macdonald2000} It may
-also be relatively easy to maintain in our case, due to the linear
-nature of Wikipedia revision histories.
+%% where ${\Delta}(v_i,v_j)$ is the difference between version $i$ and
+%% version $j$ of the document, and the union operation $\cup$ combines
+%% each version in a manner particular to the $\Delta$ data-type. Storing
+%% data in this way can be very efficient, resulting in a compression
+%% factors of five or ten on typical data.\cite{Macdonald2000} It may
+%% also be relatively easy to maintain in our case, due to the linear
+%% nature of Wikipedia revision histories.

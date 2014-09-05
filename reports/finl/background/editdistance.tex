@@ -62,41 +62,77 @@ figure~\ref{fig:levdef}. It defines that the distance between two
 strings is characterised the minimum distance between three different
 pair-combinations of its substrings. A `text-book' implementation of
 this algorithm can be represented by the pseudo-code in
-figure~\ref{ref:levenshtein-dynamic}. We present the
+figure~\ref{fig:levenshtein-dynamic}. We present the
 dynamic-programming-style algorithm here, and will generally be
 working with dynamic programming implementations throughout the study.
 
-\begin{figure}
-  REDO AS ALGORTHM?!
-  \centering
-  \begin{lstlisting}
-    ed(x,y):
-    #base cases
-    if |x| = 0: return |y|
-    if |y| = 0: return |x|    
+%% \begin{figure}
+%%   REDO AS ALGORTHM?!
+%%   \centering
+%%   \begin{lstlisting}
+%%     ed(x,y):
+%%     #base cases
+%%     if |x| = 0: return |y|
+%%     if |y| = 0: return |x|    
 
-    #table initialisation
-    d is a table [0..|x|][0..|y|]
-    for i = 1 to |m|:
-    d[i,0] = i
-    for j = 0 to |y|:
-    d[0,j] = j           
+%%     #table initialisation
+%%     d is a table [0..|x|][0..|y|]
+%%     for i = 1 to |m|:
+%%     d[i,0] = i
+%%     for j = 0 to |y|:
+%%     d[0,j] = j           
     
-    #dynamic computation
-    for j = 1 to |y|:
-    for i = 1 to |x|:
-    c = [(x[i] == y[j]) ? O else 1]
-    ins = d[i-1,j] + 1
-    dlt =d[i,j-1] + 1
-    kp_swp = d[i-1,j-1] + c
-    d[i,j] = min(ins, dlt, kp-swp)
+%%     #dynamic computation
+%%     for j = 1 to |y|:
+%%     for i = 1 to |x|:
+%%     c = [(x[i] == y[j]) ? O else 1]
+%%     ins = d[i-1,j] + 1
+%%     dlt =d[i,j-1] + 1
+%%     kp_swp = d[i-1,j-1] + c
+%%     d[i,j] = min(ins, dlt, kp-swp)
     
-    #return last computed number
-    return d[|x|,|y|]
-  \end{lstlisting}
-  \caption{Basic dynamic implementation of Levenshtein distance}
+%%     #return last computed number
+%%     return d[|x|,|y|]
+%%   \end{lstlisting}
+%%   \caption{Basic dynamic implementation of Levenshtein distance}
+%%   \label{fig:levenshtein-dynamic}
+%% \end{figure}
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function{ed}{$x, y$}
+    \State $s1len \gets $length($str1$)
+    \State $s2len \gets $length($str2$)    
+    \If{$s1len = 0$}
+    \State return $s2len$
+    \EndIf
+    \If{$s2len = 0$}
+    \State return $s1len$
+    \EndIf
+    \State $d \gets [0 \dots s1len][0 \dots s2len]$ 
+    \For{$i \gets 1, s1len$}
+    \State $d[i][0] \gets i$
+    \EndFor
+    \For{$j \gets 0, s2len$}
+    \State $d[0][j] \gets j$
+    \EndFor
+
+    \For{$j \gets 1, s2len$}
+    \For{$i \gets 1, s1len$}
+    \State $c \gets $\LineIf{0}{$str1[i-1] \neq str2[j-1]$}{1}
+    \State $insert \gets d[i-1][j] + 1$
+    \State $delete \gets d[i,j-i] + 1$
+    \State $keepswap \gets d[i-1][j-1] + c$
+    \State $d[i][j] \gets min(insert, delete, keepswap)$
+    \EndFor
+    \EndFor
+    \State return $d[s1en][s2len]$
+    \EndFunction
+  \end{algorithmic}
+  \caption{`Textbook' dynamic implementation of Levenshtein distance calculator}
   \label{fig:levenshtein-dynamic}
-\end{figure}
+\end{algorithm}
+
 
 We can see that on comparing strings $x$ and $y$, a
 $|x|$ by $|y|$ table is created, and then filled with values. For this
@@ -188,13 +224,13 @@ However it could also conceivably have been:
 \begin{center}
   \begin{tabular}{ccccccccccccccccc}
     s & p & o & r & k & - & & or even & & - & s & p & o & - & r & k - &\\
-    f & - & o & r & k & s & &         & & f & - & o & - & r & k & - & s    
+    f & - & o & r & k & s & &         & & f & - & o & - & r & - & k & s    
   \end{tabular}
 \end{center}\label{fig:sub-opt}
 
 Here, the left-hand version results in an equivalent Levenshtein
 distance, but we can see how the distance for the right-hand example
-would be sub-optimal, requiring 8 edit operations.
+would be sub-optimal, requiring 7 edit operations.
 
 \begin{figure}[h]
   \centering   
@@ -232,16 +268,6 @@ and/or $y[j]$, as described in figure
 
 \begin{figure}[h]
   \centering 
-  \begin{itemize}
-  \item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$} \\ Denotes a
-    'swap' between $x[i]$ and $y[j]$ (if $x[i] = y[j]$ then it denotes
-    the lack of an operation).
-  \item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion of $x[i]$
-  \item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the insertion of
-    $y[j]$
-  \end{itemize}
-  \vspace{10mm}
-
   $\left\{
   \begin{array}{ccccccc}
     & & S & P & O & R & K \\ & \color{red}{0} & \color{red}{0} & 0 & 0
@@ -253,9 +279,20 @@ and/or $y[j]$, as described in figure
     \color{red}{\nwarrow} \\ S & 0 & \nwarrow & \uparrow & \uparrow &
     \uparrow & \color{red}{\uparrow} \\
   \end{array}\right\} $\\
+  \vspace{2mm}
   (If the arrow reaches an edge before the left-hand corner, we trace
   along that edge, reading each shift as an arrow in the direction of
   the trace.)
+  \vspace{5mm}
+  \begin{itemize}
+  \item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$} \\ Denotes a
+    'swap' between $x[i]$ and $y[j]$ (if $x[i] = y[j]$ then it denotes
+    the lack of an operation).
+  \item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion of $x[i]$
+  \item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the insertion of
+    $y[j]$
+  \end{itemize}
+  \vspace{5mm}
   \caption{Diagram showing Smith-Waterman traceback path (in red) on
     the edit operation forks $\rightarrow$ spork}
   \label{fig:smith-waterman-traceback}
