@@ -7,7 +7,7 @@ into three steps:
   content of each revision, as well as data pertaining to the user,
   the time of the edit, it's size, and so forth. We store these in a
   PostgreSQL database.
-\item[Secondly] we take the mos recent revision, and compare it to all
+\item[Secondly] we take the most recent revision, and compare it to all
   previous revisions in turn. We do this using a plain Levenshtein
   distance. It gives us an idea of how close the article was to its
   final version at each point in its history. We translate this into a
@@ -41,13 +41,13 @@ collection -- the more complex operations of the API caused various
 problems, discussed below.
 
 To trace the history of a given page, we need only augment the
-aformentioned `rvprop' argument to include `ids'
+aforementioned `rvprop' argument to include `ids'
 (`rvprop=content{\textbar}ids') in order to discover the parent id and, from
 there, we may trace the history backwards. The procedure defined in
 algorithm~\ref{alg-data} demonstrates this clearly, showing the
 child-parent swap at line~\ref{datal2}. 
 
-However, the API, even in these simple operations, is not toally
+However, the API, even in these simple operations, is not totally
 reliable. The condition on the while loop (line~\ref{datal1}),
 however, shows the first oddity with the Wikipedia histories. Most
 articles will terminate at their origin, showing parentid 0. Some,
@@ -108,7 +108,7 @@ unable to find an explanation for this problem online.
 A second notable problem was the corrupt data regularly returned by
 the Wikipedia API. We test for `corruption' at line~\ref{datal3} in
 algorithm~\ref{alg-data}, storing a list of corrupt pages. Here we test
-for problems that do not effect the fetch overall, but would cuase
+for problems that do not effect the fetch overall, but would cause
 problems during the analysis, such as missing timestamps, or user
 data. In these cases `circumnavigate' corrupt entries in the database,
 using the procedure in algorithm~\ref{corrupt-clean}. The database
@@ -124,7 +124,7 @@ either discarding all fetched data, or terminating the history at that
 point, depending on whether we have fetched enough revisions to
 satisfy our `scrape minimum' limit.
 
-On exiting procedure mark a pageid as having a succesful fetch in the
+On exiting procedure mark a pageid as having a successful fetch in the
 database. This is useful for fetches that are interrupted
 unexpectedly, by hardware or connection problems. It allows us to
 clean or repair the database further down the line.
@@ -266,7 +266,7 @@ work by Adler, et al.\cite{Adler2007}.
 \end{figure}
 
 Figure \ref{fig:undo} shows how we may identify undone or partially
-undone edits, when they are undone immediately, as layed out in Adler
+undone edits, when they are undone immediately, as laid out in Adler
 et al.\cite{Adler2007} The triangle represents three consecutive
 revisions, and the arrows are the edit operations that transform one
 to another. By calculating the edit distance between the distance
@@ -496,7 +496,7 @@ to ``spork'' immediately afterwards. Then the original editor changes
 it back to ``fork'', and so on. We see that ``spork'' was the favoured
 choice overall, as it receives a downward trajectory throughout. The
 ``spork'' user is awarded more that the ``fork'' user throughout,
-recieving a higher gradient factor for the downward-trajectory that
+receiving a higher gradient factor for the downward-trajectory that
 the spork edits incurred in the trajectory. Both users are rewarded
 for having taken part in the discussing, though the `winner' is
 rewarded more overall.
@@ -528,7 +528,7 @@ We will see later that we can use the same visualisations to identify
 some bot-work,\footnote{It has been noted that there are around 700
   bots registered on Wikipedia (as of 2014). Though not all of them
   make edits, those that do are very prolific, and are known to
-  reverse malicious submisions in a matter of
+  reverse malicious submissions in a matter of
   seconds.\cite{wiki-bots}\cite{bbc-bots}} as well as other strange
 history features.
 
