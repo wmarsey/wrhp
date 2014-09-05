@@ -103,7 +103,7 @@ is in fact only the complete \textit{discoverable}\footnote{We may
   trace histories beyond the oldest listed on the site itself. That
   these older revisions are not available on the normal site implies a
   compromise, perhaps an early server problem.}  history. We were
-unable to find an explanation for this problem online.
+unable to find an explanation for this problem on-line.
 
 A second notable problem was the corrupt data regularly returned by
 the Wikipedia API. We test for `corruption' at line~\ref{datal3} in
@@ -296,11 +296,11 @@ We propose a more efficient way of characterising redundant
 entries in terms of longer history spans. We must utilise the fact
 that we have take one article to be the ultimate destination of all
 previous edits in order to do so. Let us graph the entirety of a
-wikipedia's revision history in terms of the edit distance from this
+Wikipedia's revision history in terms of the edit distance from this
 final version (see figure~\ref{fig:dummy-history}).
 
 Each point represents a different version, it's coordinates being its
-timestamp, and the edit distance from that revision to the final
+time-stamp, and the edit distance from that revision to the final
 revision. A line between two points represents the difference in
 to-final edit-distance between each version. Given this information,
 we may consider only those revisions that bring us closer to the final
@@ -431,7 +431,7 @@ Also, perhaps we may give some lessened reward to edits that move away
 from the final version, rather than disregarding them altogether. We
 may imagine quite easily that the work done here may have inspired
 `correction', or at least be part of an ongoing discussion which moves
-devlopment of the article on if not towards its final version.
+development of the article on if not towards its final version.
 
 So, rather than discarding the revision altogether, we calculate a
 `gradient factor', which we may use to modify the reward given to an

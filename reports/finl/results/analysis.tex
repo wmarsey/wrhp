@@ -32,7 +32,7 @@ many one-time editors, with a small amount of repeat editors. More
 similar graphs are found in appendix~\ref{sec:edit-share}.
 
 We can note here that a lot of the single-time entries are anonymous,
-showing an IP address rather than a username. Since IP addresses are
+showing an IP address rather than a user-name. Since IP addresses are
 likely to change (it is standard practice for a ISP to provide a new
 IP address for their customers on each new connection), we cannot know
 how many separate agents these IP addresses represent. We can't
@@ -43,7 +43,7 @@ We can also find our first bots on these graphs, with many making
 small numbers of edits. EmausBot towards the left of the edit count
 graph, BattyBot next -- it is common practice to name the bot account
 with an obvious bot-name. Emausbot comes up a lot in our analyses, in
-fact. It maintain's interwiki links.
+fact. It maintains inter-wiki links.
 
 From our first graphs we found that many articles, particularly in
 smaller Wikipedias have little-to-no edits, and would result in graphs
@@ -74,13 +74,11 @@ found in appendix~\ref{sec:LudvigFadeev} for comparison.
       \centering
       \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevUnweighted.png}
       \caption{Unweighted share}
-      \label{fig:japanese-tax}
     \end{subfigure}
     \begin{subfigure}[b!]{0.6\linewidth}
       \centering
       \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevLinks.png}
-      \caption{With doubly-weight links}
-      \label{fig:variable-light}
+      \caption{Share with doubly-weight links}
     \end{subfigure}
   }
   \caption{English Wikipedia, Page ID 4854639 (Ludvig Faddeev)}
@@ -100,22 +98,20 @@ towards those with the most reward already.
     \begin{subfigure}[b!]{0.6\linewidth}
       \centering
       \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevUnweightedGradient.png}
-      \caption{Unweighted share}
-      \label{fig:japanese-tax}
+      \caption{Unweighted share, with gradient factor}
     \end{subfigure}
     \begin{subfigure}[b!]{0.6\linewidth}
       \centering
       \includegraphics[width=\linewidth]{img/weightings/LudvigFaddeevLinksGradient.png}
-      \caption{}
-      \label{fig:one-weight-gradient}
+      \caption{Share with doubly-weight links and gradient factor}
     \end{subfigure}
   }
   \caption{English Wikipedia, Page ID 4854639 (Ludvig Faddeev)}
-  \label{fig:one-weight}
+  \label{fig:one-weight-gradient}
 \end{figure}
 
 \subsection*{Trajectory plots}
-On average, these plots follow a similar pattern: the levnshtein
+On average, these plots follow a similar pattern: the Levenshtein
 distance of the article begins at a high value at $x=0$, it's creation
 date, and approaches the final article state at $y=0$ and a high value
 of $x$. The article begins in a near-empty state, and as it grows,
@@ -215,7 +211,7 @@ an `undo' operation. It is more nuanced than others we have identified
 so far (after the event the article is equally similar to the current
 version, but smaller in size), but the effect is the same. The burden
 is upon our model as to how to sufficiently characterise these
-long-term discardations of useless inserted material.
+long-term removals of useless inserted material.
 
 We also may begin to notice that that edits may tend to cluster in
 time, and that the articles may owe much of their content one-time
@@ -233,7 +229,7 @@ shape seems to describe an article which engorged with content, before
 having the majority of it deleted. On further inspection we found that
 the articles generally share two characteristics -- they come from
 small Wikipedias, and the majority of the edits are made by bots. We
-can see from the usernames on the right-hand side that they are bots
+can see from the user-names on the right-hand side that they are bots
 -- there is a special bot `flag' to be raised in the user profile of
 bots, but it is also traditional for the bot to be also be given an
 identifying name.\cite{wiki-bot-policy}
@@ -274,9 +270,9 @@ identifying name.\cite{wiki-bot-policy}
 \end{figure}
 
 The explanation is in the articles' histories. In each one, we find a
-single large deletion event, ocurring any time after early 2013. With
+single large deletion event, occurring any time after early 2013. With
 a little digging, we find the origin of the act to be a Wikimedia
-project that aims to `migrating interlanguage wiki links from
+project that aims to `migrating inter-language wiki links from
 individual articles into a central database to ease
 maintenance',\cite{wiki-interwikilinks} see
 figure~\ref{fig:traj-bot-explanation} for the native wiki diff of just
@@ -317,7 +313,7 @@ distinguish between the addition and deletion of these language links
 from meaningful changes to content? We may distinguish from, say,
 useful spell-checking bots by means of a simple text regex (inter-wiki
 links always have the same form), but we may not as easily distinguish
-language-bar links from inline ones -- those that may link to related
+language-bar links from in-line ones -- those that may link to related
 articles, rather than mirror articles, widening knowledge rather than
 offering what may merely be a translation of the original
 article. We discuss this later.
@@ -337,7 +333,7 @@ and the page detailing the arbitration request raised for that page.
 
 We see clearly page's activity density is relative to the density on
 the respective talk page. We also see that a large part of the
-article's history follows the same large-unecessary-growth pattern we
+article's history follows the same large-unnecessary-growth pattern we
 recognised in the small, bot-dominated pages analysed previously. By
 the end of the densest period, the page is much smaller, and is
 quite dissimilar from the article state at the height of activity.
@@ -389,12 +385,12 @@ participate in these discussions accordingly. With simple arithmetic
 operations we can see when an argument has turned out to be eventually
 irrelevant to a document's final version -- we see that this one
 involved the addition of a lot of eventually removed text -- and
-perhaps penalise the key editors involved by corss-referencing their
+perhaps penalise the key editors involved by cross-referencing their
 edits between the pages. We can also see when the opposite occurs. The
 downward slope of the graph in figure~\ref{fig:dsmart-case}
 perhaps shows a reconciliation, and efforts to change the article
-according to the conclusions of the article. We may see if the arguin
-editors are involved in this `tidying', and reqard them accordingly.
+according to the conclusions of the article. We may see if the arguing
+editors are involved in this `tidying', and regard them accordingly.
 
 In any case we see that the immediate context of a page can have great
 effects on the path nature of the collaboration, as well as the final
@@ -431,8 +427,8 @@ one of his works that it was `a book for burning'), so it is not
 surprising to see arguments surface here. 
 
 But here, the conflict arises from questioning the possibly
-overpowering predelictions Wikipedia's editors. November 2013, Rupert
-Sheldrake accused `geurilla' editors of ``distorting hundreds of pages
+overpowering predilections Wikipedia's editors. November 2013, Rupert
+Sheldrake accused `guerilla' editors of ``distorting hundreds of pages
 on Wikipedia''\cite{sheldrake-bbc-interview}, and the argument started
 from there. One of the key players in the argument began his own
 website about the possible problem, called `Wikipedia, we have a
