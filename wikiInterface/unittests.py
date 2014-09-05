@@ -49,10 +49,19 @@ class CommandLineRevIDNotNumber(ut.TestCase):
     def testValueRaise(self):
         self.assertRaises(ValueError, self.argparse.run)
 
-class CommandLineRevIDNotNumber(ut.TestCase):
+class CommandLineMissingArgument(ut.TestCase):
     argparse = None
     def setUp(self):
-        args = ["--revid", "en", "--domain", "en", "-v"]
+        args = ["--revid", "--domain", "en", "-v"]
+        self.argparse = ArgParser(args)
+        
+    def testValueRaise(self):
+        self.assertRaises(ValueError, self.argparse.run)
+
+class CommandLineFlagGivenArg(ut.TestCase):
+    argparse = None
+    def setUp(self):
+        args = ["-v", "000"]
         self.argparse = ArgParser(args)
         
     def testValueRaise(self):

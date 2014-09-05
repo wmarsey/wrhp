@@ -1,8 +1,9 @@
 from __future__ import division
 import numpy as np
 import sys, os, inspect
-from sklearn import preprocessing as pr
-from sklearn import svm, cross_validation, linear_model
+from sklearn.preprocessing import scale
+from sklearn.linear_model import Lasso, SGDClassifier
+from sklearn import cross_validation
 import datetime
 import cPickle as pickle
 from random import choice, shuffle
@@ -12,12 +13,15 @@ import matplotlib.pyplot as plt
 here = inspect.getfile(inspect.currentframe()) # script filename (usually with path)
 BASEPATH = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
-sys.path.append("../")
+sys.path.append(os.path.abspath('..'))
 import database as db
 
-CLASSIFNUM = 4
+CLASSIFNUM = 12
 FOLDS = 5
 
+##########
+## Fetch from database, pickle 
+##########
 def fetchdatadump(flags, classnum): 
     extension = '.pickle'
     dfile = BASEPATH + '/data/alldata' + str(classnum) + extension
@@ -40,23 +44,45 @@ def fetchdatadump(flags, classnum):
 
     ##get data
     alldata = None
-    dtb = db.Database()
+    dtb = db.WikiDatabase()
     
     if classnum == 0:
         print "Test: can we predict gradient from weights?"
-        alldata = dtb.gettrainingdata1(flags['limit'])
+        alldata = dtb.gettrainingdata1()
     if classnum == 1:
-        print "Test: can we predict gradient from weights just on english wikipedia?"
-        alldata = dtb.gettrainingdata1(flags['limit'])
+        print "Test: can we predict gradient from weights and size?"
+        alldata = dtb.gettrainingdata2()
     if classnum == 2:
-        print "Test: can we predict gradient from weights and username edit count on each article?"
-        alldata = dtb.gettrainingdata2(flags['limit'])
+        print "Test: can we predict gradient from weights and time change?"
+        alldata = dtb.gettrainingdata3()
     if classnum == 3:
-        print "Test: can we predict gradient from weights and username edit count over the whole english wiki?"
-        alldata = dtb.gettrainingdata3(flags['limit'], domain='en')
+        print "Test: can we predict gradient from summed weights and size?"
+        alldata = dtb.gettrainingdata4()    
     if classnum == 4:
         print "Test: can we predict gradient from weights and username edit count over the whole english wiki?"
-        alldata = dtb.gettrainingdata4(flags['limit'], domain='en')
+        alldata = dtb.gettrainingdata5()
+    if classnum == 5:
+        print "Test: can we predict gradient from weights and username edit count over the whole english wiki?"
+        alldata = dtb.gettrainingdata6()
+    if classnum == 6:
+        print "Test: can we predict gradient from weights? (classification)"
+        alldata = dtb.gettrainingdata1()
+    if classnum == 7:
+        print "Test: can we predict gradient from weights and size? (classification)"
+        alldata = dtb.gettrainingdata2()
+    if classnum == 8:
+        print "Test: can we predict gradient from weights and time change? (classification)"
+        alldata = dtb.gettrainingdata3()
+    if classnum == 9:
+        print "Test: can we predict gradient from summed weights and size? (classification)"
+        alldata = dtb.gettrainingdata4()    
+    if classnum == 10:
+        print "Test: can we predict gradient from weights and username edit count over the whole english wiki? (classification)"
+        alldata = dtb.gettrainingdata5()
+    if classnum == 11:
+        print "Test: can we predict gradient from weights and username edit count over the whole english wiki? (classification)"
+        alldata = dtb.gettrainingdata6()
+
     print "recieved", len(alldata), "cases"
 
     ##pick a random subgroup if asked
@@ -65,13 +91,20 @@ def fetchdatadump(flags, classnum):
         shuffle(alldata)
         alldata = alldata[:flags['clip']]
 
+    # if classnum > 5:
+    #     for i in range(len(alldata)):
+    #         alldata[i][-1] = 0 if alldata[i][-1] < 0.5 else 1
+
     print "saving to file"
     with open(dfile, 'wb') as d:
         pickle.dump(alldata,d,protocol=pickle.HIGHEST_PROTOCOL)
     print "wrote to", dfile
     print
     print "splitting"
-    weights, classifications = zip(*[[list(w[:-1]),w[-1]] for w in alldata])
+    weights, classifications = zip(*[[list(w[:-1]),\
+                                          (0 if w[-1] < 0.5 else 1) \
+                                          if classnum > 5 else w[-1]] \
+                                         for w in alldata])
     for i in range(len(weights)):
         for v in range(len(weights[i])):
             weights[i][v] = float(weights[i][v])
@@ -80,25 +113,29 @@ def fetchdatadump(flags, classnum):
 
     return weights, classifications 
 
-##extra data stuff
+##########
+## some data processing necessary 
+##########
 def preparedata(weights, classifications):
-    ##standardize weights
     print "standardizing weights, numpyfying classifications"
-    return pr.scale(np.array(weights)), np.array(classifications)
+    return scale(np.array(weights)), np.array(classifications)
 
-##feed into sklearn
-def train(data, target, foldnum):
+##########
+## Prepare and train using sklearn 
+##########
+def train(data, target, foldnum, classnum):
 
-    model = svm.SVC(kernel='rbf', 
-                    shrinking=False, 
-                    verbose=True) 
-    #model.fit(data, target)
-    #print model
+    if classnum > 5:
+        model = SGDClassifier(loss="hinge", penalty="l2")
+    else:
+        model = Lasso() 
     scores = cross_validation.cross_val_score(model, data, target, cv=foldnum,verbose=1,n_jobs=-1)  
     
     return sum(scores) / len(scores)
 
-##sort out sys.argv
+##########
+## Simple argument processing 
+##########
 def flagargs(a):
     if '--load' in a and '--clip-' in a:
         print "Can't use 'load' and 'clip' arguments together right now!"
@@ -108,16 +145,9 @@ def flagargs(a):
                'limit': a[a.index("--limit") + 1] if "--limit" in a else None}
     return results
 
-# def thatplt():
-#     dtb = db.Database()
-#     fig = plt.figure()
-#     ax1 = fig.add_subplot(111)
-#     x,y = zip(*dtb.getcounttogradient())
-#     ax1.scatter(x,y, c='b', label='blue')
-#     x,y = zip(*dtb.getlinkstogradient())
-#     ax1.scatter(x,y, c='g', label='green')
-#     fig.show()
-
+##########
+## Runs tests 
+##########
 def main():
     flags = flagargs(sys.argv)
     print
@@ -126,7 +156,7 @@ def main():
         weights, classifications = fetchdatadump(flags, c) 
         pweights, ptargets = preparedata(weights, classifications)
         print "training"    
-        performance = train(pweights, ptargets, FOLDS)
+        performance = train(pweights, ptargets, FOLDS, c)
         print "Performance over", FOLDS, "folds:", performance
         print
     

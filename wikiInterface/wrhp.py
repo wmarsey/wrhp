@@ -17,10 +17,12 @@ class WikiCLI:
         self.params = params
         self.flags = flags
     
+    ##########
+    ## Opens up specified pages in browser 
+    ##########
     def launch(self):
         import launch
         wl = launch.WikiLaunch()
-        #print "---------------VIEW MODE---------------"
         if self.params['revid']:
             if self.params['oldrevid']:
                 wl.showdiff(self.params['oldrevid'], 
@@ -39,6 +41,9 @@ class WikiCLI:
                         self.params['domain'])
         return 0
 
+    ##########
+    ## Makes wide-scale changes to database
+    ##########
     def dbrepair(self, delete=False, clear=False):
         import database as db
         dtb = db.WikiDatabase()
@@ -53,7 +58,7 @@ class WikiCLI:
             else:
                 dtb.cleanup()
             return 0
-        elif:
+        else:
             piddoms = dtb.getallscraped()
 
         print "Checking", len(piddoms), "pageids for complete details"
@@ -79,6 +84,9 @@ class WikiCLI:
                 return -1
         return 0
 
+    ##########
+    ## Principle execution loop
+    ##########
     def run(self):
         if self.flags['launch']:
             return self.launch()

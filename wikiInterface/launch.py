@@ -2,9 +2,10 @@ import urllib, urlparse
 import webbrowser
 
 class WikiLaunch:
-    tmplurl = "http://|.wikipedia.org/"
-    indexf = "wiki/index.php"
-    apif = "wiki/api.php"
+    tmplurl = "http://|.wikipedia.org/wiki/"
+    indexf = "index.php"
+    apif = "api.php"
+    userf = "User:"
 
     def showpage(self, pageid, domain):
         urlbase = self.tmplurl.replace("|",domain) + self.indexf
@@ -28,11 +29,9 @@ class WikiLaunch:
 
         self._launch(urlbase, parameters)
 
-    def showuser(self, revid, domain):
-        urlbase = self.tmplurl.replace("|",domain) + self.apif
-        parameters = {'oldid':revid}
-
-        self._launch(urlbase, parameters)
+    def showuser(self, username, domain):
+        urlbase = self.tmplurl.replace("|",domain) + self.userf + username 
+        self._launch(urlbase, None)
 
     def _launch(self, url, param):
         if param:
@@ -41,9 +40,3 @@ class WikiLaunch:
             webbrowser.open(urlparse.urlunparse(urlp))
         else:
             webbrowser.open(url)
-# def main():
-#     wl = WikiLaunch()
-#     wl.showpage(43937,"fr")
-
-# if __name__=="__main__":
-#     main()

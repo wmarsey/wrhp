@@ -1,5 +1,6 @@
 import psycopg2 as db
 import sys, os
+from sys import exc_info
 sys.path.append(os.path.abspath('..'))
 from consts import BASEPATH
 
@@ -381,7 +382,7 @@ class WikiDatabase:
                 return result
         return None
 
-    def gettrainingdata1(self, limit=None, domain=None):
+    def gettrainingdata1(self,domain=None):
         sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient FROM " + self.weighttable + " AS w"
         sql += " WHERE domain = %s;" if domain else ";"
         data = (domain,) if domain else ()
@@ -391,64 +392,45 @@ class WikiDatabase:
                 return result
         return None
 
-    def gettrainingdata2(self, limit=None):
-        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, count(rr.*), w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN " + self.revisiontable + " AS rr USING (username, pageid, domain)"
-        sql += " GROUP BY w.revid, w.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient;"
+    def gettrainingdata2(self):
+        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, r.size - CASE WHEN rr.size IS NOT NULL THEN rr.size ELSE 0 END, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) LEFT JOIN " + self.revisiontable + " AS rr ON r.domain = rr.domain AND rr.revid = r.parentid;"
         if(self._execute(sql,())):
             result = self._crsrsanity()
             if result:
                 return result
         return None
 
-    def gettrainingdata3(self, limit=None, domain=None):
-        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, count(rr.*), avg(w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN " + self.revisiontable + " AS rr USING (username, domain)"
-        if domain:
-            sql += " WHERE domain= %s"
-        sql += " GROUP BY w.revid, w.domain, w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, w.gradient;"
-        data = (domain,) if domain else ()
-        if(self._execute(sql,data)):
+    def gettrainingdata3(self):
+        sql = "SELECT w.maths, w.citations, w.filesimages, w.links, w.structure, w.normal, EXTRACT(epoch FROM (r.time::timestamp - rr.time::timestamp)) AS time, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN " + self.revisiontable + " AS rr ON r.domain = rr.domain AND rr.revid = r.parentid;"
+        if(self._execute(sql,())):
             result = self._crsrsanity()
             if result:
                 return result
         return None
 
-    def gettrainingdata4(self, domain=None):
-        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS wsum, CASE WHEN rr.revid IS NULL THEN r.size ELSE (r.size - rr.size) END AS size, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid,domain) LEFT JOIN " + self.revisiontable + " AS rr ON rr.revid = r.parentid AND r.domain = rr.domain"
-        sql += " WHERE domain = %s;" if domain else ";"
-        data = (domain,) if domain else ()
-        if(self._execute(sql,data)):
+    def gettrainingdata4(self):
+        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS sum, EXTRACT(epoch FROM (r.time::timestamp - rr.time::timestamp)) AS time, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN " + self.revisiontable + " AS rr ON r.domain = rr.domain AND rr.revid = r.parentid;"
+        if(self._execute(sql,())):
             result = self._crsrsanity()
             if result:
                 return result
         return None
 
-    def gettrainingdata5(self, domain=None):
-        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS wsum, CASE WHEN rr.revid IS NULL THEN r.size ELSE (r.size - rr.size) END AS size, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid,domain) LEFT JOIN " + self.revisiontable + " AS rr ON rr.revid = r.parentid AND r.domain = rr.domain"
-        sql += " WHERE domain = %s;" if domain else ";"
-        data = (domain,) if domain else ()
-        if(self._execute(sql,data)):
+    def gettrainingdata5(self):
+        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS sum, c.count, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN (SELECT count(*) AS count, username, domain FROM " + self.revisiontable + " GROUP BY username, domain) AS c ON r.username = c.username AND r.domain = c.domain;"
+        if(self._execute(sql,())):
             result = self._crsrsanity()
             if result:
                 return result
         return None
 
-    # def getcounttogradient(self):
-    #     sql = "SELECT count(r.revid), avg(w.gradient) FROM wikiweights AS w JOIN wikirevisions AS r USING (revid, domain) WHERE domain= 'en' AND r.userid <> 0 GROUP BY r.pageid, r.username;"
-    #     data = ()
-    #     if(self._execute(sql,data)):
-    #         result = self._crsrsanity()
-    #         if result:
-    #             return result
-    #     return None
-
-    # def getusersbyeditcount(self, domain):
-    #     sql = "SELECT r.count, count(r.username) FROM (SELECT count(revid) AS count, username FROM " + self.revisiontable + " WHERE domain = %s GROUP BY username ORDER BY count DESC) AS r ORDER BY count DESC;"
-    #     data = (domain,)
-    #     if(self._execute(sql,())):
-    #         result = self._crsrsanity()
-    #         if result:
-    #             return result
-    #     return None
+    def gettrainingdata6(self):
+        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS sum, c.count, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN (SELECT count(*) AS count, pageid, username, domain FROM " + self.revisiontable + " GROUP BY pageid, username, domain) AS c ON r.username = c.username AND r.domain = c.domain AND r.pageid = c.pageid;"
+        if(self._execute(sql,())):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
 
     def geteditdistribution(self, domain=None):
         sql = "SELECT r.count AS edit_count, count(r.username) AS frequency FROM (SELECT count(rev.revid) AS count, rev.username FROM wikirevisions AS rev "
@@ -514,6 +496,7 @@ class WikiDatabase:
         try:
             self.crsr.execute(sql, data)
         except:
+            print "Unexpected error:", exc_info()
             self.cn.rollback()
         else:
             self.cn.commit()

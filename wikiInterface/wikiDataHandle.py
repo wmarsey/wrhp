@@ -1,9 +1,6 @@
-#from weighteddistance import WDistanceCalc
 from __future__ import division 
 import database as db
-#import lshtein as lv
 import math as m
-from time import mktime
 
 class WikiDataHandle:
     dtb = None
@@ -11,6 +8,9 @@ class WikiDataHandle:
     def __init__(self):
         self.dtb = db.WikiDatabase()
 
+    ##########
+    ## Prepares for trajectory-style diagrams
+    ##########
     def trajectorydata(self, pageid, domain, normalise=True):
         tdata = self.dtb.gettrajectory(pageid, domain)
         gdata = self.dtb.getgrowth(pageid, domain)
@@ -21,11 +21,13 @@ class WikiDataHandle:
             creation = tdata[0][0]
             xpoints = [(e[0]-creation).total_seconds()/3600 for e in tdata]
         else:
-            #xpoints = [mktime(e[0].timetuple()) for e in tdata]
             xpoints = [e[0] for e in tdata]
 
         return xpoints, tpoints, gpoints
 
+    ##########
+    ## Prepares for count diagrams
+    ##########
     def editcountdata(self, pageid, domain):
         dtb = db.WikiDatabase()
 
@@ -37,17 +39,15 @@ class WikiDataHandle:
 
         return xlabels, ypoints
 
+    ##########
+    ## Prepares for share diagrams
+    ##########
     def editsharedata(self, pageid, domain, weights=None, namesort=None, dbdata=None):
         dtb = db.WikiDatabase()
 
         dbdata = dbdata if dbdata else dtb.getuserchange2(pageid, domain)
 
-        if weights:
-            assert len(dbdata[0][1:-1])+1 == len(weights)
-            
         gradients = [u[-1] for u in dbdata]
-        #gradients = sorted(gradients)
-        # print "gradient range", min(gradients), "to", max(gradients), "average", sum(gradients)/len(gradients)
 
         users = {}
         for u in dbdata:
@@ -77,6 +77,9 @@ class WikiDataHandle:
             
         return xlabels, ypoints
 
+    ##########
+    ## Used for some dump plots
+    ##########
     def talkpages(self):
         dtb = db.WikiDatabase()
         
@@ -85,18 +88,3 @@ class WikiDataHandle:
         title, id1, id2, domain = zip(*tiid)
 
         return title, id1, id2, domain
-
-    # def getweights(self, pageid, domain):
-    #     wdata = []
-    #     for u in self.dtb.getuserchange(pageid, domain):
-    #         w = {
-    #             'math':u[2],
-    #             'heading':u[3],
-    #             'quotes':u[4],
-    #             'filesimages':u[5],
-    #             'links':u[6],
-    #             'citations':u[7],
-    #             'normal':u[8],
-    #             }
-    #         wdata.append((u[0],w))
-    #     return wdata

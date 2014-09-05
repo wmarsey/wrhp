@@ -1,5 +1,12 @@
 import re
 
+##########
+##########
+##
+## Parses command line arguments, raises errors when necessary
+##
+##########
+##########
 class ArgParser():
     params = {'title': None,
               'revid': 0,

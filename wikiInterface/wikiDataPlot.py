@@ -1,5 +1,6 @@
 from __future__ import division
 from consts import *
+from logger import logDebug
 import matplotlib
 import sys
 matplotlib.use('Agg')
@@ -7,7 +8,6 @@ import matplotlib.pyplot as plt
 import database as db
 from wikiDataHandle import WikiDataHandle
 from random import shuffle
-#from numpy import polyfit, poly1d, linspace, convolve, exp, ones, asarray
 
 def movingaverage(x, n, type='exponential'):
     x = asarray(x)
@@ -24,7 +24,6 @@ def movingaverage(x, n, type='exponential'):
 def safefilename(string):
     string = string.replace('/','')
     return string
-
 
 ##########
 ##########
@@ -46,14 +45,17 @@ class WikiDataPlot:
         self.weights = weights
 
     ##########
-    ## The main function for plotting 
+    ## The main function for plotting, outputs the three main types
     ##########
     def plot(self, title, pageid, domain, trajectory=True,
-             editcount=True, share=True, weights=None):   
+             editcount=True, editshare=True, weights=None):   
         filenames = []
         dat = WikiDataHandle()
 
-        title = title.decode('utf-8')
+        try:
+            title = title.decode('utf-8')
+        except:
+            title = "id" + str(pageid)
         domain = domain.decode('utf-8')
         
         if trajectory:
@@ -63,12 +65,14 @@ class WikiDataPlot:
                                              "Hours since creation",
                                              "Edit distance from final",
                                              "Article size",
-                                             "Trajectory of " + safefilename(title) + ", " + domain + str(pageid),
+                                             "Trajectory of " + safefilename(title) + ", " +\
+                                                 domain + str(pageid),
                                              domain + str(pageid) + "traj",
                                              width=13, height=8))
             print "plotted", filenames[-1]
+            logDebug("plotted "+ filenames[-1])
 
-        if share:
+        if editcount:
             xlabels, ypoints = dat.editcountdata(pageid, domain)
             filenames.append(self.barchart(xlabels, ypoints,
                                            "Username", "Edit count",
@@ -77,25 +81,33 @@ class WikiDataPlot:
                                            domain + str(pageid) + "editc",
                                            width = 13, height = 8))
             print "plotted", filenames[-1]
+            logDebug("plotted "+ filenames[-1])
 
-        if editcount:
-            xlabels, ypoints = dat.editsharedata(pageid, domain)
+        if editshare:
+            xlabels, ypoints = dat.editsharedata(pageid, domain, self.weights)
             filenames.append(self.barchart(xlabels, ypoints,
                                            "Username", "Edit share", 
-                                           "Editors of " + safefilename(title) + ", " + domain + str(pageid) + ", by share", 
+                                           "Editors of " + safefilename(title) + ", " + domain\
+                                               + str(pageid) + ", by share", 
                                            domain + str(pageid) + "share",
                                            width = 13, height = 8))
             print "plotted", filenames[-1]
+            logDebug("plotted "+ filenames[-1])
 
         return filenames
             
-    def weightplot(self,clip=50):       
-        dtb = db.Database()
+    
+    ##########
+    ## Dumps a plot of a large number of different-weight share plots
+    ## for comparison
+    ##########
+    def weightplot(self,clip=1):       
+        dtb = db.WikiDatabase()
         pages = dtb.getallfetched()
         print "got", len(pages)
 
         import itertools
-        possw = list(itertools.product([0,0.5,1], repeat=6))
+        possw = list(itertools.product([0,1], repeat=6))
 
         shuffle(pages)
         for r in pages[:clip]:
@@ -104,29 +116,23 @@ class WikiDataPlot:
             domain = r[2]
             xaxisname = "Username"
             yaxisname = "Edit share",
-            title = "Editors of " + safefilename(article) + ", " + domain + str(pageid) + ", by edit count"
+            title = "Editors of " + safefilename(article) 
+            title += ", " + domain + str(pageid) + ", by edit count"
             filename = domain + str(pageid) + "editcW"
 
             dbdata = dtb.getuserchange2(pageid,domain)
             dat = WikiDataHandle()
-            # for w in possw:
-            #     for d in (0,1):
-            #         ww = list(w + (d,))
-            #         f = filename + str(ww)
-            #         xlabels, ypoints = dat.editsharedata(pageid,domain,ww)
-            #         print self.barchart(xlabels, ypoints, xaxisname, yaxisname, title, 
-            #                             f, width=17)
+
             xlz = []
             ylz = [[],[]]
             for w in possw:
                 for d in (0,1):
                     ww = list(w + (d,))
                     f = filename + str(ww)
-                    xlabels, ypoints = dat.editsharedata(pageid,domain,weights=ww,namesort=True,dbdata=dbdata)
+                    xlabels, ypoints = dat.editsharedata(pageid,domain,weights=ww,
+                                                         namesort=True,dbdata=dbdata)
                     xlz = xlabels
                     ylz[d].append(ypoints)
-                    sys.stdout.write(".")
-                    sys.stdout.flush()
 
             realy = [[],[]]
             for i,y in enumerate(ylz):
@@ -134,8 +140,6 @@ class WikiDataPlot:
                 yyy = [sum(e) for e in yy]
                 assert len(yyy) == len(xlz)
                 realy[i] = yyy
-                sys.stdout.write(".")
-                sys.stdout.flush()
             
             xf = []
             yf = [[],[]]
@@ -144,14 +148,16 @@ class WikiDataPlot:
                 comb = zip(xlz,y)
                 comb = sorted(comb, key = lambda x: x[1])
                 xf, yf[i] = zip(*comb) 
-                # print self.barchart(xf, yf, xaxisname, yaxisname,
-                #                     title, f, width=17)
                 xpoints = list(range(len(xf)))
             print self.specialtrajectory(xpoints, yf[0], xpoints,
                                          yf[1], None, None, None,
                                          xaxisname, yaxisname, None,
                                          title, filename, width=20, height=12)
 
+    ##########
+    ## Gets a dump of all talk pages in the database, plots them
+    ## against their respective articles
+    ##########
     def talkplots(self):
         dat = WikiDataHandle()
 
@@ -202,14 +208,16 @@ class WikiDataPlot:
                                          xaxisname, taxisname, gaxisname,
                                          title, filename, width=20, height=12)
 
+    ##########
+    ## Plots two trajectories against one another, talkpage and
+    ## article
+    ##########
     def talktrajectory(self, xpoints1, tpoints1, xpoints2, tpoints2,
                      gpoints, xaxisname, taxisname, gaxisname, title,
                      filename, width=13, height=8):
 
-         #filename = domain + str(pageid) + 'traj'
         imagefile = self.plotdir + filename + " " + title + ".png"
         
-         ##prepare matplotlib
         fig = plt.figure(figsize=(width,height), 
                          dpi=600, 
                          tight_layout=None)
@@ -232,6 +240,9 @@ class WikiDataPlot:
         plt.savefig(imagefile)
         return imagefile        
 
+    ##########
+    ## Generic bar chart function
+    ##########
     def barchart(self, xlabels, ypoints, xaxisname, yaxisname, title, 
                   filename, width=13, height=8):
         imagefile = self.plotdir + filename +  " " + title + ".png"
@@ -300,6 +311,9 @@ class WikiDataPlot:
         plt.savefig(imagefile)
         return imagefile
 
+    ##########
+    ## Specialised trajectory-plotting diagram
+    ##########
     def trajectory(self, xpoints, tpoints, gpoints, xaxisname, taxisname,
                     gaxisname, title, filename, width=13, height=8):
         
@@ -329,8 +343,11 @@ class WikiDataPlot:
         plt.savefig(imagefile)
         return imagefile
 
+    ##########
+    ## For collecting large numbers of plots
+    ##########
     def dumpplot(self, clip=200):
-        dtb = db.Database()
+        dtb = db.WikiDatabase()
         pages = dtb.getallfetched()
         shuffle(pages)
         for r in pages[:clip]:
@@ -339,105 +356,17 @@ class WikiDataPlot:
             except:
                 pass
 
-    def metricplots(self):
-        dtb = db.Database()
-        y = dtb.gettexttypedistribution('en')[0]
-        xlabels = ['maths', 'citations', 'filesimages', 'links', 'structure', 'normal']
-        print self.barchart(0, y, xlabels, 000, 'en',
-                            "English Wikipedia, Text type change frequency", 
-                            'users', "Text types", "Change count",
-                            width=8, height=5)
-        y = dtb.gettexttypedistribution('en')[0]
-        xlabels = ['maths', 'citations', 'filesimages', 'links', 'structure', 'normal']
-        print self.barchart(0, y, xlabels, 000, 'en',
-                            "All Wikipedias, Text type change frequency", 
-                            'users', "Text types", "Change count",
-                            width=8, height=5)
-
-
-        x, y = zip(*dtb.geteditdistribution('en'))
-        print self.histogram(x, y, "Edit count", "Frequency", 
-                             "English Wikipedia: User edit counts, random sample", 
-                             "0editdistributionhisto")
-
-        x, y = zip(*dtb.getregeditdistribution('en'))
-        print self.histogram(x, y, "Edit count", "Frequency",
-                             "English Wikipedia: Registered users edit counts, random sample", 
-                             "0regeditdistributionhisto")
-
-        x, y = zip(*dtb.geteditdistribution())
-        print self.histogram(x, y, "Edit count", "Frequency",
-                             "All Wikipediaa: User edit counts, random sample", 
-                             "0editdistributionallhisto")
-
-        x, y = zip(*dtb.getregeditdistribution())
-        print self.histogram(x, 
-                             y, 
-                             "Edit count", 
-                             "Frequency", 
-                             "All Wikipediaa: Registered users edit counts, random sample", 
-                             "0regeditdistributionallhisto")
-
-
-        x, y = zip(*dtb.geteditdistribution('en'))
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "English Wikipedia: User edit counts, random sample", 
-                             "0editdistribution")
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "English Wikipedia: User edit counts, random sample", 
-                             "0editdistributionlog", ylog=True)
-
-        x, y = zip(*dtb.getregeditdistribution('en'))
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "English Wikipedia: Registered users edit counts, random sample", 
-                             "0regeditdistribution")
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "English Wikipedia: Registered users edit counts, random sample", 
-                             "0regeditdistributionlog", ylog=True)
-
-        x, y = zip(*dtb.geteditdistribution())
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "All Wikipediaa: User edit counts, random sample", 
-                             "0editdistributionall")
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "All Wikipedias: User edit counts, random sample", 
-                             "0editdistributionalllog", ylog=True)
-
-        x, y = zip(*dtb.getregeditdistribution())
-        print self.linechart(x, y, "Edit count", "Frequency", 
-                             "All Wikipediaa: Registered users edit counts, random sample", 
-                             "0regeditdistributionall")
-        print self.linechart(x, y, "Edit count", "Frequency",
-                             "All Wikipediaa: Registered users edit counts, random sample", 
-                             "0regeditdistributionalllog", ylog=True)
-
-        ##AVERAGE HISTORY LENGTH BY DOMAIN
-        historylengths = dtb.getaveragerevisioncounts()
-        domains, lengths = zip(*historylengths)
-        xaxis = 'Domain'
-        yaxis = 'Average article history lengths'
-        print self.barchart(000, lengths, domains, 0, '', '',
-                            'avpageactivity', xaxis, yaxis, width=30,
-                            height=10)
-
-        ##AVERAGE ARTICLE LENGTH BY DOMAIN
-        pagelengths = dtb.getaveragepagelengths()
-        domains, lengths = zip(*pagelengths)
-        xaxis = 'Domain'
-        yaxis = 'Average article length'
-        print self.barchart(000, lengths, domains, 0, '', '',
-                            'avpagelen', xaxis, yaxis, width=30,
-                            height=10)
-
+##########
+## For running as a script, getting dump plots. used to prepare
+## for report.
+##########
 def main():
-    p = Plotter()
+    p = WikiDataPlot()
     if "--dump" in sys.argv:
         if "--clip" in sys.argv:
             p.dumpplot(int(sys.argv[sys.argv.index("--clip") + 1]))
         else: 
             p.dumpplot()
-    if "--metrics" in sys.argv:
-        p.metricplots()
     if "--talk" in sys.argv:
         p.talkplots()
     if "--weight" in sys.argv:

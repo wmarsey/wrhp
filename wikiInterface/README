@@ -1,0 +1,57 @@
+This project grabs wikipedia article histories, analyses each change,
+characterises it, uses related information to give context.
+
+The project is made for PSQL. Necessary schema can be set up using
+pg_restore and the .sql file in database.
+
+CLI runs from /wrhp.py. Options:
+
+The CLI can be accessed using the shortcut wrhp (Wiki Revision History
+Portal...). Log files in top-level folder The arguments are as
+follows:
+
+
+Default behaviour.  
+	      Fetches a random page from a random Wikipedia to
+	      the database, and analyses it.
+
+-s  	      Scrape only.
+
+-p 	      Plot data. Saves png files to location given by the –plotpath
+ 	      argument.
+
+-i	      Open the interactive plot window for a given (or random) article
+ 	      once analysed.
+
+-v 	      View a Wikipedia page online. Must be used with –domain. Can be
+ 	      used to view a diff (using –revid and –oldrevid), a
+ 	      specific revision (using only –revid), or the latest
+ 	      version of a page (using –pageid).
+
+-t 	      ‘Trundle’ mode. Repeats the given operation until
+ 	      interrupted. Useful for building up adatabase. Cannot be
+ 	      used with the –titles argument.
+
+-S[S] 	      ‘Silent’ mode. One ‘S’ silences stdout, two silences both stdout
+ 	      and stderr.
+
+–title [str]  Specify the pages to be scraped. Must be used with
+       	      –domain. Case (and spelling...) sensitive.
+
+–domain [str] Specify the domain to connect to. May be used without
+ 	      –titles, limiting the random page pick to one
+ 	      –domain. Must be the short version (‘en’, ‘de’, etc.).
+
+–scrapemin [int] 
+	      Specify the minimum amount of pages to be scraped for
+ 	      one page. Default = 50.
+
+–plotpath [filepath] 
+	      Specify location for plots to be stored. Default = .
+
+–revid 	      Specify the revision ID to be viewed. Used with -v.
+
+–oldrevid     Specify the old revision ID when viewing a diff. Used with
+ 	      -v.
+
+–pageid       Specify a target pageid. Can be used in -v and -s.

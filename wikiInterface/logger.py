@@ -28,6 +28,9 @@ ilogger.setLevel(logging.DEBUG)
 def _string(*strings):
     return " ".join([str(s) for s in strings])
 
+##########
+## Debug logger
+##########
 def logDebug(*strings):
     #deal with strings
     string = _string(strings)
@@ -38,6 +41,9 @@ def logDebug(*strings):
     #log
     dlogger.debug(cframe + ":" + string)
 
+##########
+## Info logger
+##########
 def logInfo(*string):
     #deal with strings
     string = _string(strings)
@@ -48,6 +54,9 @@ def logInfo(*string):
     #compile message
     ilogger.info(cframe + ":" + string)
 
+##########
+## Special function for reporting revids
+##########
 def revidLog(title, pageid, domain):
     import database as db
     d = db.WikiDatabase()
