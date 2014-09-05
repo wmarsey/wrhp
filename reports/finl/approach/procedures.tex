@@ -102,8 +102,6 @@ multiplied many thousands of time in one operation. Instead we were
 able to use a fairly simply algorithm for calculating levenshtein
 distance, found in algorithm~\ref{lev-dist}.
 
-\def\HS{\hspace{\fontdimen2\font}}\the\fontdimen2\font
-
 \begin{figure}[p]
   \centering
 
@@ -135,20 +133,20 @@ distance, found in algorithm~\ref{lev-dist}.
 
     \node (e) [block2,below left=1.5cm and 1.5cm of c] {\hilight{[[spork]]}};
     
-    \node (f) [block2,right=1cm of e] {We can use a\HS\HS to eat spaghetti.};
+    \node (f) [block2,right=1cm of e] {We can use a\ \ to eat spaghetti.};
 
     \node (g) [block2,right=1cm of f] {\hilight{[[forks]]}};
     
-    \node (h) [block2,right=1cm of g] {We can use\HS\HS to eat lovely spaghetti.};
+    \node (h) [block2,right=1cm of g] {We can use\ \ to eat lovely spaghetti.};
 
     \node (i) [block2,below=1cm of e] {\hilight{[[spork]]}}; 
         
     \node (j) [block2,below=1cm of f] {\hilight{[[forks]]}}; 
     
-    \node (k) [block2,below =1cm of g] {We can use a\HS\HS to eat
+    \node (k) [block2,below =1cm of g] {We can use a\ \ to eat
       spaghetti.};
 
-    \node (l) [block2,below =1cm of h] {We can use\HS\HS to eat lovely spaghetti.};
+    \node (l) [block2,below =1cm of h] {We can use\ \ to eat lovely spaghetti.};
 
     \node (m) [block2,below= 1cm of i] {$ed_{links} = 3$};
 

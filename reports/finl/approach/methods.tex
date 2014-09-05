@@ -21,7 +21,6 @@ into three steps:
 
 The rest of this chapter is an elaboration of this three-step plan.
 
-\section{Procedures}
 \subsection*{Data collection and storage}
 \label{sec:wiki-api}
 WikiMedia's API service provides simple access to a wiki data,
@@ -76,7 +75,7 @@ problem is not just a temporary glitch in the delivery of the data.
     \If{corruptness is within recoverability bounds}
     \State $corruptpages \gets corruptpages + (revid, parentid, domain)$
     \Else
-    \State terminate fetch\label{data14}
+    \State terminate fetch\label{datal4}
     \EndIf
     \Else
     \State $database \gets page data$
@@ -108,7 +107,7 @@ unable to find an explanation for this problem online.
 
 A second notable problem was the corrupt data regularly returned by
 the Wikipedia API. We test for `corruption' at line~\ref{datal3} in
-algorithm~\ref{alg-1}, storing a list of corrupt pages. Here we test
+algorithm~\ref{alg-data}, storing a list of corrupt pages. Here we test
 for problems that do not effect the fetch overall, but would cuase
 problems during the analysis, such as missing timestamps, or user
 data. In these cases `circumnavigate' corrupt entries in the database,
@@ -117,7 +116,7 @@ changing pointers between children and parents so as to remove the
 corrupt revisions from the chain. We may then later trace a history of
 incorrupt entries using only these pointers.
 
-In line~\ref{data-14} of algorithm~\ref{alg-1} we define some
+In line~\ref{datal4} of algorithm~\ref{alg-data} we define some
 corruptness of data to constitute a fetching failure, and terminate
 the fetch altogether. With our model, we only do this when parentid
 information is missing. Terminating the loop early, in practice, means
@@ -134,9 +133,8 @@ clean or repair the database further down the line.
   \caption{Corrupt pages}\label{corrupt-clean}
   \begin{algorithmic}
     \Procedure{CorruptClean}{corruptrev, parent, domain}
-    \State $parentrev \gets database.getparent(corruptrev)$
-    \State $childrev \gets database.getchild(corruptrev)$
-    \State $database.setparent(childrev, parentrev)$ 
+    \State $childrev \gets database.getchildof(corruptrev)$
+    \State $database.setparent(childrev, parent)$ 
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
@@ -254,13 +252,13 @@ work by Adler, et al.\cite{Adler2007}.
          {$ed(rev_{i-1},rev_{i+1})$} (m-2-3) (m-1-2) edge node
          [right] {$ed(rev_i,rev_{i+1})$} (m-2-3); 
   \end{tikzpicture}\\ 
-  \vspace{10mm}
+  \vspace{5mm}
   \textit{case a)} if $ed(rev_{i-1},rev_i) < ed(rev_{i-1},rev_i) +
-  ed(rev_{i},rev_{i+1})$, then $ed(rev_{i-1},rev_i)$ has been
+  ed(rev_{i},rev_{i+1})$,\newline then $ed(rev_{i-1},rev_i)$ has been
   partially undone.\\
   \vspace{5mm}
   \textit{case b)} if $ed(rev_{i-1},rev_{i+1}) = 0$
-  ($rev_{i-1} = rev_{i+1}$), then $ed(rev_{i-1},rev_i)$ has been
+  ($rev_{i-1} = rev_{i+1}$),\newline then $ed(rev_{i-1},rev_i)$ has been
   completely undone.
   \caption{Diagram showing identification of a partially or
     completely undone edit}
@@ -320,6 +318,7 @@ final version (red).
         xlabel={revision ID},
       ]
       \addplot [blue] table {dat/dummy_history.dat};
+      \addplot [blue, only marks] table {dat/dummy_history.dat};
     \end{axis}
   \end{tikzpicture}
   \caption{Graph showing a `trajectory plot'}
@@ -472,7 +471,7 @@ what we can understand from these values in isolation, and how they
 relate to one another as a set. 
 
 We can also note that a repeated insertion may accrue an reward
-multiple times. In the dummy history found in figre~\ref{dummy-argument}
+multiple times. In the dummy history found in figure~\ref{dummy-argument}
 
 \begin{wrapfigure}{i}{0.4\textwidth}
   \centering
@@ -487,8 +486,8 @@ multiple times. In the dummy history found in figre~\ref{dummy-argument}
       \addplot [blue, only marks] table {dat/dummy9.dat};
     \end{axis}
   \end{tikzpicture}
-  \caption{Graph showing a `trajectory plot'}
-  \label{fig:dummy-history}
+  \caption{Graph showing trajectory with repeated actions}
+  \label{fig:dummy-argument}
 \end{wrapfigure}
 
 We can imagine the simple case of two editors warring against one
