@@ -3,7 +3,7 @@
 \label{split-distance-eval}
 As we began to realise that the details of the content were somewhat
 secondary to the context in which those edits were made, we began to
-wonder if we could make the data analysis more effecient by doing away
+wonder if we could make the data analysis more efficient by doing away
 with the text splitting.
 
 Further than that, however, we wondered whether we could find the
@@ -30,7 +30,7 @@ string splitting -- it may mis-align two strings, creating non-minimum
 calculations, such as in the diagram on page~\pageref{fig:sub-opt}. We
 illustrate the problem in figure~\ref{fig:split-string-problem}.
 
-Whilst innacurate, doing away with pair-distance calculations may be
+Whilst inaccurate, doing away with pair-distance calculations may be
 acceptable as a rough measure, and if pair-distance, as we suspect, is
 not a very effective measure of survival.
 
@@ -168,7 +168,7 @@ case:
 
 $ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
 
-Implementing this could more accurately define spellcheck operations.
+Implementing this could more accurately define spell-check operations.
 
 Block distance operation would allow us to recognise displacements of
 entire blocks to count as one operation. For
@@ -192,23 +192,21 @@ diff. Easy but fiddly. Ran out of time.
 \label{restructuring}
 It has been found that, even in the most accurate articles, that the
 structure of Wikipedia article can be weak.\cite{Giles2005} We made
-some efforts to recognise attempts at structural change, see REFERENCE
-TO REGEX DESCRIPTION. However, these attempts are limited. We really
+some efforts to recognise attempts at structural change previously with our regex splitting system. However, these attempts are limited. We really
 need to be able to identify the move of large blocks of text -- not
-only inside an article, but to another. Regarding the former, we can
-employ various tecniques WHAT ARE THEY THO. With a larger dataset and the
+only inside an article, but to others. With a larger dataset and the latter idea
 necessary computing power this would just be a matter of
-crossreferencing the deletion of largeish chunks of text with
-insertions of similar text within a short time frame.
+cross-referencing the deletion of largish chunks of text with
+insertions of similar text into other articleswithin a short time frame.
 
 \subsection*{Refinement of gradient factor}
 A limitation of gradient factor is it's reliance upon a relatively
 arbitrary measure of time. Though the measure of time has been
 consistent throughout the study, the measurement does affect the
-distribution of possible gradient factorvalues to the extremeties of
+distribution of possible gradient factor values to the extremities of
 the range. It would be recommended in further research to take this
 into account. If someone makes an edit, commits it, fixes spelling,
-and commits again, does he recieve less reward than if he had
+and commits again, does he receive less reward than if he had
 submitted at once? Or more? This is something we wished we would have
 had time to look into during the study.
 
@@ -218,7 +216,7 @@ preprocessing parts of the data, but the fetches were time
 consuming. Also, when we came to look for more general data about
 individual users, and tried to find inter-article connections, we had
 to do so in the knowledge that our databases represented a very small
-selection from the wikipedia's in question.
+selection from the Wikipedia's in question.
 
 For further work on could be better off using a wikipedia dump. These
 are made monthly and represent the entirety of the site, history

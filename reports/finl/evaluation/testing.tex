@@ -65,7 +65,7 @@ flag$ relations.
 Comparing this to the database schema as they stand in
 figure~\ref{database-schema} we see that some improvements could be
 made immediately -- the $Username, Domain \rightarrow UserID$ relation
-could recieve its own schema immediately, saving a lot of repeated
+could receive its own schema immediately, saving a lot of repeated
 information in the `wikirevisions' table. This would also be useful as
 the relation could easily be expanded upon on further study into
 individual user habits, as I will suggest later.
@@ -86,7 +86,7 @@ a $(oldrevid,newrevid)$ \textit{and} $(newrevid,oldrevid)$ before
 endeavouring to compute a new distance. This feature was scrubbed
 early but the form of the table has survived. Similarly, content had
 its own table to facilitate quicker access to revision content before
-the online-viewing feature was implemented in the CLI. We could move
+the on-line viewing feature was implemented in the CLI. We could move
 content to the `wikirevisions' table, safely take on the convention of
 the trajectory distance being unique to either the parent or child ID,
 and reduce the `wikitrajectory' table by one column.
@@ -122,7 +122,7 @@ one table and recalculate.
         \toprule
         \underline{pageid} & \underline{domain} & title & fetched? \\
         \midrule
-        $\vdots$ & $\vdots$\\
+        $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$\\
       \end{tabular}
       \caption{Table: wikipages}
     \end{subfigure}
@@ -149,8 +149,8 @@ one table and recalculate.
       & $\vdots$ & $\vdots$ \\
     \end{tabular}
     \caption{Table: wikirevisions}
-  \end{subfigure}
-
+  \end{subfigure}\\
+  \vspace{10 mm}
   \begin{subfigure}[b!]{\linewidth}
     \centering
     \begin{tabular}{ccccccccc}

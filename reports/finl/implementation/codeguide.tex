@@ -88,7 +88,7 @@ to run. The machine-learning script requires numpy and sci-kit learn.
 
 Here we discuss the five main classes in the project, and their
 function in this project. Appendix~\ref{sec:dirtree} details the
-filestructure of the code base.
+file structure of the code base.
 
 \subsection*{WikiData}
 The WikiData class interfaces with the database, and maintains its
@@ -130,16 +130,16 @@ location, or a folder specified at the command line.
 \subsection*{wikiFetch}
 This class implements algorithm~\ref{dist-calc}, including all the
 necessary logical extensions to deal with CLI parameters. It
-interfaces with Wikipedia through various language subdomains. It will
-attempt to fetch one artcle, trying until it succeeds if asked to
+interfaces with Wikipedia through various language sub-domains. It will
+attempt to fetch one article, trying until it succeeds if asked to
 choose a random article. Once it has found a file, details of the
 fetched page can be queried using function like getPageID, etc.
 
 The class automatically disregards any article with less than 50
 revisions, as we found analyses more worthwhile with longer
-histories. This can be overridden on instatiation of the class. 
+histories. This can be overridden on instantiation of the class. 
 
-The language subdomains are kept in a .csv file, scraped from the
+The language sub-domains are kept in a .csv file, scraped from the
 English Wikipedia, from which it picks and checks
 domain name from that if asked to.
 
@@ -220,11 +220,11 @@ used in this project and provides simple inserting, changing, fetching
 and checking of data.
 
 Some more complex operations are undertaken by the class, mainly
-preparing large `data-dumps' for mass-plotting (inpreparation for this
+preparing large `data-dumps' for mass-plotting (in preparation for this
 report) and validation exercises. These functions were written for
-performance purpose (the data they deliver could eaily have been
+performance purpose (the data they deliver could easily have been
 fetched using the other functions, but would have taken much longer),
-and are clearly marked in the code as seperate from the basic fetch,
+and are clearly marked in the code as separate from the basic fetch,
 get and insert functions. 
 
 The database relies upon the uniqueness of revision ID and
@@ -301,8 +301,13 @@ up the schema in schema.sql.
 
 \clearpage
 
+\subsection*{wikiLaunch}
+A simple collection of functions for launching Wikipedia in the
+browser, able to targerting diffs between two revisions, old
+revisions, pageids, and user pages and all Wikipedia sub-domains.
+
 \subsection*{The CLI interface}
-The CLI can be accessed using the shortcut wrhp (Wiki Revision History
+The CLI can be accessed using the short-cut wrhp (Wiki Revision History
 Portal), and offers a limited, automated coordinating and run of
 the above classes. It can be manipulated using the arguments as follows:
 
