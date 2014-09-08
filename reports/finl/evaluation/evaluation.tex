@@ -1,0 +1,14 @@
+\subsection{Data source}
+
+Until fairly late in the project, storing large amounts of data in
+local databases didn't create any notable problems. The PSQL database
+used text compression as default on all string fields,\cite{psql-comp}
+and the database was quick and responsive for most of the project.
+
+However, towards the end of the project, the database was regularly
+filled with data relating to ~300,000 revisions, and under this load
+began to lag. We also employed ClusterSSH in order to run the program
+on multiple machines,\cite{clusterssh} distributing the HTTP requests
+to wikipedia and building a large database, but putting the database
+under a considerable burden.
+

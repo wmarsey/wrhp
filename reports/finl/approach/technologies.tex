@@ -1,0 +1,26 @@
+\section{Technologies}
+Out first stop was to implement a library for tracing a Wikipedia
+history, harnessing the Wikipedia API in order to download information
+about articles and their histories, as well as their content. It is
+inspired by open Wikipedia metadata classes such as `Wikipedia
+Miner'\cite{wiki-miner}, or the revision-fetching `Java Wikipedia
+Library / Wikipedia Revision
+Library'.\cite{wiki-java}\cite{Ferschke2011} The python package
+`wikipedia',\cite{python-wikipedia} was also a useful starting point,
+but was not appropriate for the project in general.
+
+The Levenshtein distance calculator, being an intensive computation,
+is implemented in C++ for speed purposes. In order to import to
+Python, we prepare python variables within the C++ code, and compile
+and build a shared object library as defined in the Python
+documentation.\cite{python-extend-c++} To further improve speed, we
+deploy each levenshtein distance calculation in its own process, to
+allow for parallel processing on multi-core machines.
+
+The database is implemented in PostgreSQL, with a python wrapper
+written using the psycopg2 module.\cite{psycopg2} The text is
+automatically compressed on insertion -- this is the default in
+PostreSQL.\cite{psql-comp} 
+
+The graphs are outputted using the matlab-inspired python package,
+matplotlib.\cite{matplotlib} 

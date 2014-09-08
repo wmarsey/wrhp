@@ -1,0 +1,238 @@
+\section{Limitations, optimisations and extensions}
+\subsection*{Alignment of levenshtein distance}
+\label{split-distance-eval}
+As we began to realise that, in terms of survival rate, the details of
+the content were somewhat secondary to the context in which those
+edits were made, we began to wonder if we could make the data analysis
+more efficient by doing away with the pair distance calculation.
+
+Further than that, however, we wondered whether we could find the
+distance between each revision by just taking the absolute distance
+between each trajectory distance -- i.e. the distance-from-final at
+each point. We saw no theoretic problem with the measure, and set out
+to see if the theory that
+
+\[
+  |(ed(rev_i,rev_x) - ed(rev_j,rev_x))| = ed(rev_j,rev_i)
+\]
+
+(i.e. that an edit distance relation is transitive) could be observed
+in the edits. 
+
+Running the SQL statements found in appendix~\ref{sec:sql-things}, we
+found evidence contrary to our theory. We found that only around 30\%
+of our different measures matched up, with a high average mis-match of
+22,181. The mismatch is, on average, around 40\% of the larger
+distance.
+
+We propose two theories for this. We can identify a problem with our
+string splitting -- it may mis-align two strings, creating non-minimum
+calculations, such as in the diagram on page~\pageref{fig:sub-opt}. We
+illustrate the problem in figure~\ref{fig:split-string-problem}.
+
+We can also imagine that it may be more efficient to swap some
+characters between a and c, rather than delete to them to get from a
+to b, and reinsert from b to c. This may also be described as an
+alignment problem.
+
+Whilst inaccurate, doing away with pair-distance calculations may be
+acceptable as a rough measure, and if pair-distance, as we suspect, is
+not a very effective measure of survival.
+
+\begin{figure}[p]
+  \centering
+  \begin{subfigure}[t]{\linewidth}
+    \begin{tikzpicture}[
+        block1/.style={
+          text width=3cm, 
+          minimum height=2cm,
+          align=center,
+          anchor=north,
+        },
+        block2/.style={
+          text width=3cm, 
+          minimum height=1.5cm,
+          align=center,
+          anchor=north,
+        },
+        font=\small
+      ]
+      \node (a) [block1] {We can use a [[spork]] to eat spaghetti.};
+
+      \node (b) [block1, right=1cm of a]{We can use forks to eat lovely
+        spaghetti.};
+
+      \node (c) [block1,below=1cm of a]{We can use a \hilight{[[spork]]} to eat
+        spaghetti.};
+
+      \node (d) [block1,below=1cm of b]{We can use forks to eat lovely
+        spaghetti.};
+
+      \node (e) [block2,below left=1.5cm and 1.5cm of c] {\hilight{[[spork]]}};
+      
+      \node (f) [block2,right=1cm of e] {We can use a\ \  to eat spaghetti.};
+
+      \node (g) [block2,right=1cm of f] {$\emptyset$};
+      
+      \node (h) [block2,right=1cm of g] {We can use forks to eat lovely
+        spaghetti.};
+
+      \node (i) [block2,below=1cm of e] {\hilight{[[spork]]}}; 
+      
+      \node (j) [block2,below=1cm of f] {$\emptyset$}; 
+      
+      \node (k) [block2,below =1cm of g] {We can use a\ \  to eat
+        spaghetti.};
+
+      \node (l) [block2,below =1cm of h] {We can use forks to eat lovely
+        spaghetti.};
+
+      \node (m) [block2,below= 1cm of i] {$ed_{links} = 9$};
+
+      \node (n) [block2,below =1cm of k] {$ed_{normal} = 18$};
+      
+      \node (o) [block2,below left=1.5cm and 1.5cm of n] {$ed_{total} = 27$};
+
+      \draw [->] (a) -- (c);
+      \draw [->] (b) -- (d);
+      \draw [->] (c) -- (e);
+      \draw [->] (c) -- (f);
+      \draw [->] (d) -- (g);
+      \draw [->] (d) -- (h);
+      \draw [->] (e) -- (i);
+      \draw [->] (g) -- (j);
+      \draw [->] (f) -- (k);
+      \draw [->] (h) -- (l);
+      \draw [->] (i) -- (m);
+      \draw [->] (j) -- (m);
+      \draw [->] (k) -- (n);
+      \draw [->] (l) -- (n);
+      \draw [->] (m) -- (o);
+      \draw [->] (n) -- (o);
+
+    \end{tikzpicture}
+    \caption{Split string edit distance}
+  \end{subfigure}\\
+  \vspace{20mm}
+  \begin{subfigure}[t]{\linewidth}
+    $ed($``We can use a [[spork]] to eat spaghetti.''$,$``We can use forks
+    to eat lovely spaghetti.''$) = 6$
+    \caption{Whole-string edit distance}
+  \end{subfigure}\\
+  \vspace{20mm}
+  \caption{Showing alignment alignment inefficiency in split-string
+    Levenshtein distance processing.}
+\label{fig:split-string-problem}
+\end{figure}
+
+\subsection*{Calculating `turbulence'}
+The gradient factor that we calculate describes how much a given
+revision changes in terms of the final state -- it is a real number
+from 0 to 1, 0 being a `perfect' move away from the final version, 1
+being a `perfect' move towards. On the trajectory graphs discussed
+these two values are represented by a vertical line between two
+points, going upwards and downwards, respectively.
+
+We consider that we could perhaps use it to characterise a 'perfect
+edit factor' -- one that approaches the final edit most efficiently; in a
+linear fashion. An optimum revision history may be considered as a
+straight path from origin to destination. No edit inserted text that
+was later removed, and the approach to the final version was as
+efficient as possible over time. We may characterise such an optimum
+gradient as follows:
+
+\[
+  gfactor_{optimum} = gfactor(ed(rev_{0_{content}},
+  rev_{n_{content}}), rev_{n_{tstamp}} - rev_{0_{tstamp}})
+\]
+
+This equation gives a gradient that, if the same for every edit, would
+describe the most stable accumulation of data, with no peaks or
+fluctuations in activity. The average deviation from this number can
+measure the turbulence of an article's path. 
+
+We may also look to density of edit. If we have a set of the indexes
+of an edit operation as $\{op_0,op_1,op_2,\dots, op_n\}$, where $op_i$
+is the index of the $i$th operation, then we may evaluate it's density
+with a standard deviation of the edit itself, $\sigma_{ed}$,
+multiplied by the span of the edit itself in context of the wider
+article. Something along the lines of:
+$$ed_{density} = \frac{(op_n - op_0)\sigma_{ed}}{|v_{ed}|}$$ where
+$|v_{ed}|$ is the overall length of resultant version. By implementing
+this carefully, we may achieve a gradient of weighting, with a lower
+weight values for things like spell-checks, and higher values for
+whole-paragraph changes.
+
+However, this density is somewhat reflected in the gradient factor
+measure, as discussed before.
+
+\subsection*{Levenshtein algorithm changes}
+The Damerau-Levenshtein distance defines an `swap' operation, which is
+the reversal of two adjacent characters. It is particularly suited to
+spell-checking, and for analysing DNA-sequence variations. In this
+case:
+
+$ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
+
+Implementing this could more accurately define spell-check operations.
+
+Block distance operation would allow us to recognise displacements of
+entire blocks to count as one operation. For
+example:
+
+$ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$
+
+One move of the block `cde', one substitution of `b' for
+`x'.\cite{Tichy1984} We could implement this in order to better
+diagnose large movements of text --- perhaps between documents. (The
+Harry Potter history in appendix~\ref{sec:traj-article-talk} shows
+frequent migrations of text to book-, character- and film-specific
+pages.)
+
+\subsection*{Awarding restructuring}
+\label{restructuring}
+It has been found that, even in the most accurate articles, that the
+structure of Wikipedia article can be weak.\cite{Giles2005} We made
+some efforts to recognise attempts at structural change previously with our regex splitting system. However, these attempts are limited. We really
+need to be able to identify the move of large blocks of text -- not
+only inside an article, but to others. With a larger dataset and the latter idea
+necessary computing power this would just be a matter of
+cross-referencing the deletion of largish chunks of text with
+insertions of similar text into other articleswithin a short time frame.
+
+\subsection*{Refinement of gradient factor}
+A limitation of gradient factor is it's reliance upon a relatively
+arbitrary measure of time. Though the measure of time has been
+consistent throughout the study, the measurement does affect the
+distribution of possible gradient factor values to the extremities of
+the range. It would be recommended in further research to take this
+into account. If someone makes an edit, commits it, fixes spelling,
+and commits again, does he receive less reward than if he had
+submitted at once? Or more? This is something we wished we would have
+had time to look into during the study.
+
+\subsubsection*{Extending data}
+Grabbing each page as we went was useful for cleaning and sometimes
+preprocessing parts of the data, but the fetches were time
+consuming. Also, when we came to look for more general data about
+individual users, and tried to find inter-article connections, we had
+to do so in the knowledge that our databases represented a very small
+selection from the Wikipedia's in question.
+
+For further work on could be better off using a wikipedia dump. These
+are made monthly and represent the entirety of the site, history
+included at the point of export. They are, however, $~800$GB,
+compressed.\cite{wiki-dump} A past studies used a hadoop framework
+to enable the study of this data. In the study here we saved time by
+simply setting up the API access, but perhaps further study could
+invest time in setting up a more complete dataset.
+
+\subsubsection*{Further subjects}
+As mentioned previously, this project may easily expand beyond the
+wikipedia dataset. A git project history, for instance, may be of
+interest for further study. We may fairly easily combine the existing
+research with metrics that concern code in particular, such as
+Cyclomatic Complexity, which measures code flow complexity according
+to its logical operators.\cite{McCabe1976} The main challenge on
+platforms would be mining the contextual data that was so easily found
+on Wikipedia.

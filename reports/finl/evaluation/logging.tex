@@ -1,0 +1,16 @@
+\section{Logging}
+We implement basic but thorough info and debug logging throughout the
+program, using python's `logging' package. Our logging functions are
+defined in `logger.py' at the root of the package, and by importing
+the functions there can write detailed info to wikidebug.log. Example
+output can be found in appendix~\ref{sec:appendix-debug}.
+
+The CLI also stores details of visited revision in an information log,
+a excerpt of which can also be found in appendix~\ref{sec:appendix-debug}.
+
+Otherwise, the package outputs the most useful progress information to
+the console, including current page, pageid and domain. It also prints
+dots to the screen during the longer scraping and trajectory and
+pair-distance calculations. This information is doubled in the debug
+log, and can be silenced from the console using the `-S' or `-SS'
+options.

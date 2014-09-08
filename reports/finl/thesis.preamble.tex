@@ -1,0 +1,326 @@
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.jpg}
+
+\usepackage{verbatim}
+\usepackage{pgfplots}
+\usepackage{latexsym}
+\usepackage{mathchars}
+\usepackage{setspace}
+\usepackage{dirtree}
+
+\usepackage{cleveref} 
+\usepackage{color}               %obv
+\usepackage{appendix}            %obv
+\usepackage{amsmath}             %for math environment
+\usepackage{mathtools}
+
+\usepackage{enumitem}            %for modifying lists
+\setitemize{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
+\setenumerate{noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt}
+
+\usepackage[procnames]{listings} %for inserting code
+\usepackage{fancyvrb} % for inserting .txt
+\usepackage{parskip}             %for modifying spacing
+
+\usepackage{float}              %for forcefully placing diagrams 
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand{\tab}[1]{\hspace{.08\textwidth}{#1}} % indent tab for data
+                                                 % structs in algos
+\newcommand{\LineIf}[3]{ {#1}
+  \algorithmicif\ {#2}
+  \algorithmicelse\ {#3} } % inline X if Y else Z
+
+\usepackage{booktabs}
+%\usepackage{subfig}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\usepackage{floatflt}
+
+\usepackage[backref=true,
+  %style=authoryear,
+  style=numeric-comp,
+  citereset=section,
+  maxcitenames=3,
+  maxbibnames=100]{biblatex}
+\bibliography{thesis}
+\DefineBibliographyStrings{english}{%
+  backrefpage  = {see p.}, % for single page number
+  backrefpages = {see pp.} % for multiple page numbers
+}
+\setlength\bibitemsep{1em}
+
+\usepackage{titlesec}
+\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsubsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+\input{blocked.sty}
+\input{uhead.sty}
+\input{boxit.sty}
+\input{icthesis.sty}
+%\usepackage{algorithm2e}
+
+\newcommand{\ipc}{{\sf ipc}}
+
+\newcommand{\Prob}{\bbbp}
+\newcommand{\Real}{\bbbr}
+\newcommand{\real}{\Real}
+\newcommand{\Int}{\bbbz}
+\newcommand{\Nat}{\bbbn}
+
+\newcommand{\NN}{{\sf I\kern-0.14emN}}   % Natural numbers
+\newcommand{\ZZ}{{\sf Z\kern-0.45emZ}}   % Integers
+\newcommand{\QQQ}{{\sf C\kern-0.48emQ}}   % Rational numbers
+\newcommand{\RR}{{\sf I\kern-0.14emR}}   % Real numbers
+\newcommand{\KK}{{\cal K}}
+\newcommand{\OO}{{\cal O}}
+\newcommand{\AAA}{{\bf A}}
+\newcommand{\HH}{{\bf H}}
+\newcommand{\II}{{\bf I}}
+\newcommand{\LL}{{\bf L}}
+\newcommand{\PP}{{\bf P}}
+\newcommand{\PPprime}{{\bf P'}}
+\newcommand{\QQ}{{\bf Q}}
+\newcommand{\UU}{{\bf U}}
+\newcommand{\UUprime}{{\bf U'}}
+\newcommand{\zzero}{{\bf 0}}
+\newcommand{\ppi}{\mbox{\boldmath $\pi$}}
+\newcommand{\aalph}{\mbox{\boldmath $\alpha$}}
+\newcommand{\bb}{{\bf b}}
+\newcommand{\ee}{{\bf e}}
+\newcommand{\mmu}{\mbox{\boldmath $\mu$}}
+\newcommand{\vv}{{\bf v}}
+\newcommand{\xx}{{\bf x}}
+\newcommand{\yy}{{\bf y}}
+\newcommand{\zz}{{\bf z}}
+\newcommand{\oomeg}{\mbox{\boldmath $\omega$}}
+\newcommand{\res}{{\bf res}}
+\newcommand{\cchi}{{\mbox{\raisebox{.4ex}{$\chi$}}}}
+%\newcommand{\cchi}{{\cal X}}
+%\newcommand{\cchi}{\mbox{\Large $\chi$}}
+
+% Logical operators and symbols
+\newcommand{\imply}{\Rightarrow}
+\newcommand{\bimply}{\Leftrightarrow}
+\newcommand{\union}{\cup}
+\newcommand{\intersect}{\cap}
+\newcommand{\boolor}{\vee}
+\newcommand{\booland}{\wedge}
+\newcommand{\boolimply}{\imply}
+\newcommand{\boolbimply}{\bimply}
+\newcommand{\boolnot}{\neg}
+\newcommand{\boolsat}{\!\models}
+\newcommand{\boolnsat}{\!\not\models}
+
+\newcommand{\op}[1]{\mathrm{#1}}
+\newcommand{\s}[1]{\ensuremath{\mathcal #1}}
+
+% Properly styled differentiation and integration operators
+\newcommand{\diff}[1]{\mathrm{\frac{d}{d\mathit{#1}}}}
+\newcommand{\diffII}[1]{\mathrm{\frac{d^2}{d\mathit{#1}^2}}}
+\newcommand{\intg}[4]{\int_{#3}^{#4} #1 \, \mathrm{d}#2}
+\newcommand{\intgd}[4]{\int\!\!\!\!\int_{#4} #1 \, \mathrm{d}#2 \, \mathrm{d}#3}
+
+% Large () brackets on different lines of an eqnarray environment
+\newcommand{\Leftbrace}[1]{\left(\raisebox{0mm}[#1][#1]{}\right.}
+\newcommand{\Rightbrace}[1]{\left.\raisebox{0mm}[#1][#1]{}\right)}
+
+% Funky symobols for footnotes
+\newcommand{\symbolfootnote}{\renewcommand{\thefootnote}{\fnsymbol{footnote}}}
+% now add \symbolfootnote to the beginning of the document...
+
+\newcommand{\normallinespacing}{\renewcommand{\baselinestretch}{1.5} \normalsize}
+\newcommand{\mediumlinespacing}{\renewcommand{\baselinestretch}{1.2} \normalsize}
+\newcommand{\narrowlinespacing}{\renewcommand{\baselinestretch}{1.0} \normalsize}
+\newcommand{\bump}{\noalign{\vspace*{\doublerulesep}}}
+\newcommand{\cell}{\multicolumn{1}{}{}}
+\newcommand{\spann}{\mbox{span}}
+\newcommand{\diagg}{\mbox{diag}}
+\newcommand{\modd}{\mbox{mod}}
+\newcommand{\minn}{\mbox{min}}
+\newcommand{\andd}{\mbox{and}}
+\newcommand{\forr}{\mbox{for}}
+\newcommand{\EE}{\mbox{E}}
+
+\newcommand{\deff}{\stackrel{\mathrm{def}}{=}}
+\newcommand{\syncc}{~\stackrel{\textstyle \rhd\kern-0.57em\lhd}{\scriptstyle L}~}
+
+\def\coop{\mbox{\large $\rhd\!\!\!\lhd$}}
+\newcommand{\sync}[1]{\raisebox{-1.0ex}{$\;\stackrel{\coop}{\scriptscriptstyle
+      #1}\,$}}
+
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+
+\newcommand{\Figref}[1]{Figure~\ref{#1}}
+\newcommand{\fig}[3]{
+  \begin{figure}[!ht]
+    \begin{center}
+      \scalebox{#3}{\includegraphics{figs/#1.ps}}
+      \vspace{-0.1in}
+      \caption[ ]{\label{#1} #2}
+    \end{center}
+  \end{figure}
+}
+
+\newcommand{\figtwo}[8]{
+  \begin{figure}
+    \parbox[b]{#4 \textwidth}{
+      \begin{center}
+        \scalebox{#3}{\includegraphics{figs/#1.ps}}
+        \vspace{-0.1in}
+        \caption{\label{#1}#2}
+      \end{center}
+    }
+    \hfill
+    \parbox[b]{#8 \textwidth}{
+      \begin{center}
+        \scalebox{#7}{\includegraphics{figs/#5.ps}}
+        \vspace{-0.1in}
+        \caption{\label{#5}#6}
+      \end{center}
+    }
+  \end{figure}
+}
+
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,
+  arrows,
+  chains,
+  matrix,
+  positioning,
+  fit,
+  scopes,
+  calc,
+  decorations.pathmorphing}
+\makeatletter
+\tikzset{join/.code=\tikzset{after node path={%
+\ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
+edge[every join]#1(\tikzchaincurrent)\fi}}}
+\makeatother
+\tikzset{>=stealth',every on chain/.append style={join},
+         every join/.style={->},
+         snake it/.style={decorate, decoration=snake}}
+\tikzstyle{labeled}=[execute at begin node=$\scriptstyle,
+   execute at end node=$]
+
+\tikzset{ 
+  table/.style={
+    matrix of nodes,
+    row sep=-\pgflinewidth,
+    column sep=-\pgflinewidth,
+    nodes={rectangle,draw=black,text width=3ex,align=center},
+    text depth=0.5ex,
+    text height=2ex,
+    nodes in empty cells
+  },
+  texto/.style={font=\large\sffamily},
+  title/.style={font=\large\sffamily}
+}
+
+
+\newcommand\CellText[2]{%
+  \node[texto,left=of mat#1,anchor=east]
+  at (mat#1.west)
+  {\large #2};
+}
+
+\newcommand\SlText[2]{%
+  \node[texto,left=of mat#1,anchor=west,rotate=50]
+  at ([xshift=1.5ex,yshift=1ex]mat#1.north)
+  {\large #2};
+}
+
+\newcommand{\super}[1]{\textsuperscript{#1}}
+
+%% \renewcommand{\cite}[1]{\footcite{#1}}
+
+\definecolor{keywords}{RGB}{255,0,90}
+\definecolor{comments}{RGB}{0,0,113}
+\definecolor{red}{RGB}{160,0,0}
+\definecolor{green}{RGB}{0,150,0}
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{keywords},
+  commentstyle=\color{comments},
+  stringstyle=\color{red},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  procnamekeys={def,class}
+}
+
+
+\definecolor{deepblue}{HTML}{193441}
+\definecolor{navyblue}{HTML}{3e606F}
+\definecolor{bluegreen}{HTML}{91AA9D}
+\definecolor{beige}{HTML}{D1DBBD}
+\definecolor{cream}{HTML}{FCFFF5}
+
+\definecolor{blue}{HTML}{3e606F}
+\definecolor{green}{HTML}{91AA9D}
+
+\definecolor{redi}{RGB}{255,38,0}
+\definecolor{yellowi}{HTML}{D1DBBD}
+\definecolor{greeni}{HTML}{91AA9D}
+
+\newenvironment{itemize*}%
+               {\begin{itemize}%
+                   \setlength{\itemsep}{0pt}%
+                   \setlength{\parskip}{0pt}}%
+               {\end{itemize}}
+\newenvironment{description*}%
+               {\begin{description}%
+                   \setlength{\itemsep}{0pt}%
+                   \setlength{\parskip}{0pt}}%
+               {\end{description}}
+
+
+
+\def \mheight {1cm}
+\def \mwidth {1cm}
+\definecolor{col2}{HTML}{91AA9D}
+\definecolor{col1}{HTML}{FCFFF5}
+\definecolor{col3}{HTML}{F0EAB3}
+\definecolor{col4}{HTML}{3e606F}
+\definecolor{col5}{HTML}{D1DBBD}
+
+\tikzstyle{bx}=[
+  fill, 
+  minimum height=\mheight, 
+  minimum width=\mwidth, 
+  shape border rotate=90, 
+  shape aspect=0.1,
+  rounded corners=2mm
+]
+
+\tikzstyle{cld}=[
+  cloud, 
+  cloud puffs=15.7, 
+  cloud ignores aspect, 
+  minimum height=\mheight,
+  minimum width=\mwidth, 
+  align=center
+]
+
+\tikzstyle{dtb}=[
+  fill,
+  chamfered rectangle,
+  chamfered rectangle xsep=2cm,
+  minimum height=\mheight, 
+  minimum width=\mwidth,
+  rounded corners=1mm
+]
+
+
+\newcommand{\hilight}[1]{\colorbox{bluegreen}{#1}}

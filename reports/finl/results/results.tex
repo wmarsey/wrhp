@@ -1,0 +1,34 @@
+The basic output of the model described here is a set of numbers, a
+levenshtein distance for each of the groups described in
+line~\ref{dist-calc-groups} of algorithm~\ref{dist-calc} (and
+described more clearly by the schema in figure~\ref{database-schema}),
+and a trajectory factor, calculated by the procedure found in
+algorithm~\ref{traj-calc}. Accompanying this is the trajectory
+distance of each revision.
+
+Through simple database queries we may also find out other related
+information, such as how many edits an article has, how frequent these
+edits were, and the article's final or average size.
+
+With a large enough random sample, we begin to be able to report the
+relative activity of individual editors also. If, for every page `$X$'
+we also look for and grab the page `Talk:$X$' we may see which editors
+were involved in discussions around the edits, and begin to more
+clearly see the context surrounding each article. We can also look for
+pages named `Wikipedia:Requests\_for\_arbitration/$X$' to discover
+evidence of more serious disputes. The CLI does not implement this
+automatically, but we will discuss how to combine this information
+automatically and what we find out from it.
+
+Using the DataPlot class is built to output four different kinds of
+graphs -- trajectory graphs (trajectory against article growth), a
+trajectory vs talk page graph, a bar chart grading users by edit
+count, and a similar graph grading them by the `share' of the
+article. This latter graph can be modified by the application of
+weights. The weights allow us to take some species of text as more
+important than others when calculating a user's share in the article.
+
+The DataPlot class can also output graphs on the database as a
+whole. Running it as a script we can plot information about how the
+size of articles in each language, the lengths of their histories,
+etc.

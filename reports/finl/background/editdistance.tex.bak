@@ -1,0 +1,333 @@
+\section{Edit difference algorithms}
+To measure difference between different text revisions, we refer to
+edit distance. The edit distance between two texts, first defined by
+Vladimir Levenshtein in the 1960s,\cite{Levenshtein1966} can be
+defined as the minimum amount of insert, delete and substitutions
+operations needed to transform one text into another. We find a
+trivial illustration of the edit distance primitives in
+figure~\ref{fig:fork-spork}
+
+\begin{figure}
+  \centering
+  
+  \begin{tikzpicture}[node distance =3pt and 0.5cm,anchor=center]
+    
+    \matrix[table] (mat11) { |[fill=greeni]| &
+      |[fill=yellowi]|F & O & R & K & |[fill=redi]|S
+      \\ |[fill=greeni]|S & |[fill=yellowi]|P & O & R & K &
+      |[fill=redi]| \\ };
+
+    \CellText{11-1-1}{string 1:}; \CellText{11-2-1}{string
+      2:};
+
+    \SlText{11-1-1}{Insert} \SlText{11-1-2}{Swap}
+    \SlText{11-1-6}{Delete}
+    
+  \end{tikzpicture}
+
+  \vspace{3 mm}
+
+  forks $\rightarrow$ spork, edit distance: 3
+  
+  \caption{An edit distance example using all three basic edit
+    operations}
+  \label{fig:fork-spork}
+\end{figure}
+
+\begin{figure}
+  \centering
+  for the function $\mbox{lev}_{a,b}(|a|,|b|)$:\\
+  $$\mbox{lev}_{a,b}(i,j) = 
+  \left\{
+  \begin{array}{ll}
+    \mbox{max}(i,j) & \mbox{if }min(i,j) = 0\\
+    \mbox{min}\left\{
+    \begin{array}{lll}
+      lev_{a,b}(i-1,j)+1\\
+      lev_{a,b}(i,j-1)+1\\
+      lev_{a,b}(i-1,j-1)+1_{(a_i{\neq}b_j)}
+    \end{array}
+    \right.
+    & else 
+  \end{array}
+  \right.$$
+  when $a_i = b_j$, $1_{(a_i{\neq}b_j)} = 1$\\
+  when  $a_i \neq b_j$, $1_{(a_i{\neq}b_j)} = 0$
+  \caption{The definition of Levenshtein edit distance.}
+  \label{fig:levdef}
+\end{figure}
+
+Levenshtein's own characterisation of this distance is given in
+figure~\ref{fig:levdef}. It defines that the distance between two
+strings is characterised the minimum distance between three different
+pair-combinations of its substrings. A `text-book' implementation of
+this algorithm can be represented by the pseudo-code in
+figure~\ref{fig:levenshtein-dynamic}. We present the
+dynamic-programming-style algorithm here, and will generally be
+working with dynamic programming implementations throughout the study.
+
+%% \begin{figure}
+%%   REDO AS ALGORTHM?!
+%%   \centering
+%%   \begin{lstlisting}
+%%     ed(x,y):
+%%     #base cases
+%%     if |x| = 0: return |y|
+%%     if |y| = 0: return |x|    
+
+%%     #table initialisation
+%%     d is a table [0..|x|][0..|y|]
+%%     for i = 1 to |m|:
+%%     d[i,0] = i
+%%     for j = 0 to |y|:
+%%     d[0,j] = j           
+    
+%%     #dynamic computation
+%%     for j = 1 to |y|:
+%%     for i = 1 to |x|:
+%%     c = [(x[i] == y[j]) ? O else 1]
+%%     ins = d[i-1,j] + 1
+%%     dlt =d[i,j-1] + 1
+%%     kp_swp = d[i-1,j-1] + c
+%%     d[i,j] = min(ins, dlt, kp-swp)
+    
+%%     #return last computed number
+%%     return d[|x|,|y|]
+%%   \end{lstlisting}
+%%   \caption{Basic dynamic implementation of Levenshtein distance}
+%%   \label{fig:levenshtein-dynamic}
+%% \end{figure}
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function{ed}{$x, y$}
+    \State $s1len \gets $length($str1$)
+    \State $s2len \gets $length($str2$)    
+    \If{$s1len = 0$}
+    \State return $s2len$
+    \EndIf
+    \If{$s2len = 0$}
+    \State return $s1len$
+    \EndIf
+    \State $d \gets [0 \dots s1len][0 \dots s2len]$ 
+    \For{$i \gets 1, s1len$}
+    \State $d[i][0] \gets i$
+    \EndFor
+    \For{$j \gets 0, s2len$}
+    \State $d[0][j] \gets j$
+    \EndFor
+
+    \For{$j \gets 1, s2len$}
+    \For{$i \gets 1, s1len$}
+    \State $c \gets $\LineIf{0}{$str1[i-1] \neq str2[j-1]$}{1}
+    \State $insert \gets d[i-1][j] + 1$
+    \State $delete \gets d[i,j-i] + 1$
+    \State $keepswap \gets d[i-1][j-1] + c$
+    \State $d[i][j] \gets min(insert, delete, keepswap)$
+    \EndFor
+    \EndFor
+    \State return $d[s1en][s2len]$
+    \EndFunction
+  \end{algorithmic}
+  \caption{`Textbook' dynamic implementation of Levenshtein distance calculator}
+  \label{fig:levenshtein-dynamic}
+\end{algorithm}
+
+
+We can see that on comparing strings $x$ and $y$, a
+$|x|$ by $|y|$ table is created, and then filled with values. For this
+reason both the time and space complexity of the algorithm is $\theta
+(|x||y|)$.
+
+Reducing the space needed for this computation is relatively easy, and
+can be done in a few different ways. One way is to simply disregard
+parts of the table already computed. We can see that, on each
+computation of $d[i,j]$ (as it appears above), we require only a small
+part of the matrix: $d[i-1,j-1]$, $d[i-1,j]$ and $d[i,j-1]$. At any
+iteration $i$, where is great than $1$, we may disregard rows $0 \dots
+(i-2)$ inclusive. We eventually implement this version, implementing
+the algorithm~\ref{lev-dist}, on page~\pageref{lev-dist}.
+
+There are more complicated techniques that allow us to also disregard
+unneccesary computation --- a few implementations employ strategies
+that allow them to trace the table space diagonally, rather than
+iteratively, achieving a time complexities as low as $O(ed(x, y)^2)$
+(though they sacrifice some accuracy).\cite{Chang1992} Others
+harnesses the speed of bit operations to achieve a time complexity of
+$O(nm/w)$ or $O(nm log {\Sigma}/w)$ time where $w$ the bit-word size
+of the machine, and $\Sigma$ is the alphabet
+size.\cite{Myers1999}\cite{Hyyro2003}
+
+In this project, however, it was suffice to simply reduce the space
+needed for the computation, as the texts were relatively small, and
+speed not an issue. However, we were able to speed up the program
+somewhat by implementing some simple multiprocessing. Both these
+procedures, and their limitations, are discussed in more detail on
+page~\pageref{multiprocessing-bit}.
+
+%% \subsection*{Varieties of edit distance}
+%% Modifications can be made to the nature of the distance itself, in
+%% order to adapt the measure a variety of different and specific
+%% needs. Here is a brief overview of the main groups these extensions
+%% fall into:
+
+%% \begin{itemize}
+%% \item \textbf{Hamming distance.} This allows for substitutions only,
+%%   comparing same-length strings, such
+%%   that:\\ $ed_{hamming}(\text{``abc''},\text{``abd''})
+%%   =1$,\\ $ed_{hamming}(\text{``abc''},\text{``bcd''}) = 3$,\\ and
+%%   $ed_{hamming}(\text{``abc''},\text{``ab''})$ is
+%%   undefined.\cite{Hamming1950}
+%% \item \textbf{Reversals.} The Damerau-Levenshtein distance defines an
+%%   `swap' operation, which is the reversal of two adjacent
+%%   characters. It is particularly suited to spell-checking, and for
+%%   analysing DNA-sequence variations. In this
+%%   case:\\ $ed_{damerau}(\text{``ab''},\text{``ba''}) = 1$
+%% \item \textbf{Block distance.} This allows for displacements of entire
+%%   blocks to count as one operation. For
+%%   example:\\ $ed_{block}(\text{``abcde''},\text{``cdeax''})= 2$ \\ One
+%%   move of the block `cde', one substitution of `b' for
+%%   `x'.\cite{Tichy1984}
+%% \item \textbf{\textit{q}-grams distance.} \textit{q}-grams are simply
+%%   sub-strings, and this measure describes the similarity of two
+%%   strings in terms of \textit{q}-grams they
+%%   share.\cite{Ukkonen1992}\\ $ed_{q-gram}(x,y)=\sum\limits_{v\in\Sigma
+%%     ^q}|G(x)[v]-G(y)[v]|$\\ where $G(x)[v]$ returns the number of
+%%   occurrences of \textit{q}-gram v in string x, and $\Sigma ^q$ is all
+%%   the possible \textit{q}-grams in the alphabet (capped by string
+%%   length). $|G(x)[v]-G(y)[v]|$ a large positive number every time a
+%%   \textit{q}-gram appears a large amount of times in one string, but
+%%   not the other; it returns 0 if the substring apears the same number
+%%   of times. So, the whole function measures this difference for all
+%%   possible substrings, and sums them, returning a high number for
+%%   difference, and a low number for similarity.
+%% \end{itemize}
+
+
+\subsection*{Optimal alignment}
+Another part of the problem of working out optimal edit distance is
+finding the `optimal alignment' --- the measures are closely
+related. We displace and arrange the characters of a string such that
+the set of operations to transform each character into its counterpart
+is minimal. For example, in figure \ref{fig:fork-spork}, the alignment
+of the two strings ``fork'' and ``spork'' was:
+
+\begin{center}
+  \begin{tabular}{cccccc}
+    s & p & o & r & k & -\\
+    - & f & o & r & k & s 
+  \end{tabular}
+\end{center}
+
+However it could also conceivably have been:
+
+\begin{center}
+  \begin{tabular}{ccccccccccccccccc}
+    s & p & o & r & k & - & & or even & & - & s & p & o & - & r & k - &\\
+    f & - & o & r & k & s & &         & & f & - & o & - & r & - & k & s    
+  \end{tabular}
+\end{center}\label{fig:sub-opt}
+
+Here, the left-hand version results in an equivalent Levenshtein
+distance, but we can see how the distance for the right-hand example
+would be sub-optimal, requiring 7 edit operations.
+
+\begin{figure}[h]
+  \centering   
+  \begin{tikzpicture}[node distance =3pt and 0.5cm,anchor=center]
+    \matrix[table] (mat11) {|[fill=greeni]|  & |[fill=redi]|S & |[fill=yellowi]|P & |[fill=redi]|O & |[fill=greeni]|  & |[fill=redi]|R & K & |[fill=greeni]|\\
+      |[fill=greeni]|F & |[fill=redi]|  & |[fill=yellowi]|O & |[fill=redi]|  & |[fill=greeni]|R & |[fill=redi]|  & K & |[fill=greeni]|S\\};
+    
+    \CellText{11-1-1}{string 1:}; \CellText{11-2-1}{string
+      2:};
+
+    \SlText{11-1-1}{Insert}
+    \SlText{11-1-2}{Delete}
+    \SlText{11-1-3}{Swap}
+    \SlText{11-1-4}{Delete}
+    \SlText{11-1-5}{Insert}
+    \SlText{11-1-6}{Delete}
+    \SlText{11-1-8}{Insert}
+  \end{tikzpicture}\\
+  \vspace{3 mm}
+  spork $\rightarrow$ forks, edit distance: 7
+  \caption{An sub-optimal edit distance example}
+  \label{fig:fork-spork-subopt}
+\end{figure}
+
+The Smith-Waterman algorithm calculates optimal alignment by
+populating two tables -- one like that in the pseudocode above, and
+also as a table of directions.\cite{smithwaterman} These directions describe paths from
+one corner of the table space to the other; the shape of this path
+can define how to align the two strings.\cite{Smith1981}
+
+This path may also be read as an edit operation. An arrow at the
+position $[i,j]$ in the table defines edit operations for $x[i]$
+and/or $y[j]$, as described in figure
+\ref{fig:smith-waterman-traceback}.
+
+\begin{figure}[h]
+  \centering 
+  $\left\{
+  \begin{array}{ccccccc}
+    & & S & P & O & R & K \\ & \color{red}{0} & \color{red}{0} & 0 & 0
+    & 0 & 0 \\ F & 0 & \nwarrow & \color{red}{\nwarrow} & \nwarrow &
+    \nwarrow & \nwarrow \\ O & 0 & \uparrow & \nwarrow &
+    \color{red}{\nwarrow} & \downarrow & \leftarrow \\ R & 0 &
+    \uparrow & \uparrow & \uparrow & \color{red}{\nwarrow} &
+    \leftarrow \\ K & 0 & \uparrow & \uparrow & \uparrow & \uparrow &
+    \color{red}{\nwarrow} \\ S & 0 & \nwarrow & \uparrow & \uparrow &
+    \uparrow & \color{red}{\uparrow} \\
+  \end{array}\right\} $\\
+  \vspace{2mm}
+  (If the arrow reaches an edge before the left-hand corner, we trace
+  along that edge, reading each shift as an arrow in the direction of
+  the trace.)
+  \vspace{5mm}
+  \begin{itemize}
+  \item \textbf{$\nwarrow$ at $[i,j]$, if $x[i] \neq y[j]$} \\ Denotes a
+    'swap' between $x[i]$ and $y[j]$ (if $x[i] = y[j]$ then it denotes
+    the lack of an operation).
+  \item \textbf{$\uparrow$ at $[i,j]$}\\Denotes the deletion of $x[i]$
+  \item \textbf{$\leftarrow$ at $[i,j]$}\\Denotes the insertion of
+    $y[j]$
+  \end{itemize}
+  \vspace{5mm}
+  \caption{Diagram showing Smith-Waterman traceback path (in red) on
+    the edit operation forks $\rightarrow$ spork}
+  \label{fig:smith-waterman-traceback}
+\end{figure}
+
+Our early implementations of the Levenshtein algorithm implemented
+various ways of computing this alignment data, including creating a
+separate matrix as here, and implementing a struct which would accrue
+this path data as it was passed along in the $min(a,b,c)$ function of
+the Levenshtein algorithm. However, these implementations were very
+slow, and we decided that evidencing alignment was not a priority. 
+
+We did, however, find that splitting the string caused some
+sub-optimal alignment, and discrepancies in plain levenshtein vs split
+levenshtein distance. We discuss this in detail on
+page~\pageref{split-distance-eval}.
+
+%% \subsection*{Delta encoding}
+%% Finally, we may also look into Delta encoding algorithms. These
+%% describe ways of compressing the storage of a document's history --- a
+%% format in which only the differences between each text is stored, not
+%% the entire version. These algorithms are of the same family of
+%% algorithms discussed above. In fact, we find that one of the fastest
+%% known algorithms,\footnote{According to Hunt's 1998
+%%   study\cite{Hunt1998}} \textit{VDelta}, is a refinement of the block
+%% distance algorithm mentioned above. For a given version $n$ of a
+%% document $doc$ is defined as:
+
+%% $$v_n = v_0 \cup {\Delta}(v_0,v_1) \cup {\Delta}(v_1,v_2) \cup \dots
+%% \cup {\Delta}(v_{n-1},v_n) $$
+
+%% where ${\Delta}(v_i,v_j)$ is the difference between version $i$ and
+%% version $j$ of the document, and the union operation $\cup$ combines
+%% each version in a manner particular to the $\Delta$ data-type. Storing
+%% data in this way can be very efficient, resulting in a compression
+%% factors of five or ten on typical data.\cite{Macdonald2000} It may
+%% also be relatively easy to maintain in our case, due to the linear
+%% nature of Wikipedia revision histories.
