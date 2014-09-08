@@ -4,6 +4,8 @@ characterises it, uses related information to give context.
 The project is made for PSQL. Necessary schema can be set up using
 pg_restore and the .sql file in database.
 
+sklearn package is required for running machine learning scripts
+
 CLI runs from /wrhp.py. Options:
 
 The CLI can be accessed using the shortcut wrhp (Wiki Revision History
