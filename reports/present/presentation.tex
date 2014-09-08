@@ -30,6 +30,14 @@
 \definecolor{owhite}{HTML}{F9FFFF}
 \definecolor{redi}{HTML}{A5121E}
 \definecolor{greeni}{HTML}{3E700F}
+
+\definecolor{col2}{HTML}{ABC8E2}
+\definecolor{col1}{HTML}{E1E6FA}
+\definecolor{col3}{HTML}{F0EAB3}
+\definecolor{col4}{HTML}{375D81}
+\definecolor{col5}{HTML}{C4D7ED}
+
+
 \newcommand{\hilight}[1]{\colorbox{bluegreen}{#1}}
 
 \setbeamercolor{normal text}{fg=oblack}
@@ -102,6 +110,36 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
     \tableofcontents[currentsection]
   \end{frame}
 }
+
+\def \mheight {0.5cm}
+\def \mwidth {0.5cm}
+
+\tikzstyle{bx}=[
+  fill, 
+  minimum height=\mheight, 
+  minimum width=\mwidth, 
+  shape border rotate=90, 
+  shape aspect=0.1,
+  rounded corners=2mm
+]
+
+\tikzstyle{cld}=[
+  cloud, 
+  cloud puffs=15.7, 
+  cloud ignores aspect, 
+  minimum height=\mheight,
+  minimum width=\mwidth, 
+  align=center
+]
+
+\tikzstyle{dtb}=[
+  fill,
+  chamfered rectangle,
+  chamfered rectangle xsep=2cm,
+  minimum height=\mheight, 
+  minimum width=\mwidth,
+  rounded corners=1mm
+]
 
 \usepackage[utf8]{inputenc}
 \usetheme{Hannover}
@@ -660,7 +698,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
     \EndFor
     \EndFor
     \If {length($comparestr[0]$)$ > 0$ OR length($comparestr[1]$)$ > 0$}
-    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \Comment{See algorithm~\ref{lev-dist}}\label{mprocess-spawn}
+    \State $distances[key] \gets LevDist(comparestr[0], comparestr[1])$ \label{mprocess-spawn}
     \Else
     \State $distances[key] \gets 0$
     \EndIf
@@ -671,6 +709,69 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
     \EndFunction
   \end{algorithmic}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Implementation}
+  \begin{itemize}
+  \item C++ core
+  \item Python wrapper
+  \item multi-processing for the separate Levenshtein distance
+    calculations
+  \end{itemize}
+
+  \onslide<2>{
+    
+    Though we are inevitably be waiting on the final process (the normal
+    text), we noticed a sizable increase in speed:
+
+    \begin{figure}
+      \tiny
+      \centering
+      \begin{tikzpicture}[x=0.25cm, y=0.25cm]
+        \draw[step=.1cm,gray,very thin] (0,6) grid (30,5);
+        \draw[step=.1cm,gray,very thin] (0,4) grid (30,3);
+        \draw[step=.1cm,gray,very thin] (0,2) grid (30,1);
+        \draw[step=.1cm,gray,very thin] (0,0) grid (30,-1);
+        
+        \draw[dashed, navyblue] (2,1) -- (2,0);
+        \draw[dashed, navyblue] (5,3) -- (5,0);
+        \draw[dashed, navyblue] (8,5) -- (8,0);
+        \draw[dashed, navyblue] (10,1) -- (10,0);
+        \draw[dashed, navyblue] (9,3) -- (9,0);
+        \draw[dashed, navyblue] (27,5) -- (27,0);
+
+        \draw[fill, redi] (0,0) rectangle (2,-1);
+        \draw[fill, redi] (3,0) rectangle (5,-1);
+        \draw[fill, redi] (6,0) rectangle (8,-1);
+        
+        \draw[fill, blue] (2,2) rectangle (10,1);
+        \draw[fill, blue] (5,4) rectangle (9,3);
+        \draw[fill, blue] (8,6) rectangle (27,5);
+
+        \draw[fill, beige] (27,0) rectangle (30,-1);
+
+
+        \draw(a)[fill, redi] (0,-2) rectangle (4,-2.5);
+        \node[font=\tiny] at (5,-3) {Regex splitting operations};
+
+        \draw(b)[fill, blue] (11,-2) rectangle (15,-2.5);
+        \node[font=\tiny] at (14.7,-3) {Levenshtein calculations};
+
+        \draw(c)[fill, beige] (22,-2) rectangle (26,-2.5);
+        \node[font=\tiny] at (24.9,-3) {Database insertion};
+
+        \node[font=\tiny, align=left] at (2,6.35) {\tiny Child process 3};
+        \node[font=\tiny, align=left] at (2,4.35) {\tiny Child process 2};
+        \node[font=\tiny, align=left] at (2,2.35) {\tiny Child process 1};    
+        \node[font=\tiny, align=left] at (2,0.35) {\tiny Parent process};
+        
+      \end{tikzpicture}
+    \end{figure}
+
+  }
+\end{frame}
+\note{Small articles are fast, and even large articles were small
+  articles once}
 
   \subsection{Trajectory calculation}
   
@@ -684,9 +785,9 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
       \item Compare to every revision in turn
     \end{itemize}
     
-    \onslide<3->{
+    \onslide<2->{
       The result is a map of how close each version was to the final
-      at each point:
+      at each point in that history:
       
         \centering
         \pgfplotsset{width=0.5\textwidth}
@@ -704,23 +805,27 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
   \end{frame}
 
-  \begin{frame}
-    
-    \begin{columns}[c]
-      \column{0.5\linewidth}
-      \pgfplotsset{width=1\linewidth}
+  \begin{frame}{Possible optimisations}
+    \centering
+    \only<1>{ 
+        \pgfplotsset{width=0.8\linewidth}
+        \begin{tikzpicture}
+          \begin{axis}[
+              title={Identifying discarded work}
+            ]
+            \addplot [navyblue] table {dat/dummy1.dat};
+            \addplot [redi] table {dat/dummy2.dat};
+            \addplot [navyblue] table {dat/dummy3.dat};
+            \addplot [navyblue, only marks] table {dat/dummy4.dat};
+          \end{axis}
+        \end{tikzpicture}
+    }
+    \only<2>{ 
+      \pgfplotsset{width=0.8\linewidth}
       \begin{tikzpicture}
-        \begin{axis}
-          \addplot [navyblue] table {dat/dummy1.dat};
-          \addplot [redi] table {dat/dummy2.dat};
-          \addplot [navyblue] table {dat/dummy3.dat};
-          \addplot [navyblue, only marks] table {dat/dummy4.dat};
-        \end{axis}
-      \end{tikzpicture}
-
-      \pgfplotsset{width=1\linewidth}
-      \begin{tikzpicture}
-        \begin{axis}
+        \begin{axis}[
+            title={Identifying a preening area}
+          ]
           \addplot [navyblue] table {dat/dummy1.dat};
           \addplot [redi] table {dat/dummy5.dat};
           \addplot [navyblue] table {dat/dummy6.dat};
@@ -733,11 +838,13 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           coordinates {(4,-2) (4,23)};
         \end{axis}
       \end{tikzpicture}
-      
-      \column{0.5\linewidth}
-      \pgfplotsset{width=1\linewidth}
+    }
+    \only<3>{ 
+      \pgfplotsset{width=0.8\linewidth}
       \begin{tikzpicture}
-        \begin{axis}
+        \begin{axis}[
+            title={Identifying a preening area}
+          ]
           \addplot [navyblue] table {dat/dummy1.dat};
           \addplot [redi] table {dat/dummy7.dat};
           \addplot [navyblue] table {dat/dummy6.dat};
@@ -750,8 +857,23 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           coordinates {(4,-2) (4,23)};
         \end{axis}
       \end{tikzpicture}
-
-    \end{columns}
+    }
+    \only<4>{ 
+      \pgfplotsset{width=0.8\linewidth}
+      \begin{tikzpicture}
+        \begin{axis}[
+            title={`Argument history'}
+          ]
+          \addplot [navyblue] table {dat/dummy9.dat};
+          \addplot [navyblue, only marks] table {dat/dummy9.dat};
+        \end{axis}
+      \end{tikzpicture}
+    }
+    \only<5>{
+      We finally decide not to `preen', but to grade each contribution
+      according to the degree to which it caused an approach of the
+      final version. 
+    }
 \end{frame}
 
 
@@ -791,9 +913,9 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             \node[fill,navyblue,circle] at (4,1) (d) {};
             \node[fill,navyblue,circle] at (4,7) (e) {};
             
-            \node[fill=owhite,left=1.5cm of o, minimum height=3cm]{\textit{undefined region}};
-            \node at (6,7) {\textit{moving away from final}};
-            \node at (6,1) {\textit{moving towards final}};
+            \node[fill=owhite,left=0.5cm of o, minimum height=3cm]{\textit{undefined region}};
+            \node at (6,7) {\textit{~\ ~\ ~\ ~moving away from final}};
+            \node at (6,1) {\textit{\ ~\ ~moving towards final}};
             
             \draw [thick, navyblue, ->] (o) -- (7,4) node[sloped, midway, above]{$0.5$};
             \draw [thick, navyblue, ->] (o) -- (6,2) node[sloped, midway, above]{$0.75$};
@@ -815,14 +937,13 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         \For {$i \gets length(revids), 0$}
         \If{trajectory distance not already in database}
         \State $str1 \gets $database.gettext($revids[i]$)
-        \State $dist \gets $LevDist($str1, target$)\Comment{See algorithm~\ref{lev-dist}}
+        \State $dist \gets $LevDist($str1, target$)
         \State $database.inserttrajectoryinsert(dist)$    
         \EndIf
         \EndFor
         \For{$i \gets 0, length(revids)$}
         \State $dist2 \gets $database.gettrajectory($revids[i],domain$)
-        \State $dist1 \gets$
-        \LineIf{database.gettrajectory($revid[i-1],domain$)}{$i \neq 0$}{$2 \times disty$}
+        \State $dist1 \gets$ database.gettrajectory($revid[i-1],domain$)
         \State $time2 \gets $database.gettimestamp($revid[i],domain$)
         \State $time1 \gets $
         \LineIf{database.gettimestamp($revid[i-1],domain$)}{$i \neq 0$}{$timex$} 
@@ -838,6 +959,64 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         \EndProcedure
       \end{algorithmic}
   \end{frame}
+
+\section{Iplementation}
+\begin{frame}
+
+  \begin{figure}
+  \centering
+  \begin{tikzpicture}[align=center,node distance=0.4cm,font=\tiny]
+
+    \node (database)[dtb, fill=col1]{Database};
+
+    \node (wikidata)[bx, fill=col2, above=of database]{WikiDatabase};
+
+    \node (wikifetch)[bx, fill=col2, above=of wikidata]{WikiRevisionScrape};
+
+    \node (wikilaunch)[bx, fill=col2, left=0.25cm of wikifetch]{WikiLaunch};
+
+    \node (analysis)[bx, fill=col2, right=0.25 of wikifetch]{WikiAnalysis};
+        
+    \node (datplot)[bx, fill=col2,  right=0.25 of analysis]{WikiDataPlot};
+
+    \node (datahandle)[bx, fill=col2, below= of datplot]{WikiDataHandle};
+
+    \node (wikicli)[bx, fill=col5, above= 3cm of wikifetch]{WikiCLI}; 
+    
+    \node (wikipedia)[cld, fill=col4, left=of wikicli]{\textit{Wikipedia}};
+
+    \draw [-] (database) -- (wikidata); 
+
+    \draw [-] (wikidata) -- (analysis); 
+
+    \draw [-] (wikidata) -- (wikifetch); 
+
+    \draw [-] (wikidata) -- (datahandle); 
+
+    \draw [-] (wikifetch) -- (wikipedia); 
+
+    \draw [-] (wikilaunch) -- (wikipedia); 
+
+    \draw [-] (datahandle) -- (datplot);
+
+    \draw [-] (datplot.north) -- (wikicli); 
+
+    \draw [-] (wikifetch) -- (wikicli); 
+
+    \draw [-] (wikicli) -- (analysis); 
+
+    \draw [-] (wikicli) -- (wikilaunch);      
+
+  \end{tikzpicture}
+  \caption{Diagram showing the connections between entities in python implementation}
+\end{figure}
+\end{frame}
+
+%% \begin{frame}
+%%   \frametitle{Alignment problems}
+%%   Later we would wonder if we could afford to do away with the
+%%   trajectory calculations.
+%% \end{frame}
 
   \section{Findings}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
