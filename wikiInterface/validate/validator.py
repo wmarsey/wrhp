@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath('..'))
 import database as db
 
 CLASSIFNUM = 12
-FOLDS = 5
+FOLDS = 10
 
 ##########
 ## Fetch from database, pickle 
@@ -26,22 +26,6 @@ def fetchdatadump(flags, classnum):
     extension = '.pickle'
     dfile = BASEPATH + '/data/alldata' + str(classnum) + extension
     
-    ##if asked and files exist, load from files
-    if flags['load']:
-        filepaths = (wfile,)
-        for f in filepaths:
-            if not os.path.isfile(f):
-                print "file", f, "not found, fetching afresh"
-                break
-        else:
-            data = ()
-            for f in filepaths:
-                data += (pickle.load(open(f, 'rb')),)
-                print "loaded file", f
-            print "done"
-            print 
-            return data
-
     ##get data
     alldata = None
     dtb = db.WikiDatabase()
@@ -64,22 +48,22 @@ def fetchdatadump(flags, classnum):
     if classnum == 5:
         print "Test: can we predict gradient from weights and username edit count over the whole english wiki?"
         alldata = dtb.gettrainingdata6()
-    if classnum == 6:
+    if classnum == 7:
         print "Test: can we predict gradient from weights? (classification)"
         alldata = dtb.gettrainingdata1()
-    if classnum == 7:
+    if classnum == 8:
         print "Test: can we predict gradient from weights and size? (classification)"
         alldata = dtb.gettrainingdata2()
-    if classnum == 8:
+    if classnum == 9:
         print "Test: can we predict gradient from weights and time change? (classification)"
         alldata = dtb.gettrainingdata3()
-    if classnum == 9:
+    if classnum == 10:
         print "Test: can we predict gradient from summed weights and size? (classification)"
         alldata = dtb.gettrainingdata4()    
-    if classnum == 10:
+    if classnum == 11:
         print "Test: can we predict gradient from weights and username edit count over the whole english wiki? (classification)"
         alldata = dtb.gettrainingdata5()
-    if classnum == 11:
+    if classnum == 12:
         print "Test: can we predict gradient from weights and username edit count over the whole english wiki? (classification)"
         alldata = dtb.gettrainingdata6()
 
@@ -91,15 +75,6 @@ def fetchdatadump(flags, classnum):
         shuffle(alldata)
         alldata = alldata[:flags['clip']]
 
-    # if classnum > 5:
-    #     for i in range(len(alldata)):
-    #         alldata[i][-1] = 0 if alldata[i][-1] < 0.5 else 1
-
-    print "saving to file"
-    with open(dfile, 'wb') as d:
-        pickle.dump(alldata,d,protocol=pickle.HIGHEST_PROTOCOL)
-    print "wrote to", dfile
-    print
     print "splitting"
     weights, classifications = zip(*[[list(w[:-1]),\
                                           (0 if w[-1] < 0.5 else 1) \
@@ -108,7 +83,6 @@ def fetchdatadump(flags, classnum):
     for i in range(len(weights)):
         for v in range(len(weights[i])):
             weights[i][v] = float(weights[i][v])
-    print
     print "got", len(weights[0]), "weights"
 
     return weights, classifications 

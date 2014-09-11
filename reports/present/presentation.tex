@@ -169,17 +169,56 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}{Why?}
+  \begin{itemize}[<+->]
+  \item Interesting because automated collaboration is only becoming
+    more popular.
+  \item How do we define authorship in this context?
+  \item Wikipedia is a good model data source because its free,
+    public, simple.
+  \end{itemize} 
+  \only<4>{
 
-  
+    We investigate how we may define share on Wikipedia. As a simple
+    model for more proprietary work. 
+
+  }
+\end{frame}
+
+\begin{frame}{Past studies}
+  On Wikipedia:
+  \begin{itemize}[<+->]
+  \item Wide array of past studies.
+  \item Tangential studies concentrate on `quality'.
+  \item Last year's paper looks comparison's between texts.
+  \end{itemize} 
+
+  \onslide<4->{
+
+    We are going to look at how we:
+    \begin{itemize}
+      \item Automate, improve \& expand on last year's work
+      \item Change our idea of what makes a good edit
+      \item Introduce a better approach
+    \end{itemize}
+  }
+
+\end{frame}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%% COPYRIGHT
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \subsection{Copyright legislation}
   \begin{frame}[shrink]
     \setbeamercovered{transparent}
 
     \frametitle{On copyright} 
     \framesubtitle{What does existing legislature say?}
+    
+    \begin{itemize}[<+->]
+      \item Joint works are inseparable, made with intent
+      \item Ownership is complex / changeable
+      \item Share is divided according to licensing arrangements
+    \end{itemize}    
+    
     \only<1>{
       
       \begin{quote} When two or more authors prepare a work
@@ -244,19 +283,9 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
       \end{quote}
 
     }
-
-    \begin{itemize}[<+->]
-      \item Joint works are inseparable, made with intent
-      \item Ownership is negotiated
-      \item Share is divided according to licensing arrangements
-    \end{itemize}
   \end{frame}
 
-
-
-  \begin{frame}
-
-    \frametitle{Royalties}
+  \begin{frame}{Royalties}
     Three common techniques: \cite{simplemethod}
     \begin{itemize}
       \item<1->{According to previous, similar deals}
@@ -268,13 +297,14 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         Usually divvied up according to respective investment.
       \end{alertblock}
     
-    \begin{block}<4->{}
+    \onslide<4->{
       We define an economy based on adherence to native Wikipedia
       standards of quality, and divide share based upon this.
-    \end{block}
+    }
+
     \begin{exampleblock}<4->{Our heuristic}
-      An article will automatically over time approach the `golden'
-      standard of Wikipedia.
+      We assume an article will automatically over time approach the
+      `golden' standard of Wikipedia.
     \end{exampleblock}
 
   \end{frame}
@@ -288,80 +318,152 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%% WIKIPEDIA
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \subsection{Existing studies}
 
-  \begin{frame}
-    \frametitle{Wikipedia} 
+%  \begin{frame}
+%    \frametitle{Wikipedia} 
+%
+%    6th most popular website in the world.\cite{Alexa-about2014}
+%    %More content goes here
+%  \end{frame}
+%
+%
+%  \begin{frame}
+%    \frametitle{Wikipedia in academia}
+%    AcaWiki: 1,147\\
+%    wikipapers: ~1,500
+%    
+%    \begin{block}<2->{Qualititavely analysing wikipedia}
+%      A very popular academic pastime
+%
+%      At cross-purposes to our study, but useful in some ways
+%
+%    \end{block}
+%
+%    %More content goes here
+%  \end{frame}
+%
+%  \note{Kind of a moot point in terms of this study. The techniques
+%    used}
+%
+%  \begin{frame}{The Wikitrust software}
+%    Highlighted and measured the trust a reader could have in each
+%    word, given it's age.
+%
+%    \begin{itemize}
+%    \item <2-> A culmination of a lot of existing and original work
+%    \item <3-> Useless \cite{Lucassen2011}
+%    \end{itemize}
+%    
+%    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio, clip=true, resolution=600]{img/wikitrust.png}
+%
+%  \end{frame}
+%
+%  \begin{frame}[fragile]{The Wikitrust software}
+%    \begin{figure}
+%      \begin{tikzpicture}
+%        \matrix (m) [matrix of math nodes, row sep=4em, column
+%          sep=4em]{ & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+%        \path[-stealth] (m-2-1) edge node [left]
+%             {$ed(rev_{i-1},rev_i)$} (m-1-2) edge node [below]
+%             {$ed(rev_{i-1},rev_{i+1})$} (m-2-3) (m-1-2) edge node
+%             [right] {$ed(rev_i,rev_{i+1})$} (m-2-3); 
+%      \end{tikzpicture}\\ 
+%      \vspace{5mm}
+%      \textit{case a)} if $ed(rev_{i-1},rev_i) < ed(rev_{i-1},rev_i) +
+%      ed(rev_{i},rev_{i+1})$,\newline then $ed(rev_{i-1},rev_i)$ has been
+%      partially undone.\\
+%      \vspace{5mm}
+%      \textit{case b)} if $ed(rev_{i-1},rev_{i+1}) = 0$
+%      ($rev_{i-1} = rev_{i+1}$),\newline then $ed(rev_{i-1},rev_i)$ has been
+%      completely undone.\cite{Adler2007}
+%    \end{figure}
+%\end{frame}
 
-    6th most popular website in the world.\cite{Alexa-about2014}
-    %More content goes here
-  \end{frame}
-
-
-  \begin{frame}
-    \frametitle{Wikipedia in academia}
-    AcaWiki: 1,147\\
-    wikipapers: ~1,500
-    
-    \begin{block}<2->{Qualititavely analysing wikipedia}
-      A very popular academic pastime
-
-      At cross-purposes to our study, but useful in some ways
-
-    \end{block}
-
-    %More content goes here
-  \end{frame}
-
-  \note{Kind of a moot point in terms of this study. The techniques
-    used}
-
-  \begin{frame}{The Wikitrust software}
-    Highlighted and measured the trust a reader could have in each
-    word, given it's age.
-
-    \begin{itemize}
-    \item <2-> Interesting
-    \item <3-> A combination of a lot of existing and original work
-    \item <4-> Useless \cite{Lucassen2011}
-    \end{itemize}
-    
-    \includegraphics[clip=true,resolution=600]{../finl/img/wikitrust.png}
-
-  \end{frame}
-
-  \begin{frame}[fragile]{The Wikitrust software}
-    \begin{figure}
-      \begin{tikzpicture}
-        \matrix (m) [matrix of math nodes, row sep=4em, column
-          sep=4em]{ & v_i & \\ v_{i-1} & & v_{i+1}\\ };
-        \path[-stealth] (m-2-1) edge node [left]
-             {$ed(rev_{i-1},rev_i)$} (m-1-2) edge node [below]
-             {$ed(rev_{i-1},rev_{i+1})$} (m-2-3) (m-1-2) edge node
-             [right] {$ed(rev_i,rev_{i+1})$} (m-2-3); 
-      \end{tikzpicture}\\ 
-      \vspace{5mm}
-      \textit{case a)} if $ed(rev_{i-1},rev_i) < ed(rev_{i-1},rev_i) +
-      ed(rev_{i},rev_{i+1})$,\newline then $ed(rev_{i-1},rev_i)$ has been
-      partially undone.\\
-      \vspace{5mm}
-      \textit{case b)} if $ed(rev_{i-1},rev_{i+1}) = 0$
-      ($rev_{i-1} = rev_{i+1}$),\newline then $ed(rev_{i-1},rev_i)$ has been
-      completely undone.\cite{Adler2007}
-    \end{figure}
-\end{frame}
-
-  \section{The data}
+%\subsection{Database storage}
+%\begin{frame}[fragile]{Our database}
+%\begin{figure}[b]
+%  \tiny
+%  \centering
+%  \begin{subfigure}[t]{0.3\linewidth}
+%    \centering
+%    \begin{tabular}{ccc}
+%      \toprule
+%      \underline{revid} & \underline{domain} & content\\
+%      \midrule
+%      $\vdots$ & $\vdots$ & $\vdots$\\
+%    \end{tabular}
+%    \caption{\tiny Table: wikicontent}
+%  \end{subfigure}
+%  \hspace{2mm}
+%  \begin{subfigure}[t]{0.2\linewidth}
+%    \centering
+%    \begin{tabular}{cc}
+%      \toprule
+%      \underline{pageid} & \underline{domain} \\
+%      \midrule
+%      $\vdots$ & $\vdots$\\
+%    \end{tabular}
+%    \caption{\tiny Table:~wikifetched}
+%  \end{subfigure}
+%  \hspace{2mm}
+%  \begin{subfigure}[t]{0.4\linewidth}
+%    \centering
+%    \begin{tabular}{cccc}
+%      \toprule
+%      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
+%      \midrule
+%      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+%    \end{tabular}
+%    \caption{\tiny Table: wikitrajectory}
+%  \end{subfigure}\\
+%  \vspace{2mm}
+%  \begin{subfigure}[b!]{\linewidth}
+%    \centering
+%    \begin{tabular}{ccccccccc}
+%      \toprule
+%      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
+%      comment \\ 
+%      \midrule
+%      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
+%      & $\vdots$ & $\vdots$ \\
+%    \end{tabular}
+%    \caption{\tiny Table: wikirevisions}
+%  \end{subfigure}\\
+%  \vspace{2mm}
+%  \begin{subfigure}[b!]{\linewidth}
+%    \centering
+%    \begin{tabular}{ccccccccc}
+%      \toprule
+%      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
+%      structure & normal & gradient\\
+%      \midrule
+%      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
+%      $\vdots$ & $\vdots$ & $\vdots$ \\
+%    \end{tabular}
+%    \caption{\tiny Table: wikiweights} 
+%  \end{subfigure}
+%  \caption{Schemata for the database used to store wikipedia data}
+%\end{figure}  
+%\end{frame}
+%  
+  \section{The procedure}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%% 
+  %%%%% ANALYSING THE DATA
+  %%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%% 
   %%%%% GETTING / STORING THE DATA
   %%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \subsection{The Wikipedia API}
-  \begin{frame}
-    \frametitle{The Wikipedia API}
+  \subsection{The data}
+  \begin{frame}{Getting data}{The Wikipedia API}
     
     \begin{quote}
       The MediaWiki web API is a Web service that provides convenient
@@ -392,20 +494,19 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
  
   \end{frame}
   
-  \subsection{Fetching procedure}
-  \begin{frame}[fragile]{Alogrithm for fetching a \\revision history}    
+  \begin{frame}[fragile]{Getting data}{Alogrithm for fetching a revision history}    
         \tiny  
       \begin{algorithmic}
         \tiny
-          \Procedure{Fetch}{$pageid$}
+          \Procedure{Fetch}{$pageid, domain$}
           \State $corrupt,visitedpages \gets \emptyset , \emptyset$
           \State $revid \gets 0$
-          \State $parentid \gets wiki.getlatest(pageid)$
+          \State $parentid \gets wiki.getlatest(pageid, domain)$
           \While{$revid \ne 0$ AND $revid \notin visitedpages$}\label{datal1} 
           \If{$revid$ is in the database}
-          \State $parentid \gets database.getparentid(revid)$
+          \State $parentid \gets database.getparentid(revid, domain)$
           \Else
-          \State $pagedata \gets wiki.getpage(revid)$
+          \State $pagedata \gets wiki.getpage(revid, domain)$
           \EndIf
           \If{$pagedata$ is corrupt}\label{datal3}
           \If{corruptness is recoverable}
@@ -422,7 +523,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           \ForAll {$(revision, parent, domain) \in corrupt$}
           \State $CorruptClean(revision, parent, domain)$
           \EndFor
-          \State Mark $pageid$ as complete in $database$
+          \State Mark $pageid, domain$ as complete in $database$
           \EndProcedure
         \end{algorithmic}
 \end{frame}
@@ -430,85 +531,74 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 \note{Discoverable history. Is a little annoying, but fine as a data
   source}
 
-\subsection{Database storage}
-\begin{frame}[fragile]{Our database}
+\begin{frame}[fragile]{Getting data}{Our database}
 \begin{figure}[b]
-  \tiny
-  \centering
-  \begin{subfigure}[t]{0.3\linewidth}
-    \centering
-    \begin{tabular}{ccc}
-      \toprule
-      \underline{revid} & \underline{domain} & content\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$\\
-    \end{tabular}
-    \caption{\tiny Table: wikicontent}
-  \end{subfigure}
-  \hspace{2mm}
-  \begin{subfigure}[t]{0.2\linewidth}
-    \centering
-    \begin{tabular}{cc}
-      \toprule
-      \underline{pageid} & \underline{domain} \\
-      \midrule
-      $\vdots$ & $\vdots$\\
-    \end{tabular}
-    \caption{\tiny Table:~wikifetched}
-  \end{subfigure}
-  \hspace{2mm}
-  \begin{subfigure}[t]{0.4\linewidth}
-    \centering
-    \begin{tabular}{cccc}
-      \toprule
-      \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{\tiny Table: wikitrajectory}
-  \end{subfigure}\\
-  \vspace{2mm}
-  \begin{subfigure}[b!]{\linewidth}
-    \centering
-    \begin{tabular}{ccccccccc}
-      \toprule
-      \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
-      comment \\ 
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
-      & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{\tiny Table: wikirevisions}
-  \end{subfigure}\\
-  \vspace{2mm}
-  \begin{subfigure}[b!]{\linewidth}
-    \centering
-    \begin{tabular}{ccccccccc}
-      \toprule
-      \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
-      structure & normal & gradient\\
-      \midrule
-      $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
-      $\vdots$ & $\vdots$ & $\vdots$ \\
-    \end{tabular}
-    \caption{\tiny Table: wikiweights} 
-  \end{subfigure}
-  \caption{Schemata for the database used to store wikipedia data}
+ \tiny
+ \centering
+ \begin{subfigure}[t]{0.3\linewidth}
+   \centering
+   \begin{tabular}{ccc}
+     \toprule
+     \underline{revid} & \underline{domain} & content\\
+     \midrule
+     $\vdots$ & $\vdots$ & $\vdots$\\
+   \end{tabular}
+   \caption{\tiny Table: wikicontent}
+ \end{subfigure}
+ \hspace{2mm}
+ \begin{subfigure}[t]{0.2\linewidth}
+   \centering
+   \begin{tabular}{cc}
+     \toprule
+     \underline{pageid} & \underline{domain} \\
+     \midrule
+     $\vdots$ & $\vdots$\\
+   \end{tabular}
+   \caption{\tiny Table:~wikifetched}
+ \end{subfigure}
+ \hspace{2mm}
+ \begin{subfigure}[t]{0.4\linewidth}
+   \centering
+   \begin{tabular}{cccc}
+     \toprule
+     \underline{revid1} & \underline{revid2} & \underline{domain} & distance\\
+     \midrule
+     $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+   \end{tabular}
+   \caption{\tiny Table: wikitrajectory}
+ \end{subfigure}\\
+ \vspace{2mm}
+ \begin{subfigure}[b!]{\linewidth}
+   \centering
+   \begin{tabular}{ccccccccc}
+     \toprule
+     \underline{revid} & \underline{domain} & pageid & title & username & userid & time & size &
+     comment \\ 
+     \midrule
+     $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$
+     & $\vdots$ & $\vdots$ \\
+   \end{tabular}
+   \caption{\tiny Table: wikirevisions}
+ \end{subfigure}\\
+ \vspace{2mm}
+ \begin{subfigure}[b!]{\linewidth}
+   \centering
+   \begin{tabular}{ccccccccc}
+     \toprule
+     \underline{revid} & \underline{domain} & maths & citations & filesimages & links &
+     structure & normal & gradient\\
+     \midrule
+     $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &
+     $\vdots$ & $\vdots$ & $\vdots$ \\
+   \end{tabular}
+   \caption{\tiny Table: wikiweights} 
+ \end{subfigure}
+ \caption{Schemata for the database used to store wikipedia data}
 \end{figure}  
 \end{frame}
-  
-  \section{The analysis}
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%% 
-  %%%%% ANALYSING THE DATA
-  %%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  \subsection{Edit distance}
-  \begin{frame}
-    \frametitle{Wikipedia diffs} 
+  \subsection{Pair-distance calculation}
+  \begin{frame}{Pair-distance calculation}{Wikipedia diffs} 
 
     We analyse using a Levenshtein edit-distance calculation
     algorithm, rather than using native Wikipedia diff-ing measures
@@ -522,15 +612,16 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
     \onslide<2->{
       
-      However, measures are insufficient, and have only partial
-      support from the Wikipedia API
+      The measures are insufficient, and are only partially accessible
+      via the Wikipedia API
       
     }
     
   \end{frame}
 
-  \begin{frame}
-    \frametitle{Levenshtein edit distance}
+  \begin{frame}{Pair-distance calculation}{Levenshtein edit distance}
+	
+	The minimum amount of operations needed to transform one string into another.
 
     \begin{figure}
       \vspace{5mm}
@@ -558,11 +649,40 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
   \end{frame}
 
-  \subsection{Pair-distance calculation}
+  \begin{frame}{Pair-distance calculation}{Levenshtein implementation}
+ \begin{algorithmic}
+    \Function{LevDist}{$str1, str2$}
+    \State $s1len \gets $length($str1$)
+    \State $s2len \gets $length($str2$)
+    \State $column \gets [0_{1}, 0_{2}, \ldots, 0_{s1len}]$
+    \For{$x \gets 1,s2len$}
+    \State $col[x] \gets x$
+    \EndFor
+    \For{$p \gets 1,s1len$}
+    \State $column[0] \gets p$
+    \State $r \gets p-1$
+    \For{$q \gets 1,s2len$}
+    \State $oldnum \gets column[q]$
+    \State $column[q] \gets min(col[q]+1, col[q-1] + 1, r + str1[p-1] \neq str2[q-1])$
+    \EndFor
+    \EndFor
+    \State return $col[s1len]$
+    \EndFunction
+  \end{algorithmic}
+\end{frame}
 
-%\newcommand\tinyv{\@setfontsize\tinyv{4pt}}
-\begin{frame}{Splitting the text by wikimarkup}
+\begin{frame}{Pair-distance calculation}{Splitting the text by wikimarkup}
   \only<1>{
+
+    Wikimarkup -- a HTML-like like language for defining and then
+    rendering kinds of Wikipedia texts.
+
+    Used in last year's paper, and many previous papers in the
+    literature. 
+
+  }
+
+\only<2>{
   	We may identify the following types of text from their tags:
   	\begin{itemize}
   	\item Internal links
@@ -579,7 +699,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   \item Tables
   \end{itemize}
   }
-  \only<2>{
+  \only<3>{
   We then group them logically, as follows:
   \begin{description}
   \item[Equation]\hfill\\
@@ -589,17 +709,14 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   \item[Links]\hfill\\
     Internal Links, External Links
   \item[Structural]\hfill\\ 
-    Section headings, Tables\\
-    It was found in 2005 that this, if anything, was the clearest
-    difference between Wikipedia and commercial
-    encyclopedias,\cite{Giles2005} supporting previous
-    conjecture.\cite{Denning2005} The regexes in this group provide a
-    simple way of noticing changes that affect structure.
+    Section headings, Tables
+  \item[Files / Images]\hfill\\ 
+    Images, files, musical scores
   \end{description}
   }
 \end{frame}
 
-    \begin{frame}[fragile]{Splitting text by wiki-markup tags}
+    \begin{frame}[fragile]{Pair-distance calculation}{Splitting text by wiki-markup tags}
 \begin{figure}
   \tiny
   \centering
@@ -674,7 +791,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 \end{figure}
 \end{frame}
 
-\begin{frame}{Algorithm for processing split levenshtein distance}
+\begin{frame}{Pair-distance calculation}{Algorithm}
   \tiny
   \begin{algorithmic}
     \State $regexes \gets $\{
@@ -710,19 +827,18 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   \end{algorithmic}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Implementation}
+\begin{frame}{Pair-distance calculation}{Implementation}
   \begin{itemize}
   \item C++ core
   \item Python wrapper
-  \item multi-processing for the separate Levenshtein distance
+ \item multi-processing for the separate Levenshtein distance
     calculations
   \end{itemize}
 
   \onslide<2>{
     
-    Though we are inevitably be waiting on the final process (the normal
-    text), we noticed a sizable increase in speed:
+    Though we are inevitably waiting on the final process, we still
+    notice sizable increase in speed.
 
     \begin{figure}
       \tiny
@@ -773,10 +889,118 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 \note{Small articles are fast, and even large articles were small
   articles once}
 
-  \subsection{Trajectory calculation}
-  
-  \begin{frame}
-    \frametitle{Understanding context}
+  \subsection{Edit and share graphs}
+  \begin{frame}{Edit and Share graphs}
+    We sum the weights of the rewards, group by user and normalize. We
+    can compare with different weighted versions, and edit count.
+
+    \only<1>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/lastolympianedit.png}
+
+    }
+
+    \only<2>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/lastolympianshare.png}
+
+    }
+
+    \only<3>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/zambijoedit.png}
+
+    }
+
+    \only<4>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/zambijoshare.png}
+
+    }
+
+    \only<5>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/belvoiredit.png}
+
+    }
+
+    \only<6>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/belvoirshare.png}
+
+    }
+
+    \only<7>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/agrotisedit.png}
+
+    }
+
+    \only<8>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/argotisshare.png}
+
+    }
+
+  \end{frame}
+
+  \begin{frame}{Edit and Share graphs with weights}
+    The upper graph is unweighted, the lower graph weighted
+    
+    \onslide<1-4>{
+
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevUnweighted.png}
+
+    }
+
+    \only<2>{
+      {\tiny maths:}\\
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevMaths.png}
+
+    }
+
+    \only<3>{
+      {\tiny files / images:}\\
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevfilesimages.png}
+
+    }
+
+    \only<4>{
+      {\tiny links:}\\
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevLinks.png}
+
+    }
+\end{frame}
+
+  \begin{frame}{Edit and Share graphs with weights}
+
+    \begin{alertblock}{Edit species distribution}
+      In our database of ~250,000 revisions:
+      \begin{tabular}{l|r|r}
+        \textbf{type} & \textbf{edit op count} & \textbf{\%}\\
+        maths & 72,284 & 0.00003\%\\
+        structure & 2,989,005 & 0.00109\%\\
+        links  &   12,422,194 & 0.00454\%\\
+        normal& 2,717,266,294 & 0.99326\%\\
+        citations & 2,789,216 & 0.00102\%\\
+        filesimages& 166,518 & 0.00006\%\\
+      \end{tabular}
+    \end{alertblock}
+
+    \only<2>{
+
+      Reasons?
+      \begin{itemize}
+      \item Wikimarkup must be learnt
+      \item Using makrup is less natural
+      \item Copyright problems 
+        \end{itemize}
+    }
+
+  \end{frame}
+
+  \subsection{Trajectory calculation}  
+  \begin{frame}{Trajectory calculation}{History plotting}
     
     We want to augment our first measure by analysing context. Our
     steps are:
@@ -805,7 +1029,7 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 
   \end{frame}
 
-  \begin{frame}{Possible optimisations}
+  \begin{frame}{Trajectory calculation}{Use for preening}
     \centering
     \only<1>{ 
         \pgfplotsset{width=0.8\linewidth}
@@ -858,28 +1082,46 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
         \end{axis}
       \end{tikzpicture}
     }
-    \only<4>{ 
-      \pgfplotsset{width=0.8\linewidth}
-      \begin{tikzpicture}
-        \begin{axis}[
-            title={`Argument history'}
-          ]
-          \addplot [navyblue] table {dat/dummy9.dat};
-          \addplot [navyblue, only marks] table {dat/dummy9.dat};
-        \end{axis}
-      \end{tikzpicture}
-    }
-    \only<5>{
+    \only<4>{
       We finally decide not to `preen', but to grade each contribution
       according to the degree to which it caused an approach of the
       final version. 
-    }
+   	}
 \end{frame}
 
+    \begin{frame}[fragile]{Trajectory calculation}{Getting greater context}
 
-  \begin{frame}
-  
-    \begin{figure}{Defining gradient factor}
+      We finally decide not to `preen', but to grade each contribution
+      according to the degree to which it caused an approach of the
+      final version.   
+    
+    \begin{figure}
+      \begin{tikzpicture}
+        \matrix (m) [matrix of math nodes, row sep=4em, column
+          sep=4em]{ & v_i & \\ v_{i-1} & & v_{i+1}\\ };
+        \path[-stealth] (m-2-1) edge node [left]
+             {$ed(rev_{i-1},rev_i)$} (m-1-2) edge node [below]
+             {$ed(rev_{i-1},rev_{i+1})$} (m-2-3) (m-1-2) edge node
+             [right] {$ed(rev_i,rev_{i+1})$} (m-2-3); 
+      \end{tikzpicture}
+    \end{figure}
+\end{frame}
+
+ \begin{frame}{Trajectory calculation}{The Wikitrust software}
+   Highlighted and measured the trust a reader could have in each
+   word, given it's age.\cite{Adler2007}
+
+   \begin{itemize}
+   \item <1-> A culmination of a lot of existing and original work
+   \item <2-> Useless \cite{Lucassen2011}
+   \end{itemize}
+   
+   \includegraphics[width=\linewidth, height=\textheight, keepaspectratio, clip=true, resolution=600]{img/wikitrust.png}
+
+ \end{frame}
+
+  \begin{frame}{Trajectory calculation}{Defining gradient factor}
+    \begin{figure}
       \tiny
       \centering
       \begin{subfigure}[b]{\linewidth}
@@ -891,11 +1133,11 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
           0 & \quad \text{if ${\Delta}x = 0$ and ${\Delta}y >= 0$ }\\
           \frac{arctan({\Delta}y/{\Delta}x)}{\pi}&\quad\text{if ${\Delta}x > 0$}
         \end{array} \right.\]
-      \caption{\tiny gradient factor definition, with $\Delta x$ as
+      {\tiny gradient factor definition, with $\Delta x$ as
         change in time and $\Delta y$ as difference in to-final edit
         distance}
       \end{subfigure}\\
-      \vspace{10mm}
+      \vspace{4mm}
       \onslide<2>{
         \begin{subfigure}[b]{\linewidth}
           \tiny
@@ -923,13 +1165,26 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
             \draw [thick, navyblue, ->] (o) -- (4,1) node[midway, right]{$1$};
             \draw [thick, navyblue, ->] (o) -- (4,7) node[midway, right]{$0$};
           \end{tikzpicture}
-          \caption{\tiny mapping gradient factor to an arc}
+          {\tiny mapping gradient factor to an arc}
         \end{subfigure}
       }
     \end{figure}
   \end{frame}
+  
+  \begin{frame}{Trajectory calculation}{Defining gradient factor}
+      \pgfplotsset{width=0.8\linewidth}
+      \begin{tikzpicture}
+        \begin{axis}[
+            title={`Argument history'}
+          ]
+          \addplot [navyblue] table {dat/dummy9.dat};
+          \addplot [navyblue, only marks] table {dat/dummy9.dat};
+        \end{axis}
+      \end{tikzpicture}
 
-  \begin{frame}{Algorithm for trajectory calculation}
+  \end{frame}
+
+  \begin{frame}{Trajectory calculation}{Algorithm}
       \begin{algorithmic}
         \tiny
         \Procedure{TrajectoryCalculation}{$revids, domain$}
@@ -960,56 +1215,55 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
       \end{algorithmic}
   \end{frame}
 
-\section{Iplementation}
-\begin{frame}
+  \subsection{Implementation}
+  \begin{frame}{Implementation}
+    \begin{figure}
+      \centering
+      \begin{tikzpicture}[align=center,node distance=0.5cm,font=\tiny]
 
-  \begin{figure}
-  \centering
-  \begin{tikzpicture}[align=center,node distance=0.4cm,font=\tiny]
+        \node (database)[dtb, fill=col1]{Database};
 
-    \node (database)[dtb, fill=col1]{Database};
+        \node (wikidata)[bx, fill=col2, above=of database]{WikiDatabase};
 
-    \node (wikidata)[bx, fill=col2, above=of database]{WikiDatabase};
+        \node (wikifetch)[bx, fill=col2, above=of wikidata]{WikiRevisionScrape};
 
-    \node (wikifetch)[bx, fill=col2, above=of wikidata]{WikiRevisionScrape};
+        \node (wikilaunch)[bx, fill=col2, left=0.25cm of wikifetch]{WikiLaunch};
 
-    \node (wikilaunch)[bx, fill=col2, left=0.25cm of wikifetch]{WikiLaunch};
-
-    \node (analysis)[bx, fill=col2, right=0.25 of wikifetch]{WikiAnalysis};
+        \node (analysis)[bx, fill=col2, right=0.25 of wikifetch]{WikiAnalysis};
         
-    \node (datplot)[bx, fill=col2,  right=0.25 of analysis]{WikiDataPlot};
+        \node (datplot)[bx, fill=col2,  right=0.25 of analysis]{WikiDataPlot};
 
-    \node (datahandle)[bx, fill=col2, below= of datplot]{WikiDataHandle};
+        \node (datahandle)[bx, fill=col2, below= of datplot]{WikiDataHandle};
 
-    \node (wikicli)[bx, fill=col5, above= 3cm of wikifetch]{WikiCLI}; 
-    
-    \node (wikipedia)[cld, fill=col4, left=of wikicli]{\textit{Wikipedia}};
+        \node (wikicli)[bx, fill=col5, above=of wikifetch]{WikiCLI}; 
+        
+        \node (wikipedia)[cld, fill=col4, left=of wikicli]{\textit{Wikipedia}};
 
-    \draw [-] (database) -- (wikidata); 
+        \draw [-] (database) -- (wikidata); 
 
-    \draw [-] (wikidata) -- (analysis); 
+        \draw [-] (wikidata) -- (analysis); 
 
-    \draw [-] (wikidata) -- (wikifetch); 
+        \draw [-] (wikidata) -- (wikifetch); 
 
-    \draw [-] (wikidata) -- (datahandle); 
+        \draw [-] (wikidata) -- (datahandle); 
 
-    \draw [-] (wikifetch) -- (wikipedia); 
+        \draw [-] (wikifetch) -- (wikipedia); 
 
-    \draw [-] (wikilaunch) -- (wikipedia); 
+        \draw [-] (wikilaunch) -- (wikipedia); 
 
-    \draw [-] (datahandle) -- (datplot);
+        \draw [-] (datahandle) -- (datplot);
 
-    \draw [-] (datplot.north) -- (wikicli); 
+        \draw [-] (datplot.north) -- (wikicli); 
 
-    \draw [-] (wikifetch) -- (wikicli); 
+        \draw [-] (wikifetch) -- (wikicli); 
 
-    \draw [-] (wikicli) -- (analysis); 
+        \draw [-] (wikicli) -- (analysis); 
 
-    \draw [-] (wikicli) -- (wikilaunch);      
+        \draw [-] (wikicli) -- (wikilaunch);      
 
-  \end{tikzpicture}
-  \caption{Diagram showing the connections between entities in python implementation}
-\end{figure}
+      \end{tikzpicture}
+      \caption{Diagram showing the connections between entities in python implementation}
+    \end{figure}
 \end{frame}
 
 %% \begin{frame}
@@ -1018,7 +1272,6 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
 %%   trajectory calculations.
 %% \end{frame}
 
-  \section{Findings}
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%% 
@@ -1026,6 +1279,306 @@ edge[every join]#1(\tikzchaincurrent)\fi}}}
   %%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Plotting with trajectory}
+  \begin{frame}{Edit and Share graphs with gradient factor}
+    The lower graph includes the gradient factor.
+
+    \only<1>{
+      \small{unweighted:}\\
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevUnweighted.png}
+      
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevUnweightedGradient.png}
+    }
+
+    \only<2>{
+      \small{maths:}\\
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevMaths.png}
+      
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevMathsGradient.png}
+    }
+
+    \only<3>{
+      \small{links:}\\
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevLinks.png}
+      
+      \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio,resolution=600]{img/weightings/LudvigFaddeevLinksGradient.png}
+    }
+  \end{frame}
+
+
+  \begin{frame}{Typical trajectory graphs}
+
+    \only<1>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/altman.png}
+
+    }
+
+    \only<2>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/silver.png}
+
+    }
+
+    \only<3>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/utica.png}
+
+    }
+
+    \only<4>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/basketball.png}
+
+    }
+
+
+    \only<5>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/kelly.png}
+
+    }    
+
+    \only<6>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/pl291709traj.png}
+
+    }    
+
+  \end{frame}
+
+  \begin{frame}{Small Wikipedia graphs}
+    ...showing evidence of bot link migration
+
+    \only<1>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/marroko.png}
+
+    }
+
+
+    \only<2>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/sicilia.png}
+
+    }
+
+    \only<3>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/icnahi.png}
+
+    }
+
+    \only<4>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/957.png}
+
+    }
+
+    \only<5>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/hif1042.png}
+
+    }
+
+    \only<6>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/fo1937.png}
+
+    }
+
+  \end{frame}
+
+  \begin{frame}{Combination plots}
+
+    \only<1>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/specialcombo/en5800180.png}
+
+    }
+
+    \only<2>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/specialcombo/en4834368.png}
+
+    }
+    
+    \only<3>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/specialcombo/en21113485.png}
+
+    }
+    
+    \only<4>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/specialcombo/en2387806.png}
+
+    }
+    
+    \only<5>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/specialcombo/sheldrake.png}
+
+    }
+
+    \only<6>{
+
+      \includegraphics[width=\linewidth,height=\textheight,keepaspectratio,resolution=600]{img/dereksmartcombo.png}
+
+    }
+  \end{frame}
+
+  \section{Evaluation}
+  \begin{frame}{Alignment of levenshtein distance}
+    \only<1>{
+
+      Is it possible to do away with the weights, and get an idea of
+      the distance between each pair using the trajectory diagram?
+
+      Deleting some text and reinserting over two operations may by
+      less efficient than swapping in one.
+
+      But our splitting of the text causes further problems:
+      
+      {\tiny $ed($``We can use a [[spork]] to eat spaghetti.''$,$``We can use forks
+      to eat lovely spaghetti.''$) = 7$}
+      
+    }
+
+    \only<2>{
+      
+    \begin{tikzpicture}[
+        block1/.style={
+          text width=1.5cm, 
+          minimum height=1cm,
+          align=center,
+          anchor=north,
+          font=\tiny
+        },
+        block2/.style={
+          text width=1.5cm, 
+          minimum height=1cm,
+          align=center,
+          anchor=north,
+          font=\tiny
+        },
+        font=\small
+      ]
+      \node (a) [block1] {We can use a [[spork]] to eat spaghetti.};
+
+      \node (b) [block1, right=0.5 of a]{We can use forks to eat lovely
+        spaghetti.};
+
+      \node (c) [block1,below=0.25 of a]{We can use a \hilight{[[spork]]} to eat
+        spaghetti.};
+
+      \node (d) [block1,below=0.25 of b]{We can use forks to eat lovely
+        spaghetti.};
+
+      \node (e) [block2,below left=0.25cm and 0.5cm of c] {\hilight{[[spork]]}};
+      
+      \node (f) [block2,right=0.5 of e] {We can use a\ \  to eat spaghetti.};
+
+      \node (g) [block2,right=0.5 of f] {$\emptyset$};
+      
+      \node (h) [block2,right=0.5 of g] {We can use forks to eat lovely
+        spaghetti.};
+
+      \node (i) [block2,below=0.25 of e] {\hilight{[[spork]]}}; 
+      
+      \node (j) [block2,below=0.25 of f] {$\emptyset$}; 
+      
+      \node (k) [block2,below =0.25 of g] {We can use a\ \  to eat
+        spaghetti.};
+
+      \node (l) [block2,below =0.25 of h] {We can use forks to eat lovely
+        spaghetti.};
+
+      \node (m) [block2,below= 0.25 of i] {$ed_{links} = 9$};
+
+      \node (n) [block2,below =0.25 of k] {$ed_{normal} = 18$};
+      
+      \node (o) [block2,below left=0.25cm and 0.5cm of n] {$ed_{total} = 27$};
+
+      \draw [->] (a) -- (c);
+      \draw [->] (b) -- (d);
+      \draw [->] (c) -- (e);
+      \draw [->] (c) -- (f);
+      \draw [->] (d) -- (g);
+      \draw [->] (d) -- (h);
+      \draw [->] (e) -- (i);
+      \draw [->] (g) -- (j);
+      \draw [->] (f) -- (k);
+      \draw [->] (h) -- (l);
+      \draw [->] (i) -- (m);
+      \draw [->] (j) -- (m);
+      \draw [->] (k) -- (n);
+      \draw [->] (l) -- (n);
+      \draw [->] (m) -- (o);
+      \draw [->] (n) -- (o);
+
+    \end{tikzpicture}
+ 
+    Diagram from work leading up to the Wikitrust Software
+ }
+
+\end{frame}
+
+\begin{frame}{Other optimisations}
+
+  \begin{description}
+    \item[\textbf{Identify moves of large blocks of text}] structure
+      of Wikipedia article can be weak.\cite{Giles2005}
+    \item[\textbf{Refinement of gradient factor}] If someone makes two
+      consecutive edits, is the reward less than or greater than if
+      they made the edit in one go?
+    \item[\textbf{Better data}] Wikipedia dumps...
+    \item[\textbf{Further subjects}] Source control...
+  \end{description}
+  
+  \only<2>{
+
+     \includegraphics[width=\linewidth,height=0.4\textheight,keepaspectratio,resolution=600]{img/myproject101.png}
+
+  }
+  
+\end{frame}
+
+\begin{frame}{Machine learning validation of gradient factor}
+  We wanted to see if we could predict gradient factor using other
+  weights, size, etc.
+
+  If we can predict gradient factor, we can see if some of the things
+  we analysed come to bear on how much that edit will affect the final
+  form.
+ 
+  \onslide<2->{
+
+    We tried regression and classification techniques, without much
+    success. 
+  }
+
+\onslide<3->{
+  Not enough information
+  \begin{itemize}
+    \item More information about text?
+    \item More information about context?
+  \end{itemize}
+}
+\end{frame}
+
+\section{Conclusions}
+\begin{frame}{Conclusions}
+
+\begin{enumerate}[<+->]  
+\item If we are distributing royalties to collaborators, then we must also consider the item has worth in its current form.
+\item If we have a full history, we can trace the provenance of the parts of the current form.
+\item We can't assume that edits that aren't (partially) present at the end aren't important to the shape and nature of the current form.
+\item Qualitative analysis of the fact of each edit is misguided.
+\item More important is the work's `path', and the discussions around
+  it. (Easily accessible usually but perhaps not in programming.)
+\end{enumerate}
+\end{frame}
 
   \section{References}
   \begin{frame}[allowframebreaks] %allow to expand references to multiple frames (slides)

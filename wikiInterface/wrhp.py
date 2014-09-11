@@ -37,7 +37,8 @@ class WikiCLI:
         elif self.params['title']:
             wl.showtitle(self.params['title'], 
                          self.params['domain'])
-        else: wl.showuser(self.params['user'],
+        elif self.params['user']: 
+            wl.showuser(self.params['user'],
                         self.params['domain'])
         return 0
 
@@ -107,7 +108,7 @@ class WikiCLI:
                     title = scraper.getTitle()
                     domain = scraper.getDomain()
                     break
-                elif (self.params['title'] or self.params['pageid']):
+                elif (self.params['domain']):
                     return -1 ##if you asked but didnt get. terminate
                               ##instead of trying again
 

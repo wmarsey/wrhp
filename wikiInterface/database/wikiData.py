@@ -432,6 +432,14 @@ class WikiDatabase:
                 return result
         return None
 
+    def gettrainingdata7(self):
+        sql = "SELECT (w.maths + w.citations + w.filesimages + w.links + w.structure + w.normal) AS sum, c.count,  EXTRACT(epoch FROM (r.time::timestamp - rr.time::timestamp)) AS time, r.size - CASE WHEN rr.size IS NOT NULL THEN rr.size ELSE 0 END, w.gradient FROM " + self.weighttable + " AS w JOIN " + self.revisiontable + " AS r USING (revid, domain) JOIN (SELECT count(*) AS count, pageid, username, domain FROM " + self.revisiontable + " GROUP BY pageid, username, domain) AS c ON r.username = c.username AND r.domain = c.domain AND r.pageid = c.pageid JOIN " + self.revisiontable + " AS rr ON r.domain = rr.domain AND rr.revid = r.parentid;"
+        if(self._execute(sql,())):
+            result = self._crsrsanity()
+            if result:
+                return result
+        return None
+
     def geteditdistribution(self, domain=None):
         sql = "SELECT r.count AS edit_count, count(r.username) AS frequency FROM (SELECT count(rev.revid) AS count, rev.username FROM wikirevisions AS rev "
         if domain:
@@ -496,7 +504,6 @@ class WikiDatabase:
         try:
             self.crsr.execute(sql, data)
         except:
-            print "Unexpected error:", exc_info()
             self.cn.rollback()
         else:
             self.cn.commit()

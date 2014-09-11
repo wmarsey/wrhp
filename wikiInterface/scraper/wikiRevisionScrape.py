@@ -64,7 +64,6 @@ class WikiRevisionScrape:
         if domain:
             self.api_domain = domain
             self.domainset = True
-            print domain
               
         self.scrapemin = scrapemin
         
@@ -116,6 +115,8 @@ class WikiRevisionScrape:
     def _picklang(self, domainset=False):
         s = WIKI_API_TEMPLATE
         if domainset:
+            if self.api_domain not in [e[0] for e in self.domains]:
+                return None, None
             lname = ""
             for ds in self.domains:
                 if ds[0] == self.api_domain:
@@ -138,6 +139,9 @@ class WikiRevisionScrape:
     def scrape(self):
         ## prepare params for choosing article
         self.api_url, self.api_lang = self._picklang(self.domainset)
+        if not self.api_url:
+            print "Malformed domain parameter"
+            return False
         if 'rvprop' in self.par:
             del self.par['rvprop']
         if 'revids' in self.par:
@@ -290,6 +294,8 @@ class WikiRevisionScrape:
             if self.parentid == 0 or self.parentid in self.visited:
                 b = True
 
+            dot(final=b)
+
             ## check whether it's time to batch insert into database
             ## (this happens either every 50 fetches, or just every
             ## time we are about to break from fetching a page with a
@@ -348,8 +354,7 @@ class WikiRevisionScrape:
                     print "\nToo few revisions, article discarded"
                     print
                     return False
-            dot(reset=(not j),final=b)
-            
+
             ## break if ready
             if b:
                 ##deal with corruption before break
